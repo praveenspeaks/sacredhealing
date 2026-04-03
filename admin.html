@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sacred Healing — Admin Panel</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Raleway:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    :root {
+      --midnight: #0D1117; --panel: #181830; --card: #1e1e40; --indigo: #1a1a3e;
+      --gold: #C9A84C; --gold-light: #E8C97A; --gold-glow: rgba(201,168,76,0.2);
+      --amethyst: #7B2FBE; --cream: #F5EDD6; --cream-dim: #C9BFA8; --muted: #6B6080;
+      --border: rgba(201,168,76,0.15); --border-strong: rgba(201,168,76,0.4);
+      --success: #2ECC71; --warning: #E8A838; --danger: #E74C3C; --info: #5B8AF5;
+      --radius: 10px; --transition: 0.25s ease;
+    }
+    html { font-size: 15px; scroll-behavior: smooth; }
+    body { font-family: 'Raleway', sans-serif; background: var(--midnight); color: var(--cream); min-height: 100vh; }
+    a { text-decoration: none; color: inherit; }
+    button { cursor: pointer; font-family: 'Raleway', sans-serif; }
+    input, select, textarea { font-family: 'Raleway', sans-serif; }
+
+    /* ── LOGIN ── */
+    #login-screen {
+      min-height: 100vh; display: flex; align-items: center; justify-content: center;
+      background: radial-gradient(ellipse at center, rgba(123,47,190,0.15) 0%, transparent 70%);
+    }
+    .login-card {
+      background: var(--panel); border: 1px solid var(--border-strong); border-radius: 20px;
+      padding: 3rem 2.5rem; width: 100%; max-width: 380px; text-align: center;
+    }
+    .login-logo { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; color: var(--cream); margin-bottom: 0.3rem; }
+    .login-logo span { color: var(--gold); }
+    .login-sub { font-size: 0.78rem; color: var(--muted); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 2rem; display: block; }
+    #login-error { color: var(--danger); font-size: 0.82rem; margin-top: 0.75rem; display: none; }
+
+    /* ── APP ── */
+    #app { display: none; min-height: 100vh; }
+
+    /* ── SIDEBAR ── */
+    .sidebar {
+      position: fixed; left: 0; top: 0; bottom: 0; width: 240px;
+      background: var(--panel); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; z-index: 100;
+    }
+    .sidebar-logo { padding: 1.5rem; border-bottom: 1px solid var(--border); font-family: 'Cormorant Garamond', serif; font-size: 1.25rem; color: var(--cream); }
+    .sidebar-logo span { color: var(--gold); margin-right: 0.4rem; }
+    .sidebar-sub { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; display: block; margin-top: 0.15rem; }
+    .sidebar-nav { flex: 1; padding: 1rem 0; }
+    .nav-item {
+      display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.5rem;
+      font-size: 0.87rem; font-weight: 500; color: var(--muted);
+      border-left: 3px solid transparent; transition: var(--transition); cursor: pointer;
+    }
+    .nav-item:hover { color: var(--cream-dim); background: rgba(255,255,255,0.03); }
+    .nav-item.active { color: var(--gold); background: rgba(201,168,76,0.07); border-left-color: var(--gold); }
+    .nav-item .nav-icon { font-size: 1.1rem; width: 20px; text-align: center; }
+    .sidebar-footer { padding: 1.25rem 1.5rem; border-top: 1px solid var(--border); }
+    .logout-btn { display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; color: var(--muted); background: none; border: none; transition: var(--transition); padding: 0; cursor: pointer; }
+    .logout-btn:hover { color: var(--danger); }
+
+    /* ── MAIN CONTENT ── */
+    .main-content { margin-left: 240px; padding: 2rem 2.5rem; min-height: 100vh; }
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ── PAGE HEADER ── */
+    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
+    .page-title { font-family: 'Cormorant Garamond', serif; font-size: 2rem; color: var(--cream); }
+    .page-title em { font-style: italic; background: linear-gradient(135deg, var(--gold-light), var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+
+    /* ── STATS ── */
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
+    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem 1.5rem; transition: var(--transition); }
+    .stat-card:hover { border-color: var(--border-strong); }
+    .stat-card-value { font-family: 'Cormorant Garamond', serif; font-size: 2.2rem; font-weight: 300; background: linear-gradient(135deg, var(--gold-light), var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1; margin-bottom: 0.3rem; }
+    .stat-card-label { font-size: 0.75rem; color: var(--muted); font-weight: 500; letter-spacing: 0.05em; }
+
+    /* ── CARD ── */
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.75rem; margin-bottom: 1.5rem; }
+    .card-title { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; color: var(--cream); margin-bottom: 1.25rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; }
+
+    /* ── FORMS ── */
+    .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+    .form-group { margin-bottom: 0; }
+    .form-group label { display: block; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.4rem; }
+    .form-control { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--cream); padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.9rem; transition: var(--transition); outline: none; }
+    .form-control:focus { border-color: var(--gold); background: rgba(201,168,76,0.05); }
+    select.form-control { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='%23C9A84C'%3E%3Cpath d='M0 0l6 8 6-8z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 1rem center; padding-right: 2.5rem; }
+
+    /* ── PRICE INPUT GROUP ── */
+    .price-group { display: flex; gap: 0; }
+    .price-group select { border-radius: 8px 0 0 8px; border-right: none; width: 90px; flex-shrink: 0; }
+    .price-group input { border-radius: 0 8px 8px 0; flex: 1; }
+
+    /* ── DURATION PILLS SELECTOR ── */
+    .duration-pills { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.4rem; }
+    .duration-pill {
+      padding: 0.4rem 1rem; border-radius: 50px; border: 1px solid var(--border);
+      background: rgba(255,255,255,0.03); color: var(--cream-dim);
+      font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: var(--transition);
+    }
+    .duration-pill:hover { border-color: var(--border-strong); }
+    .duration-pill.selected { background: linear-gradient(135deg, var(--gold-light), var(--gold)); color: var(--midnight); border-color: transparent; }
+    .duration-pill input[type=radio] { display: none; }
+
+    /* ── BUTTONS ── */
+    .btn-add { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.7rem 1.5rem; background: linear-gradient(135deg, var(--gold-light), var(--gold)); color: var(--midnight); border: none; border-radius: 50px; font-weight: 700; font-size: 0.85rem; transition: var(--transition); cursor: pointer; }
+    .btn-add:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 4px 16px var(--gold-glow); }
+    .btn-sm { padding: 0.3rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; border: none; transition: var(--transition); cursor: pointer; }
+    .btn-danger { background: rgba(231,76,60,0.15); color: var(--danger); border: 1px solid rgba(231,76,60,0.3); }
+    .btn-danger:hover { background: rgba(231,76,60,0.25); }
+    .btn-success { background: rgba(46,204,113,0.15); color: var(--success); border: 1px solid rgba(46,204,113,0.3); }
+    .btn-success:hover { background: rgba(46,204,113,0.25); }
+    .btn-primary { width: 100%; padding: 0.85rem; background: linear-gradient(135deg, var(--gold-light), var(--gold)); color: var(--midnight); border: none; border-radius: 50px; font-weight: 700; font-size: 0.9rem; letter-spacing: 0.05em; cursor: pointer; }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-blue { background: rgba(91,138,245,0.15); color: var(--info); border: 1px solid rgba(91,138,245,0.3); }
+    .btn-blue:hover { background: rgba(91,138,245,0.25); }
+    .btn-warning { background: rgba(232,168,56,0.15); color: var(--warning); border: 1px solid rgba(232,168,56,0.3); }
+    .btn-warning:hover { background: rgba(232,168,56,0.25); }
+
+    /* ── TABLE ── */
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    thead th { text-align: left; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); transition: var(--transition); }
+    tbody tr:last-child { border-bottom: none; }
+    tbody tr:hover { background: rgba(255,255,255,0.02); }
+    tbody td { padding: 0.85rem 1rem; color: var(--cream-dim); vertical-align: middle; }
+    .td-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+
+    /* ── BADGES ── */
+    .badge { display: inline-flex; align-items: center; padding: 0.2rem 0.6rem; border-radius: 50px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.05em; }
+    .badge-available { background: rgba(46,204,113,0.15); color: var(--success); }
+    .badge-booked { background: rgba(201,168,76,0.15); color: var(--gold); }
+    .badge-pending { background: rgba(232,168,56,0.15); color: var(--warning); }
+    .badge-confirmed { background: rgba(46,204,113,0.15); color: var(--success); }
+    .badge-cancelled { background: rgba(231,76,60,0.15); color: var(--danger); }
+    .badge-free { background: rgba(91,138,245,0.15); color: var(--info); }
+
+    /* ── PRICE DISPLAY ── */
+    .price-tag { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; color: var(--gold-light); font-weight: 400; }
+    .price-tag.free { color: var(--info); font-size: 0.85rem; font-family: 'Raleway', sans-serif; font-weight: 700; letter-spacing: 0.05em; }
+
+    /* ── DURATION BADGE ── */
+    .dur-badge { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.2rem 0.6rem; border-radius: 50px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em; }
+    .dur-15 { background: rgba(91,138,245,0.15); color: var(--info); }
+    .dur-30 { background: rgba(46,204,113,0.12); color: var(--success); }
+    .dur-60 { background: rgba(201,168,76,0.15); color: var(--gold); }
+    .dur-90 { background: rgba(123,47,190,0.2); color: #b47bfa; }
+    .dur-120 { background: rgba(232,168,56,0.15); color: var(--warning); }
+
+    /* ── FILTER BAR ── */
+    .filter-bar { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
+    .filter-bar select.form-control { max-width: 200px; padding: 0.5rem 2.5rem 0.5rem 0.85rem; }
+
+    /* ── BULK PREVIEW ── */
+    .bulk-preview { max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; margin-top: 0.75rem; font-size: 0.8rem; color: var(--cream-dim); display: none; }
+    .bulk-preview p { padding: 0.2rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .bulk-preview p:last-child { border-bottom: none; }
+
+    /* ── EMPTY STATE ── */
+    .empty-state { text-align: center; padding: 3rem; color: var(--muted); }
+    .empty-state .empty-icon { font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.4; }
+
+    /* ── LOADING ── */
+    .loading-spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── TOAST ── */
+    .toast-container { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; }
+    .toast { padding: 0.85rem 1.25rem; border-radius: 10px; font-size: 0.85rem; font-weight: 500; min-width: 280px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); animation: slideIn 0.3s ease, fadeOut 0.4s ease 2.8s forwards; border-left: 3px solid; }
+    .toast-success { background: rgba(46,204,113,0.12); border-left-color: var(--success); color: var(--success); }
+    .toast-error { background: rgba(231,76,60,0.12); border-left-color: var(--danger); color: var(--danger); }
+    .toast-info { background: rgba(201,168,76,0.12); border-left-color: var(--gold); color: var(--gold); }
+    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; pointer-events: none; } }
+
+    /* ── HELP TEXT ── */
+    .help-text { font-size: 0.75rem; color: var(--muted); margin-top: 0.3rem; }
+
+    /* ── REVENUE HIGHLIGHT ── */
+    .revenue-card .stat-card-value { font-size: 1.8rem; }
+
+    @media (max-width: 768px) {
+      .sidebar { width: 60px; }
+      .sidebar-logo, .sidebar-sub, .nav-item span:not(.nav-icon), .sidebar-footer span, .logout-btn span { display: none; }
+      .nav-item { justify-content: center; padding: 0.75rem; }
+      .main-content { margin-left: 60px; padding: 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── LOGIN ── -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo"><span>✦</span> Sacred Healing</div>
+    <span class="login-sub">Admin Panel</span>
+    <div class="form-group" style="margin-bottom:1.2rem; text-align:left;">
+      <label style="display:block;font-size:0.75rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:var(--gold);margin-bottom:0.4rem;">Password</label>
+      <input id="admin-password" type="password" class="form-control" placeholder="Enter admin password" />
+    </div>
+    <button class="btn-primary" id="login-btn" onclick="handleLogin()">Enter Dashboard</button>
+    <div id="login-error">⚠ Incorrect password. Please try again.</div>
+  </div>
+</div>
+
+<!-- ── APP ── -->
+<div id="app">
+  <aside class="sidebar">
+    <div class="sidebar-logo"><span>✦</span> Sacred Healing<span class="sidebar-sub">Admin Panel</span></div>
+    <nav class="sidebar-nav">
+      <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard"><span class="nav-icon">◈</span><span>Dashboard</span></div>
+      <div class="nav-item" onclick="showPage('slots')" id="nav-slots"><span class="nav-icon">📅</span><span>Manage Slots</span></div>
+      <div class="nav-item" onclick="showPage('bookings')" id="nav-bookings"><span class="nav-icon">📋</span><span>Bookings</span></div>
+    </nav>
+    <div class="sidebar-footer"><button class="logout-btn" onclick="handleLogout()">⟵ <span>Logout</span></button></div>
+  </aside>
+
+  <main class="main-content">
+
+    <!-- ── DASHBOARD ── -->
+    <div class="page active" id="page-dashboard">
+      <div class="page-header">
+        <h1 class="page-title">Dashboard <em>Overview</em></h1>
+        <button class="btn-add" onclick="refreshDashboard()">↻ Refresh</button>
+      </div>
+      <div class="stats-row" id="stats-row">
+        <div class="stat-card"><div class="stat-card-value" id="stat-available">—</div><div class="stat-card-label">Available Slots</div></div>
+        <div class="stat-card"><div class="stat-card-value" id="stat-total-bookings">—</div><div class="stat-card-label">Total Bookings</div></div>
+        <div class="stat-card"><div class="stat-card-value" id="stat-pending">—</div><div class="stat-card-label">Pending</div></div>
+        <div class="stat-card"><div class="stat-card-value" id="stat-confirmed">—</div><div class="stat-card-label">Confirmed</div></div>
+        <div class="stat-card"><div class="stat-card-value" id="stat-today">—</div><div class="stat-card-label">Today's Sessions</div></div>
+        <div class="stat-card revenue-card"><div class="stat-card-value" id="stat-revenue">—</div><div class="stat-card-label">Total Revenue</div></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Recent Bookings</div>
+        <div class="table-wrap" id="recent-bookings-table"></div>
+      </div>
+    </div>
+
+    <!-- ── SLOTS ── -->
+    <div class="page" id="page-slots">
+      <div class="page-header"><h1 class="page-title">Manage <em>Slots</em></h1></div>
+
+      <!-- Add Single Slot -->
+      <div class="card">
+        <div class="card-title">Add New Availability Slot</div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Date</label>
+            <input type="date" class="form-control" id="slot-date" />
+          </div>
+          <div class="form-group">
+            <label>Start Time</label>
+            <input type="time" class="form-control" id="slot-time" />
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:1rem;">
+          <label>Session Duration</label>
+          <div class="duration-pills" id="slot-duration-pills">
+            <label class="duration-pill"><input type="radio" name="slot-dur" value="15" /> ✨ 15 min – Free Consult</label>
+            <label class="duration-pill"><input type="radio" name="slot-dur" value="30" /> 🌙 30 min</label>
+            <label class="duration-pill selected"><input type="radio" name="slot-dur" value="60" checked /> ⭐ 60 min</label>
+            <label class="duration-pill"><input type="radio" name="slot-dur" value="90" /> 🌟 90 min</label>
+            <label class="duration-pill"><input type="radio" name="slot-dur" value="120" /> 💫 120 min</label>
+          </div>
+          <span class="help-text">15-minute slots are always free (consultation only)</span>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Price</label>
+            <div class="price-group">
+              <select class="form-control" id="slot-currency">
+                <option value="GBP">£ GBP</option>
+                <option value="USD">$ USD</option>
+                <option value="EUR">€ EUR</option>
+                <option value="INR">₹ INR</option>
+              </select>
+              <input type="number" class="form-control" id="slot-price" min="0" step="0.01" value="0" placeholder="0 = Free" />
+            </div>
+            <span class="help-text">Set to 0 for a free consultation slot</span>
+          </div>
+          <div class="form-group">
+            <label>Internal Note (optional)</label>
+            <input type="text" class="form-control" id="slot-note" placeholder="e.g. Zoom link, prep instructions" />
+          </div>
+        </div>
+        <button class="btn-add" onclick="addSlot()">+ Add Slot</button>
+      </div>
+
+      <!-- Bulk Generator -->
+      <div class="card">
+        <div class="card-title">
+          Bulk Slot Generator
+          <span style="font-size:0.75rem;color:var(--muted);font-weight:400;">Generate a week or month of slots at once</span>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label>Start Date</label><input type="date" class="form-control" id="bulk-start" /></div>
+          <div class="form-group"><label>End Date</label><input type="date" class="form-control" id="bulk-end" /></div>
+          <div class="form-group">
+            <label>Days of Week</label>
+            <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-top:0.4rem;">
+              <label style="display:flex;align-items:center;gap:0.25rem;font-size:0.8rem;color:var(--cream-dim);cursor:pointer;"><input type="checkbox" id="day-mon" value="1" checked style="accent-color:var(--gold);" /> Mon</label>
+              <label style="display:flex;align-items:center;gap:0.25rem;font-size:0.8rem;color:var(--cream-dim);cursor:pointer;"><input type="checkbox" id="day-tue" value="2" checked style="accent-color:var(--gold);" /> Tue</label>
+              <label style="display:flex;align-items:center;gap:0.25rem;font-size:0.8rem;color:var(--cream-dim);cursor:pointer;"><input type="checkbox" id="day-wed" value="3" checked style="accent-color:var(--gold);" /> Wed</label>
+              <label style="display:flex;align-items:center;gap:0.25rem;font-size:0.8rem;color:var(--cream-dim);cursor:pointer;"><input type="checkbox" id="day-thu" value="4" checked style="accent-color:var(--gold);" /> Thu</label>
+              <label style="display:flex;align-items:center;gap:0.25rem;font-size:0.8rem;color:var(--cream-dim);cursor:pointer;"><input type="checkbox" id="day-fri" value="5" checked style="accent-color:var(--gold);" /> Fri</label>
+              <label style="display:flex;align-items:center;gap:0.25rem;font-size:0.8rem;color:var(--cream-dim);cursor:pointer;"><input type="checkbox" id="day-sat" value="6" style="accent-color:var(--gold);" /> Sat</label>
+              <label style="display:flex;align-items:center;gap:0.25rem;font-size:0.8rem;color:var(--cream-dim);cursor:pointer;"><input type="checkbox" id="day-sun" value="0" style="accent-color:var(--gold);" /> Sun</label>
+            </div>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Time Slots (comma-separated)</label>
+            <input type="text" class="form-control" id="bulk-times" value="09:00, 11:00, 14:00, 16:00" placeholder="09:00, 11:00, 14:00" />
+          </div>
+          <div class="form-group">
+            <label>Session Duration</label>
+            <div class="duration-pills" id="bulk-duration-pills">
+              <label class="duration-pill"><input type="radio" name="bulk-dur" value="15" /> ✨ 15 min</label>
+              <label class="duration-pill"><input type="radio" name="bulk-dur" value="30" /> 🌙 30 min</label>
+              <label class="duration-pill selected"><input type="radio" name="bulk-dur" value="60" checked /> ⭐ 60 min</label>
+              <label class="duration-pill"><input type="radio" name="bulk-dur" value="90" /> 🌟 90 min</label>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Price per Slot</label>
+            <div class="price-group">
+              <select class="form-control" id="bulk-currency">
+                <option value="GBP">£ GBP</option>
+                <option value="USD">$ USD</option>
+                <option value="EUR">€ EUR</option>
+                <option value="INR">₹ INR</option>
+              </select>
+              <input type="number" class="form-control" id="bulk-price" min="0" step="0.01" value="75" placeholder="Price" />
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+          <button class="btn-add btn-blue" style="background:rgba(91,138,245,0.2);color:var(--info);border:1px solid rgba(91,138,245,0.4);" onclick="previewBulk()">👁 Preview</button>
+          <button class="btn-add" onclick="addBulkSlots()">+ Generate All Slots</button>
+        </div>
+        <div class="bulk-preview" id="bulk-preview"></div>
+      </div>
+
+      <!-- Slots Table -->
+      <div class="card">
+        <div class="card-title">
+          All Slots
+          <div class="filter-bar">
+            <select class="form-control" id="filter-slot-status" onchange="loadSlots()">
+              <option value="">All Status</option>
+              <option value="0">Available</option>
+              <option value="1">Booked</option>
+            </select>
+            <select class="form-control" id="filter-slot-duration" onchange="loadSlots()">
+              <option value="">All Durations</option>
+              <option value="15">15 min (Free)</option>
+              <option value="30">30 min</option>
+              <option value="60">60 min</option>
+              <option value="90">90 min</option>
+              <option value="120">120 min</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-wrap" id="slots-table"></div>
+      </div>
+    </div>
+
+    <!-- ── BOOKINGS ── -->
+    <div class="page" id="page-bookings">
+      <div class="page-header"><h1 class="page-title">All <em>Bookings</em></h1></div>
+      <div class="card">
+        <div class="card-title">
+          Booking List
+          <div class="filter-bar">
+            <select class="form-control" id="filter-booking-status" onchange="loadBookings()">
+              <option value="">All Status</option>
+              <option value="pending">Pending</option>
+              <option value="confirmed">Confirmed</option>
+              <option value="cancelled">Cancelled</option>
+            </select>
+          </div>
+        </div>
+        <div class="table-wrap" id="bookings-table"></div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<div class="toast-container" id="toast-container"></div>
+
+<script>
+  const API = '';
+  let adminToken = '';
+
+  // ── UTILS ──
+  function toast(msg, type = 'info') {
+    const t = document.createElement('div');
+    t.className = `toast toast-${type}`;
+    t.textContent = msg;
+    document.getElementById('toast-container').appendChild(t);
+    setTimeout(() => t.remove(), 3400);
+  }
+
+  function fmtDate(dateStr) {
+    if (!dateStr) return '—';
+    return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', weekday: 'short' });
+  }
+
+  function fmtTime(t) {
+    if (!t) return '';
+    const [h, m] = t.split(':');
+    const hour = parseInt(h);
+    return `${hour % 12 || 12}:${m} ${hour < 12 ? 'AM' : 'PM'}`;
+  }
+
+  function fmtDateTime(dt) {
+    if (!dt) return '—';
+    return new Date(dt).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+  }
+
+  const SYMBOLS = { GBP: '£', USD: '$', EUR: '€', INR: '₹', AUD: 'A$' };
+
+  function fmtPrice(price, currency = 'GBP') {
+    if (!price || price == 0) return '<span class="badge badge-free">FREE</span>';
+    const sym = SYMBOLS[currency] || currency;
+    return `<span class="price-tag">${sym}${parseFloat(price).toFixed(2)}</span>`;
+  }
+
+  function durBadge(min) {
+    const cls = min <= 15 ? 'dur-15' : min <= 30 ? 'dur-30' : min <= 60 ? 'dur-60' : min <= 90 ? 'dur-90' : 'dur-120';
+    const label = min == 15 ? '✨ 15 min' : min == 30 ? '🌙 30 min' : min == 60 ? '⭐ 60 min' : min == 90 ? '🌟 90 min' : '💫 ' + min + ' min';
+    return `<span class="dur-badge ${cls}">${label}</span>`;
+  }
+
+  function statusBadge(status) {
+    const map = { available: 'available', booked: 'booked', pending: 'pending', confirmed: 'confirmed', cancelled: 'cancelled' };
+    return `<span class="badge badge-${map[status] || 'pending'}">${status}</span>`;
+  }
+
+  async function api(method, endpoint, body) {
+    const opts = { method, headers: { 'Content-Type': 'application/json', 'x-admin-password': adminToken } };
+    if (body) opts.body = JSON.stringify(body);
+    const res = await fetch(API + endpoint, opts);
+    return res.json();
+  }
+
+  // Duration pill interaction
+  document.querySelectorAll('.duration-pills').forEach(group => {
+    group.querySelectorAll('.duration-pill').forEach(pill => {
+      pill.addEventListener('click', () => {
+        group.querySelectorAll('.duration-pill').forEach(p => p.classList.remove('selected'));
+        pill.classList.add('selected');
+        // Auto-set price to 0 if 15min selected
+        const radio = pill.querySelector('input[type=radio]');
+        if (radio) {
+          radio.checked = true;
+          const priceField = group.closest('.card').querySelector('#slot-price, #bulk-price');
+          if (radio.value === '15' && priceField) {
+            priceField.value = '0';
+            priceField.disabled = true;
+          } else if (priceField) {
+            priceField.disabled = false;
+          }
+        }
+      });
+    });
+  });
+
+  // ── AUTH ──
+  async function handleLogin() {
+    const pw = document.getElementById('admin-password').value.trim();
+    if (!pw) return;
+    const btn = document.getElementById('login-btn');
+    btn.innerHTML = '<span class="loading-spinner"></span>';
+    btn.disabled = true;
+    try {
+      const res = await fetch('/api/admin/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ password: pw }) });
+      const data = await res.json();
+      if (data.success) {
+        adminToken = data.token;
+        document.getElementById('login-screen').style.display = 'none';
+        document.getElementById('app').style.display = 'flex';
+        refreshDashboard();
+        setDefaultDates();
+      } else {
+        document.getElementById('login-error').style.display = 'block';
+      }
+    } catch (e) { toast('Could not connect to server', 'error'); }
+    finally { btn.innerHTML = 'Enter Dashboard'; btn.disabled = false; }
+  }
+
+  function handleLogout() {
+    adminToken = '';
+    document.getElementById('app').style.display = 'none';
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('admin-password').value = '';
+  }
+
+  document.getElementById('admin-password').addEventListener('keydown', e => { if (e.key === 'Enter') handleLogin(); });
+
+  // ── NAVIGATION ──
+  function showPage(name) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById(`page-${name}`).classList.add('active');
+    document.getElementById(`nav-${name}`).classList.add('active');
+    if (name === 'slots') loadSlots();
+    if (name === 'bookings') loadBookings();
+    if (name === 'dashboard') refreshDashboard();
+  }
+
+  // ── DASHBOARD ──
+  async function refreshDashboard() {
+    try {
+      const [stats, bookingsData] = await Promise.all([api('GET', '/api/admin/stats'), api('GET', '/api/admin/bookings')]);
+      document.getElementById('stat-available').textContent = stats.availableSlots ?? '—';
+      document.getElementById('stat-total-bookings').textContent = stats.totalBookings ?? '—';
+      document.getElementById('stat-pending').textContent = stats.pendingBookings ?? '—';
+      document.getElementById('stat-confirmed').textContent = stats.confirmedBookings ?? '—';
+      document.getElementById('stat-today').textContent = stats.todayBookings ?? '—';
+      const rev = stats.revenue || 0;
+      document.getElementById('stat-revenue').textContent = rev > 0 ? `£${parseFloat(rev).toFixed(0)}` : '£0';
+
+      const recent = (bookingsData.bookings || []).slice(0, 8);
+      document.getElementById('recent-bookings-table').innerHTML = recent.length
+        ? buildBookingsTable(recent, true)
+        : '<div class="empty-state"><div class="empty-icon">📭</div><p>No bookings yet</p></div>';
+    } catch(e) { toast('Failed to load dashboard', 'error'); }
+  }
+
+  // ── SLOTS ──
+  function setDefaultDates() {
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('slot-date').value = today;
+    document.getElementById('bulk-start').value = today;
+    const nm = new Date(); nm.setDate(nm.getDate() + 30);
+    document.getElementById('bulk-end').value = nm.toISOString().split('T')[0];
+  }
+
+  function getSelectedDuration(name) {
+    const checked = document.querySelector(`input[name="${name}"]:checked`);
+    return checked ? parseInt(checked.value) : 60;
+  }
+
+  async function addSlot() {
+    const date     = document.getElementById('slot-date').value;
+    const time     = document.getElementById('slot-time').value;
+    const duration = getSelectedDuration('slot-dur');
+    const price    = duration === 15 ? 0 : parseFloat(document.getElementById('slot-price').value) || 0;
+    const currency = document.getElementById('slot-currency').value;
+    const note     = document.getElementById('slot-note').value;
+
+    if (!date || !time) { toast('Please select a date and time', 'error'); return; }
+
+    try {
+      const res = await api('POST', '/api/admin/slots', { date, time, duration, price, currency, note });
+      if (res.success) {
+        toast(`✦ Slot added: ${fmtDate(date)} at ${fmtTime(time)} (${duration} min)`, 'success');
+        loadSlots();
+      } else { toast(res.error || 'Failed to add slot', 'error'); }
+    } catch(e) { toast('Server error', 'error'); }
+  }
+
+  function generateBulkSlots() {
+    const start = document.getElementById('bulk-start').value;
+    const end   = document.getElementById('bulk-end').value;
+    const times = document.getElementById('bulk-times').value.split(',').map(t => t.trim()).filter(Boolean);
+    const dur   = getSelectedDuration('bulk-dur');
+    const price = dur === 15 ? 0 : parseFloat(document.getElementById('bulk-price').value) || 0;
+    const curr  = document.getElementById('bulk-currency').value;
+
+    if (!start || !end || !times.length) return [];
+
+    const selectedDays = [0,1,2,3,4,5,6].filter(d => {
+      const el = document.getElementById(['day-sun','day-mon','day-tue','day-wed','day-thu','day-fri','day-sat'][d]);
+      return el && el.checked;
+    });
+
+    const slots = [];
+    const cursor = new Date(start + 'T00:00:00');
+    const endDate = new Date(end + 'T00:00:00');
+    while (cursor <= endDate) {
+      if (selectedDays.includes(cursor.getDay())) {
+        for (const t of times) {
+          slots.push({ date: cursor.toISOString().split('T')[0], time: t, duration: dur, price, currency: curr });
+        }
+      }
+      cursor.setDate(cursor.getDate() + 1);
+    }
+    return slots;
+  }
+
+  function previewBulk() {
+    const slots = generateBulkSlots();
+    const preview = document.getElementById('bulk-preview');
+    if (!slots.length) { preview.style.display = 'none'; toast('No slots – check your date range and day selections', 'error'); return; }
+    const sym = SYMBOLS[slots[0]?.currency] || '£';
+    preview.style.display = 'block';
+    preview.innerHTML = `<strong style="color:var(--gold);">${slots.length} slots will be created:</strong><br/>` +
+      slots.map(s => `<p>📅 ${fmtDate(s.date)} · ${fmtTime(s.time)} · ${s.duration} min · ${s.price > 0 ? sym + s.price : 'FREE'}</p>`).join('');
+  }
+
+  async function addBulkSlots() {
+    const slots = generateBulkSlots();
+    if (!slots.length) { toast('No slots to generate', 'error'); return; }
+    try {
+      const res = await api('POST', '/api/admin/slots/bulk', { slots });
+      if (res.success) {
+        toast(`✦ ${res.added} slots added successfully`, 'success');
+        document.getElementById('bulk-preview').style.display = 'none';
+        loadSlots();
+      } else { toast(res.error || 'Failed', 'error'); }
+    } catch(e) { toast('Server error', 'error'); }
+  }
+
+  async function deleteSlot(id) {
+    try {
+      const res = await api('DELETE', `/api/admin/slots/${id}`);
+      if (res.success) { 
+        toast('Slot deleted', 'success'); 
+        loadSlots(); 
+        refreshDashboard();
+      } else {
+        toast(res.error || 'Failed', 'error');
+      }
+    } catch(e) { 
+      toast('Server error', 'error'); 
+    }
+  }
+
+  async function loadSlots() {
+    const statusFilter   = document.getElementById('filter-slot-status').value;
+    const durationFilter = document.getElementById('filter-slot-duration').value;
+    document.getElementById('slots-table').innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted);"><span class="loading-spinner"></span> Loading…</div>';
+    try {
+      const data = await api('GET', '/api/admin/slots');
+      let slots = data.slots || [];
+      if (statusFilter !== '') slots = slots.filter(s => String(s.is_booked) === statusFilter);
+      if (durationFilter) slots = slots.filter(s => s.duration == parseInt(durationFilter));
+
+      if (!slots.length) { document.getElementById('slots-table').innerHTML = '<div class="empty-state"><div class="empty-icon">📅</div><p>No slots found</p></div>'; return; }
+
+      document.getElementById('slots-table').innerHTML = `
+        <table>
+          <thead><tr><th>Date</th><th>Time</th><th>Duration</th><th>Price</th><th>Status</th><th>Booked By</th><th>Service</th><th>Actions</th></tr></thead>
+          <tbody>${slots.map(s => `
+            <tr>
+              <td>${fmtDate(s.date)}</td>
+              <td>${fmtTime(s.time)}</td>
+              <td>${durBadge(s.duration)}</td>
+              <td>${fmtPrice(s.price, s.currency)}</td>
+              <td>${statusBadge(s.is_booked ? 'booked' : 'available')}</td>
+              <td>${s.customer_name ? `${s.customer_name}<br/><small style="color:var(--muted)">${s.customer_email}</small>` : '<span style="color:var(--muted)">—</span>'}</td>
+              <td>${s.service ? `<small>${s.service}</small>` : '<span style="color:var(--muted)">—</span>'}</td>
+              <td>${!s.is_booked ? `<button class="btn-sm btn-danger" onclick="deleteSlot(${s.id})">Delete</button>` : '<span style="color:var(--muted);font-size:0.75rem;">Booked</span>'}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table>`;
+    } catch(e) { toast('Failed to load slots', 'error'); }
+  }
+
+  // ── BOOKINGS ──
+  function buildBookingsTable(bookings, compact = false) {
+    return `
+      <table>
+        <thead><tr>
+          <th>Date & Time</th><th>Duration</th><th>Price</th><th>Service</th><th>Customer</th>
+          ${!compact ? '<th>Message</th>' : ''}
+          <th>Status</th><th>Booked On</th><th>Actions</th>
+        </tr></thead>
+        <tbody>
+          ${bookings.map(b => `
+            <tr>
+              <td>${fmtDate(b.date)}<br/><small>${fmtTime(b.time)}</small></td>
+              <td>${durBadge(b.duration)}</td>
+              <td>${fmtPrice(b.price, b.currency)}</td>
+              <td><small>${b.service || '—'}</small></td>
+              <td><strong>${b.customer_name}</strong><br/><small style="color:var(--muted)">${b.customer_email}</small></td>
+              ${!compact ? `<td style="max-width:160px;word-break:break-word;font-size:0.8rem;">${b.message || '—'}</td>` : ''}
+              <td>${statusBadge(b.status)}</td>
+              <td style="font-size:0.78rem;color:var(--muted)">${fmtDateTime(b.created_at)}</td>
+              <td>
+                <div class="td-actions">
+                  ${b.status !== 'confirmed' ? `<button class="btn-sm btn-success" onclick="updateBooking(${b.id},'confirmed')">✓</button>` : ''}
+                  ${b.status !== 'cancelled' ? `<button class="btn-sm btn-danger" onclick="updateBooking(${b.id},'cancelled')">✕</button>` : ''}
+                </div>
+              </td>
+            </tr>`).join('')}
+        </tbody>
+      </table>`;
+  }
+
+  async function loadBookings() {
+    const filter = document.getElementById('filter-booking-status').value;
+    document.getElementById('bookings-table').innerHTML = '<div style="text-align:center;padding:2rem;color:var(--muted);"><span class="loading-spinner"></span> Loading…</div>';
+    try {
+      const data = await api('GET', '/api/admin/bookings');
+      let bookings = data.bookings || [];
+      if (filter) bookings = bookings.filter(b => b.status === filter);
+      document.getElementById('bookings-table').innerHTML = bookings.length ? buildBookingsTable(bookings) : '<div class="empty-state"><div class="empty-icon">📭</div><p>No bookings found</p></div>';
+    } catch(e) { toast('Failed to load bookings', 'error'); }
+  }
+
+  async function updateBooking(id, status) {
+    try {
+      const res = await api('PATCH', `/api/admin/bookings/${id}`, { status });
+      if (res.success) { toast(`Booking ${status}`, status === 'confirmed' ? 'success' : 'info'); loadBookings(); refreshDashboard(); }
+      else toast(res.error || 'Failed', 'error');
+    } catch(e) { toast('Server error', 'error'); }
+  }
+</script>
+</body>
+</html>

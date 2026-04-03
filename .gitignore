@@ -1,0 +1,6 @@
+node_modules/
+.env
+sacredhealing.db
+sacredhealing.db-wal
+sacredhealing.db-shm
+.DS_Store

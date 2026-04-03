@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sacred Healing | Ancient Wisdom, Infinite Healing</title>
+  <meta name="description" content="Discover transformative spiritual healing through energy work, psychic readings, past life healing, and ancestral pattern healing. Begin your sacred journey to wholeness." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,600&family=Raleway:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ============ PARTICLES ============ -->
+  <canvas id="particles-canvas"></canvas>
+
+  <!-- ============ ANNOUNCEMENT BAR ============ -->
+  <div class="announce-bar" id="announce-bar">
+    <div class="announce-inner">
+      <span class="announce-pulse"></span>
+      <span class="announce-text">
+        ✨ <strong>Free 15-minute consultations</strong> now available — <a href="#contact" onclick="filterSlots(document.querySelector('[data-dur=\'15\']'), '15')" class="announce-link">See open slots →</a>
+      </span>
+      <button class="announce-close" onclick="document.getElementById('announce-bar').style.display='none'" aria-label="Close">✕</button>
+    </div>
+  </div>
+
+  <!-- ============ NAVIGATION ============ -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="#" class="nav-logo">
+        <span class="logo-icon">✦</span>
+        Sacred Healing
+      </a>
+      <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="nav-links">
+        <li><a href="#home" class="nav-link active">Home</a></li>
+        <li><a href="#about" class="nav-link">About</a></li>
+        <li><a href="#services" class="nav-link">Services</a></li>
+        <li><a href="#testimonials" class="nav-link">Testimonials</a></li>
+        <li><a href="#contact" class="nav-link">Contact</a></li>
+      </ul>
+      <button class="btn btn-gold nav-cta" onclick="openBookingModal()">Book Session</button>
+    </div>
+  </nav>
+
+  <!-- ============ HERO ============ -->
+  <section class="hero" id="home">
+    <div class="hero-bg">
+      <img src="hero-bg.png" alt="Cosmic background" class="hero-bg-img" />
+      <div class="hero-overlay"></div>
+    </div>
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="badge-dot"></span>
+        <span>ELYSIAN FIELDS</span>
+        <span class="badge-dot"></span>
+      </div>
+      <h1 class="hero-title">
+        Awaken Your<br />
+        <em class="gold-text">Sacred Self</em>
+      </h1>
+      <p class="hero-subtitle">
+        Journey beyond the veil of ordinary existence.<br />
+        Ancient wisdom meets infinite healing potential — within you.
+      </p>
+      <div class="hero-actions">
+        <button class="btn btn-gold" id="begin-journey-btn" onclick="openBookingModal()">Begin Your Journey →</button>
+        <a href="#services" class="btn btn-outline" id="explore-services-btn">Explore Services</a>
+      </div>
+      <div class="hero-float-card">
+        <div class="float-card-inner">
+          <span class="float-card-icon">◈</span>
+          <h3>"Wholeness"</h3>
+          <p>Embracing faith, compassion, and togetherness</p>
+        </div>
+      </div>
+    </div>
+    <div class="hero-scroll-indicator">
+      <span>Scroll to explore</span>
+      <div class="scroll-line"></div>
+    </div>
+  </section>
+
+  <!-- ============ STATS ============ -->
+  <section class="stats-bar">
+    <div class="container">
+      <div class="stats-grid">
+        <div class="stat-item" data-value="10">
+          <span class="stat-number" id="stat-years">10+</span>
+          <span class="stat-label">Years of Experience</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item" data-value="500">
+          <span class="stat-number" id="stat-lives">500+</span>
+          <span class="stat-label">Lives Transformed</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item" data-value="4">
+          <span class="stat-number" id="stat-paths">4</span>
+          <span class="stat-label">Sacred Healing Paths</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-number">∞</span>
+          <span class="stat-label">Infinite Possibilities</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ABOUT ============ -->
+  <section class="about" id="about">
+    <div class="container">
+      <div class="about-grid">
+        <div class="about-visual">
+          <div class="mandala-wrapper">
+            <div class="mandala-ring mandala-ring-1"></div>
+            <div class="mandala-ring mandala-ring-2"></div>
+            <div class="mandala-ring mandala-ring-3"></div>
+            <img src="mandala.png" alt="Sacred Mandala" class="mandala-img" />
+          </div>
+          <div class="about-quote-card">
+            <p>"The soul always knows the way to heal itself."</p>
+          </div>
+        </div>
+        <div class="about-content">
+          <div class="section-tag">✦ Our Philosophy</div>
+          <h2 class="section-title">Ancient Wisdom,<br /><em>Infinite Healing</em></h2>
+          <p class="about-text">
+            We believe that true healing transcends the physical — it is a sacred dialogue between your soul and the universe. Through centuries-old wisdom traditions blended with intuitive guidance, we create a space where transformation becomes not just possible, but inevitable.
+          </p>
+          <p class="about-text">
+            Every session is a unique journey tailored to your energetic blueprint. We hold space for your deepest wounds to surface, to be seen with compassion, and to be released with grace.
+          </p>
+          <div class="about-features">
+            <div class="feature-item">
+              <span class="feature-icon">◈</span>
+              <div>
+                <h4>Personalized Sessions</h4>
+                <p>Each healing path is uniquely crafted for your soul's journey</p>
+              </div>
+            </div>
+            <div class="feature-item">
+              <span class="feature-icon">◈</span>
+              <div>
+                <h4>Ancient Traditions</h4>
+                <p>Drawing from timeless wisdom lineages across cultures</p>
+              </div>
+            </div>
+            <div class="feature-item">
+              <span class="feature-icon">◈</span>
+              <div>
+                <h4>Transformative Results</h4>
+                <p>Real, lasting change that ripples through every area of life</p>
+              </div>
+            </div>
+          </div>
+          <a href="#services" class="btn btn-gold">Explore Healing Paths →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ SERVICES ============ -->
+  <section class="services" id="services">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">✦ Sacred Offerings</div>
+        <h2 class="section-title">Paths to <em>Healing</em></h2>
+        <p class="section-subtitle">Four sacred doorways, each leading to profound transformation and lasting peace within your soul.</p>
+      </div>
+      <div class="services-grid">
+
+        <div class="service-card" id="service-spiritual">
+          <div class="service-card-glow"></div>
+          <div class="service-number">01</div>
+          <div class="service-icon">🌀</div>
+          <h3 class="service-title">Spiritual Healing</h3>
+          <p class="service-desc">Realign your energy centres and restore harmony between body, mind, and spirit through powerful energy work and chakra balancing.</p>
+          <ul class="service-features">
+            <li>Chakra alignment & clearing</li>
+            <li>Aura cleansing & protection</li>
+            <li>Energy cord cutting</li>
+          </ul>
+          <button class="service-link" onclick="openBookingModal('Spiritual Healing')">Book a Session →</button>
+        </div>
+
+        <div class="service-card featured" id="service-psychic">
+          <div class="service-card-glow"></div>
+          <div class="service-card-badge">Most Popular</div>
+          <div class="service-number">02</div>
+          <div class="service-icon">🔮</div>
+          <h3 class="service-title">Psychic Reading</h3>
+          <p class="service-desc">Receive clear, compassionate intuitive guidance to illuminate your path, understand your relationships, and navigate life's crossroads.</p>
+          <ul class="service-features">
+            <li>Soul purpose clarity</li>
+            <li>Relationship insights</li>
+            <li>Future path guidance</li>
+          </ul>
+          <button class="service-link" onclick="openBookingModal('Psychic Reading')">Book a Session →</button>
+        </div>
+
+        <div class="service-card" id="service-past-life">
+          <div class="service-card-glow"></div>
+          <div class="service-number">03</div>
+          <div class="service-icon">⏳</div>
+          <h3 class="service-title">Past Life Healing</h3>
+          <p class="service-desc">Explore the stories written in your soul's memory across lifetimes and release the patterns, fears, and wounds carried through time.</p>
+          <ul class="service-features">
+            <li>Past life regression</li>
+            <li>Soul wound healing</li>
+            <li>Karmic pattern release</li>
+          </ul>
+          <button class="service-link" onclick="openBookingModal('Past Life Healing')">Book a Session →</button>
+        </div>
+
+        <div class="service-card" id="service-ancestral">
+          <div class="service-card-glow"></div>
+          <div class="service-number">04</div>
+          <div class="service-icon">🌿</div>
+          <h3 class="service-title">Ancestral Healing</h3>
+          <p class="service-desc">Break free from inherited trauma and unconscious family patterns that have shaped your life, and reclaim your true heritage of wholeness.</p>
+          <ul class="service-features">
+            <li>Generational trauma release</li>
+            <li>Family constellation work</li>
+            <li>Ancestral blessings</li>
+          </ul>
+          <button class="service-link" onclick="openBookingModal('Ancestral Healing')">Book a Session →</button>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PROCESS ============ -->
+  <section class="process">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">✦ The Journey</div>
+        <h2 class="section-title">How It <em>Works</em></h2>
+      </div>
+      <div class="process-steps">
+        <div class="process-step">
+          <div class="step-number">I</div>
+          <h3>Connect</h3>
+          <p>Reach out and share your intention. We'll find the perfect healing path for your unique journey.</p>
+        </div>
+        <div class="process-connector">
+          <div class="connector-line"></div>
+          <span>✦</span>
+          <div class="connector-line"></div>
+        </div>
+        <div class="process-step">
+          <div class="step-number">II</div>
+          <h3>Discover</h3>
+          <p>In your session, we explore the deeper layers of your being with compassion and sacred intention.</p>
+        </div>
+        <div class="process-connector">
+          <div class="connector-line"></div>
+          <span>✦</span>
+          <div class="connector-line"></div>
+        </div>
+        <div class="process-step">
+          <div class="step-number">III</div>
+          <h3>Transform</h3>
+          <p>Experience profound shifts as energy moves, patterns dissolve, and your true self emerges.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ TESTIMONIALS ============ -->
+  <section class="testimonials" id="testimonials">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">✦ Voices of Transformation</div>
+        <h2 class="section-title">Sacred <em>Stories</em></h2>
+        <p class="section-subtitle">Hear from those who have walked this path before you.</p>
+      </div>
+      <div class="testimonials-grid">
+
+        <div class="testimonial-card">
+          <div class="testimonial-quote">❝</div>
+          <p class="testimonial-text">"After my ancestral healing session, it felt like a weight I'd carried my whole life — that I didn't even know was there — simply lifted. I cried for an hour and felt completely free."</p>
+          <div class="testimonial-author">
+            <div class="author-avatar">S</div>
+            <div>
+              <h4>Sarah M.</h4>
+              <span>Ancestral Healing Client</span>
+            </div>
+          </div>
+          <div class="testimonial-stars">★★★★★</div>
+        </div>
+
+        <div class="testimonial-card featured">
+          <div class="testimonial-quote">❝</div>
+          <p class="testimonial-text">"The psychic reading gave me more clarity in one hour than years of therapy. She saw things I had never told anyone. I finally understand my life's purpose and feel excited about my future."</p>
+          <div class="testimonial-author">
+            <div class="author-avatar">J</div>
+            <div>
+              <h4>James T.</h4>
+              <span>Psychic Reading Client</span>
+            </div>
+          </div>
+          <div class="testimonial-stars">★★★★★</div>
+        </div>
+
+        <div class="testimonial-card">
+          <div class="testimonial-quote">❝</div>
+          <p class="testimonial-text">"My past life session was the most profound experience of my life. The fears that had paralysed me for decades dissolved completely. I am a different person now — lighter, freer, more myself."</p>
+          <div class="testimonial-author">
+            <div class="author-avatar">A</div>
+            <div>
+              <h4>Amelia K.</h4>
+              <span>Past Life Healing Client</span>
+            </div>
+          </div>
+          <div class="testimonial-stars">★★★★★</div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ BOOKING SECTION ============ -->
+  <section class="booking-section" id="contact">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">✦ Begin Today</div>
+        <h2 class="section-title">Book Your <em>Session</em></h2>
+        <p class="section-subtitle">Choose from our available healing sessions and begin your sacred journey.</p>
+      </div>
+
+      <!-- Duration Filter -->
+      <div class="booking-filter">
+        <button class="filter-btn active" data-dur="" onclick="filterSlots(this, '')">All Available</button>
+        <button class="filter-btn" data-dur="15" onclick="filterSlots(this, '15')">✨ 15 min <span class="filter-free-badge">Free</span></button>
+        <button class="filter-btn" data-dur="30" onclick="filterSlots(this, '30')">🌙 30 min</button>
+        <button class="filter-btn" data-dur="60" onclick="filterSlots(this, '60')">⭐ 60 min</button>
+        <button class="filter-btn" data-dur="90+" onclick="filterSlots(this, '90+')">🌟 90+ min</button>
+      </div>
+
+      <!-- Slots Grid -->
+      <div class="slots-grid" id="public-slots-grid">
+        <div class="slots-loading">
+          <div class="slots-spinner"></div>
+          <p>Loading available sessions…</p>
+        </div>
+      </div>
+
+      <!-- Bottom CTA -->
+      <div class="booking-cta-row">
+        <div class="contact-item"><span>📧</span><a href="mailto:hello@sacredhealing.com">hello@sacredhealing.com</a></div>
+        <div class="contact-divider">|</div>
+        <div class="contact-item"><span>⏰</span><span>Mon–Sat: 9am – 7pm</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="#" class="footer-logo">
+            <span class="logo-icon">✦</span>
+            Sacred Healing
+          </a>
+          <p class="footer-tagline">Ancient Wisdom · Infinite Healing<br />Your journey to wholeness begins here.</p>
+          <div class="footer-socials">
+            <a href="#" class="social-link" aria-label="Instagram">◈</a>
+            <a href="#" class="social-link" aria-label="Facebook">◉</a>
+            <a href="#" class="social-link" aria-label="YouTube">▶</a>
+          </div>
+        </div>
+        <div class="footer-nav">
+          <h4>Explore</h4>
+          <ul>
+            <li><a href="#home">Home</a></li>
+            <li><a href="#about">About Us</a></li>
+            <li><a href="#services">Services</a></li>
+            <li><a href="#testimonials">Testimonials</a></li>
+            <li><a href="#contact">Book Session</a></li>
+          </ul>
+        </div>
+        <div class="footer-nav">
+          <h4>Healing Services</h4>
+          <ul>
+            <li><a href="#service-spiritual">Spiritual Healing</a></li>
+            <li><a href="#service-psychic">Psychic Reading</a></li>
+            <li><a href="#service-past-life">Past Life Healing</a></li>
+            <li><a href="#service-ancestral">Ancestral Healing</a></li>
+          </ul>
+        </div>
+        <div class="footer-contact">
+          <h4>Connect</h4>
+          <ul>
+            <li>📧 hello@sacredhealing.com</li>
+            <li>📞 +1 (234) 567-890</li>
+            <li>⏰ Mon–Sat: 9am – 7pm</li>
+            <li>🌐 Online Sessions Available</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2024 Sacred Healing. All rights reserved. Crafted with ✦ love & light.</p>
+        <div class="footer-bottom-links">
+          <a href="#">Privacy Policy</a>
+          <span>·</span>
+          <a href="#">Terms of Service</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ============ BOOKING MODAL ============ -->
+  <div class="modal-overlay" id="booking-modal" onclick="closeModalOnOverlay(event)">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeBookingModal()">✕</button>
+
+      <!-- Step 1: Slot selected display -->
+      <div class="modal-header">
+        <div class="modal-icon">✦</div>
+        <h2 class="modal-title">Reserve Your <em>Sacred Session</em></h2>
+        <div class="modal-slot-info" id="modal-slot-info"></div>
+      </div>
+
+      <!-- Form -->
+      <form id="booking-form" onsubmit="submitBooking(event)">
+        <input type="hidden" id="booking-slot-id" />
+        <!-- Service Selection -->
+        <div class="modal-form-group">
+          <label>Healing Service *</label>
+          <div class="service-selector" id="service-selector">
+            <label class="service-opt">
+              <input type="radio" name="modal-service" value="Spiritual Healing" required />
+              <span class="service-opt-inner"><span class="service-opt-icon">🌀</span><span>Spiritual Healing</span></span>
+            </label>
+            <label class="service-opt">
+              <input type="radio" name="modal-service" value="Psychic Reading" />
+              <span class="service-opt-inner"><span class="service-opt-icon">🔮</span><span>Psychic Reading</span></span>
+            </label>
+            <label class="service-opt">
+              <input type="radio" name="modal-service" value="Past Life Healing" />
+              <span class="service-opt-inner"><span class="service-opt-icon">⏳</span><span>Past Life Healing</span></span>
+            </label>
+            <label class="service-opt">
+              <input type="radio" name="modal-service" value="Ancestral Healing" />
+              <span class="service-opt-inner"><span class="service-opt-icon">🌿</span><span>Ancestral Healing</span></span>
+            </label>
+          </div>
+        </div>
+        <div class="modal-form-row">
+          <div class="modal-form-group">
+            <label>Your Full Name *</label>
+            <input type="text" id="booking-name" class="modal-input" placeholder="e.g. Sarah Johnson" required />
+          </div>
+          <div class="modal-form-group">
+            <label>Email Address *</label>
+            <input type="email" id="booking-email" class="modal-input" placeholder="your@email.com" required />
+          </div>
+        </div>
+        <div class="modal-form-group">
+          <label>Phone Number (optional)</label>
+          <input type="tel" id="booking-phone" class="modal-input" placeholder="+44 7700 000000" />
+        </div>
+        <div class="modal-form-group">
+          <label>Intention for your session (optional)</label>
+          <textarea id="booking-message" class="modal-input" rows="2" placeholder="Share anything you'd like us to know before your session…"></textarea>
+        </div>
+        <button type="submit" class="btn btn-gold btn-large modal-submit" id="booking-submit-btn">Confirm Booking →</button>
+      </form>
+
+      <!-- Success State -->
+      <div class="modal-success" id="modal-success" style="display:none;">
+        <div class="success-icon">✦</div>
+        <h3>Your Session is Booked!</h3>
+        <p id="modal-success-msg"></p>
+        <button class="btn btn-outline" onclick="closeBookingModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
