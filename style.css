@@ -495,12 +495,16 @@ h1, h2, h3, h4 {
 
 .float-card-mandala {
   display: block;
-  width: 60px;
-  height: 60px;
-  margin: 0 auto 0.5rem;
+  /* Make the mandala massive and standalone */
+  width: 450px;
+  height: 450px;
   object-fit: contain;
-  animation: spin 30s linear infinite;
+  /* Extremely slow, hypnotic rotation */
+  animation: spin 160s linear infinite;
+  /* Blend nicely with background or give it absolute vibrancy */
   filter: saturate(1.2) brightness(1.2);
+  /* Optional: soft drop shadow behind the spinning image to make it pop */
+  filter: drop-shadow(0 0 40px rgba(123, 47, 190, 0.4));
 }
 
 .float-card-inner h3 {
