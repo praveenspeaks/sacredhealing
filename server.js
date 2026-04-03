@@ -144,15 +144,15 @@ app.post('/api/bookings', async (req, res) => {
               currency: slot.currency.toLowerCase(),
               product_data: {
                 name: service + ' Session',
-                description: \`Date: \${slot.date} at \${slot.time} (\${slot.duration} min)\`,
+                description: `Date: ${slot.date} at ${slot.time} (${slot.duration} min)`,
               },
               unit_amount: Math.round(slot.price * 100),
             },
             quantity: 1,
           }],
           mode: 'payment',
-          success_url: \`\${req.protocol}://\${req.get('host')}/api/bookings/success?session_id={CHECKOUT_SESSION_ID}\`,
-          cancel_url: \`\${req.protocol}://\${req.get('host')}/api/bookings/cancel?session_id={CHECKOUT_SESSION_ID}\`,
+          success_url: `${req.protocol}://${req.get('host')}/api/bookings/success?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${req.protocol}://${req.get('host')}/api/bookings/cancel?session_id={CHECKOUT_SESSION_ID}`,
           metadata: { booking_id: bookingId },
         });
 
@@ -198,7 +198,7 @@ app.get('/api/bookings/success', async (req, res) => {
       db.prepare('UPDATE bookings SET status = ? WHERE id = ?').run('confirmed', bookingId);
     }
     // Redirect to frontend with success marker
-    res.redirect(\`/?booking=success&booking_id=\${bookingId}\`);
+    res.redirect(`/?booking=success&booking_id=${bookingId}`);
   } catch (err) {
     console.error('Stripe retrieve error:', err);
     res.redirect('/');
