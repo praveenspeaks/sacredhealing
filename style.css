@@ -505,13 +505,8 @@ h1, h2, h3, h4 {
   border-radius: 50%;
   animation: spin 60s linear infinite;
   
-  /* The Magic Trick to remove the pure white background:
-     1. Invert the image (white background becomes pure black).
-     2. mix-blend-mode: screen drops pure black completely!
-     3. hue-rotate(180deg) brings the inverted colors back to roughly their original purple/gold state.
-  */
-  filter: invert(1) hue-rotate(180deg) contrast(1.5) saturate(1.5);
-  mix-blend-mode: screen;
+  /* The white background has been natively stripped from the image file via Python transparency script. */
+  filter: saturate(1.2) brightness(1.2) drop-shadow(0 0 40px rgba(123, 47, 190, 0.4));
 }
 
 .float-card-inner h3 {
