@@ -383,6 +383,7 @@ h1, h2, h3, h4 {
   position: absolute;
   inset: 0;
   z-index: 0;
+  background-color: var(--midnight); /* Ensure base is dark */
 }
 
 .hero-bg-img {
@@ -391,17 +392,19 @@ h1, h2, h3, h4 {
   object-fit: cover;
   object-position: center;
   opacity: 1; /* Fully visible */
+  mix-blend-mode: screen; /* Drops all dark pixels so only bright stars and nebulas shine through beautifully */
+  filter: contrast(1.3) saturate(1.4); /* Makes the colors pop exactly like the mystical dark design */
 }
 
 .hero-overlay {
   position: absolute;
   inset: 0;
-  /* Just a light overlay to ensure text is readable, fading to dark at the bottom to match the page background */
-  background: linear-gradient(
-    to bottom,
-    rgba(13, 17, 23, 0.2) 0%,
-    rgba(13, 17, 23, 0.5) 70%,
-    rgba(13, 17, 23, 1) 100%
+  /* A subtle radial vignette: clear in the middle where the text is, darkening gently toward the edges to blend into the rest of the site */
+  background: radial-gradient(
+    circle at center,
+    rgba(13, 17, 23, 0.1) 0%,
+    rgba(13, 17, 23, 0.4) 60%,
+    rgba(13, 17, 23, 0.95) 100%
   );
 }
 
