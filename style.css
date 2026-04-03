@@ -390,17 +390,18 @@ h1, h2, h3, h4 {
   height: 100%;
   object-fit: cover;
   object-position: center;
-  opacity: 0.8; /* Increased to make it visible */
+  opacity: 1; /* Fully visible */
 }
 
 .hero-overlay {
   position: absolute;
   inset: 0;
+  /* Just a light overlay to ensure text is readable, fading to dark at the bottom to match the page background */
   background: linear-gradient(
-    135deg,
-    rgba(13, 17, 23, 0.6) 0%,
-    rgba(26, 26, 62, 0.4) 50%,
-    rgba(13, 17, 23, 0.6) 100%
+    to bottom,
+    rgba(13, 17, 23, 0.2) 0%,
+    rgba(13, 17, 23, 0.5) 70%,
+    rgba(13, 17, 23, 1) 100%
   );
 }
 
