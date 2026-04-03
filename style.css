@@ -619,7 +619,7 @@ h1, h2, h3, h4 {
   justify-content: center;
 }
 
-.mandala-wrapper {
+.healer-wrapper {
   position: relative;
   width: 380px;
   height: 380px;
@@ -662,15 +662,16 @@ h1, h2, h3, h4 {
   to { transform: rotate(360deg); }
 }
 
-.mandala-img {
-  width: 360px;
-  height: 360px;
+.healer-img {
+  width: 340px;
+  height: 340px;
   object-fit: cover;
   border-radius: 50%;
   position: relative;
   z-index: 2;
-  box-shadow: 0 0 60px var(--amethyst-glow), 0 0 120px rgba(201, 168, 76, 0.1);
-  filter: saturate(1.2) brightness(1.05);
+  box-shadow: 0 0 40px rgba(201, 168, 76, 0.2), 0 0 100px var(--amethyst-glow);
+  border: 2px solid rgba(201, 168, 76, 0.3);
+  filter: saturate(1.1) brightness(1.05); /* Enhance the photo slightly */
 }
 
 .about-quote-card {
