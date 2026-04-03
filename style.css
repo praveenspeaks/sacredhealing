@@ -475,9 +475,6 @@ h1, h2, h3, h4 {
   right: 5%;
   top: 50%;
   transform: translateY(-50%);
-  /* Since there's a floating animation, we override transform in the keyframes below, so instead we use margin or flex.
-     Let's override the base animation alignment to be perfectly centered. */
-  animation: floatLarge 8s ease-in-out infinite;
   z-index: 10;
 }
 
@@ -501,12 +498,7 @@ h1, h2, h3, h4 {
   display: block;
   width: 450px;
   height: 450px;
-  object-fit: cover;
-  border-radius: 50%;
-  animation: spin 60s linear infinite;
-  
-  /* The white background has been natively stripped from the image file via Python transparency script. */
-  filter: saturate(1.2) brightness(1.2) drop-shadow(0 0 40px rgba(123, 47, 190, 0.4));
+  object-fit: contain;
 }
 
 .float-card-inner h3 {
