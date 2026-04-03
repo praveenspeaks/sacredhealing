@@ -15,7 +15,14 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
 // ── Database Setup ──────────────────────────────────────────
-const db = new Database(path.join(__dirname, 'sacredhealing.db'));
+const dbPath = process.env.DB_PATH || path.join(__dirname, 'data', 'sacredhealing.db');
+const fs = require('fs');
+const dataDir = path.dirname(dbPath);
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
+}
+
+const db = new Database(dbPath);
 db.pragma('journal_mode = WAL');
 
 db.exec(`
