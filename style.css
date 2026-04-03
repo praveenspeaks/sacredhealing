@@ -309,6 +309,18 @@ h1, h2, h3, h4 {
   font-size: 1rem;
 }
 
+.logo-img {
+  height: 38px;
+  width: auto;
+  border-radius: 6px;
+  /* Blend the image into the background to emulate transparency.
+     'screen' works well if the background of the image is black.
+     If the background is white, you can use 'multiply' (but might disappear on dark headers).
+     Another trick is 'mix-blend-mode: luminosity' or CSS filters to drop the background. */
+  mix-blend-mode: screen;
+  filter: contrast(1.1);
+}
+
 .nav-links {
   display: flex;
   list-style: none;
