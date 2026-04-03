@@ -493,11 +493,14 @@ h1, h2, h3, h4 {
   box-shadow: 0 8px 32px rgba(0,0,0,0.3), 0 0 0 1px var(--border);
 }
 
-.float-card-icon {
+.float-card-mandala {
   display: block;
-  font-size: 1.5rem;
-  color: var(--gold);
-  margin-bottom: 0.5rem;
+  width: 60px;
+  height: 60px;
+  margin: 0 auto 0.5rem;
+  object-fit: contain;
+  animation: spin 30s linear infinite;
+  filter: saturate(1.2) brightness(1.2);
 }
 
 .float-card-inner h3 {
