@@ -472,14 +472,18 @@ h1, h2, h3, h4 {
 
 .hero-float-card {
   position: absolute;
-  right: 2rem;
-  bottom: 15%;
-  animation: float 6s ease-in-out infinite;
+  right: 5%;
+  top: 50%;
+  transform: translateY(-50%);
+  /* Since there's a floating animation, we override transform in the keyframes below, so instead we use margin or flex.
+     Let's override the base animation alignment to be perfectly centered. */
+  animation: floatLarge 8s ease-in-out infinite;
+  z-index: 10;
 }
 
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-12px); }
+@keyframes floatLarge {
+  0%, 100% { transform: translateY(-50%) translateY(0); }
+  50% { transform: translateY(-50%) translateY(-20px); }
 }
 
 .float-card-inner {
