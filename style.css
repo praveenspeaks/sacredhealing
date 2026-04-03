@@ -502,13 +502,12 @@ h1, h2, h3, h4 {
   /* Make the mandala massive and standalone */
   width: 450px;
   height: 450px;
-  object-fit: contain;
+  object-fit: cover; /* changed from contain to cover so border-radius works perfectly */
+  border-radius: 50%; /* This cuts off the 4 square corners perfectly! */
   /* Extremely slow, hypnotic rotation */
-  animation: spin 160s linear infinite;
+  animation: spin 60s linear infinite; /* sped up slightly so it's noticeable */
   /* Blend nicely with background or give it absolute vibrancy */
-  filter: saturate(1.2) brightness(1.2);
-  /* Optional: soft drop shadow behind the spinning image to make it pop */
-  filter: drop-shadow(0 0 40px rgba(123, 47, 190, 0.4));
+  filter: saturate(1.2) brightness(1.2) drop-shadow(0 0 40px rgba(123, 47, 190, 0.4));
 }
 
 .float-card-inner h3 {
