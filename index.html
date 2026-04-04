@@ -30,7 +30,7 @@
   <nav class="navbar" id="navbar">
     <div class="nav-container">
       <a href="#" class="nav-logo">
-        <img src="logo.jpg" alt="Sacred Healing Logo" class="logo-img" />
+        <img src="logo.jpg" alt="Sacred Healing Logo" class="logo-img" id="logo_img" />
         Sacred Healing
       </a>
       <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
@@ -50,7 +50,7 @@
   <!-- ============ HERO ============ -->
   <section class="hero" id="home">
     <div class="hero-bg">
-      <img src="sacred_healing_hero_bg.png" alt="Cosmic background" class="hero-bg-img" />
+      <img src="sacred_healing_hero_bg.png" alt="Cosmic background" class="hero-bg-img" id="hero_bg_img" />
       <div class="hero-overlay"></div>
     </div>
     <div class="hero-content">
@@ -59,20 +59,20 @@
         <span>ELYSIAN FIELDS</span>
         <span class="badge-dot"></span>
       </div>
-      <h1 class="hero-title">
+      <h1 class="hero-title" id="hero_title">
         Awaken Your<br />
         <em class="gold-text">Sacred Self</em>
       </h1>
-      <p class="hero-subtitle">
+      <p class="hero-subtitle" id="hero_subtitle">
         Journey beyond the veil of ordinary existence.<br />
         Ancient wisdom meets infinite healing potential — within you.
       </p>
       <div class="hero-actions">
-        <button class="btn btn-gold" id="begin-journey-btn" onclick="openBookingModal()">Begin Your Journey →</button>
-        <a href="#services" class="btn btn-outline" id="explore-services-btn">Explore Services</a>
+        <button class="btn btn-gold" id="hero_button_text" onclick="openBookingModal()">Begin Your Journey →</button>
+        <a href="#services" class="btn btn-outline" id="explore_button_text">Explore Services</a>
       </div>
       <div class="hero-float-card">
-        <img src="mandala.png" alt="Sacred Mandala" class="float-card-mandala" />
+        <img src="mandala.png" alt="Sacred Mandala" class="float-card-mandala" id="chakra_img" />
       </div>
     </div>
     <div class="hero-scroll-indicator">
@@ -117,7 +117,7 @@
             <div class="mandala-ring mandala-ring-1"></div>
             <div class="mandala-ring mandala-ring-2"></div>
             <div class="mandala-ring mandala-ring-3"></div>
-            <img src="healer.jpg" alt="Your Spiritual Healer" class="healer-img" onerror="this.src='https://images.unsplash.com/photo-1544367567-0f2fcb046eb9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';" />
+            <img src="healer.jpg" alt="Your Spiritual Healer" class="healer-img" id="healer_img" onerror="this.src='https://images.unsplash.com/photo-1544367567-0f2fcb046eb9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';" />
           </div>
           <div class="about-quote-card">
             <p>"The soul always knows the way to heal itself."</p>
@@ -125,11 +125,11 @@
         </div>
         <div class="about-content">
           <div class="section-tag">✦ Meet Your Guide</div>
-          <h2 class="section-title">Guiding You Toward<br /><em>Wholeness</em></h2>
-          <p class="about-text">
+          <h2 class="section-title" id="about_title">Guiding You Toward<br /><em>Wholeness</em></h2>
+          <p class="about-text" id="about_paragraph1">
             Welcome, I am honored that your journey has brought you here. As an intuitive healer and spiritual guide, I am dedicated to helping you unlock the ancient healing potential resting within your own soul.
           </p>
-          <p class="about-text">
+          <p class="about-text" id="about_paragraph2">
             By blending timeless wisdom and modern energetic practices, my absolute passion is to provide a safe, sacred space where your deepest wounds are met with compassion—and transformed with grace.
           </p>
           <div class="about-features">
@@ -482,5 +482,6 @@
   </div>
 
   <script src="script.js"></script>
+  <script src="cms_frontend.js"></script>
 </body>
 </html>
