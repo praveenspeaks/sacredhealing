@@ -46,10 +46,10 @@ module.exports = {
         'contact_email': 'hello@sacredhealing.com',
         'contact_phone': '+44 7700 900000',
         'contact_location': 'Elysian Fields, London, UK',
-        'logo_img': 'logo.jpg',
-        'hero_bg_img': 'sacred_healing_hero_bg.png',
-        'chakra_img': 'mandala.png',
-        'healer_img': 'healer.jpg'
+        'logo_img': 'assets/logo.png',
+        'hero_bg_img': 'assets/sacred_healing_hero_bg.png',
+        'chakra_img': 'assets/mandala.png',
+        'healer_img': 'assets/healer.jpg'
       };
       
       const insertManyContent = db.transaction((contentObj) => {
@@ -98,7 +98,7 @@ module.exports = {
     }
 
     // ── Multer Image Uploader ────────────────────────────────
-    const uploadDir = path.join(__dirname, 'data', 'uploads');
+    const uploadDir = path.join(__dirname, 'assets');
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
@@ -112,7 +112,7 @@ module.exports = {
       }
     });
     const upload = multer({ storage: storage });
-    app.use('/data/uploads', express.static(uploadDir));
+    app.use('/assets', express.static(uploadDir));
 
     // ── PUBLIC CMS ENDPOINTS ──────────────────────────────────
     app.get('/api/content', (req, res) => {
@@ -175,7 +175,7 @@ module.exports = {
         const key = req.body.key; // e.g., 'logo_img'
         if (!key) return res.status(400).json({ error: 'Missing content key' });
         
-        const fileUrl = '/data/uploads/' + req.file.filename;
+        const fileUrl = 'assets/' + req.file.filename;
         db.prepare('INSERT INTO site_content (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value')
           .run(key, fileUrl);
           
