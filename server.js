@@ -71,6 +71,42 @@ const cms = require('./cms');
 cms.init(db, app, requireAdmin);
 
 // ════════════════════════════════════════════════════════════
+// CLEAN SEO URLS FOR SERVICES
+// ════════════════════════════════════════════════════════════
+
+function slugify(title) {
+  return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}
+
+// Route: /services/spiritual-healing  →  serves service.html
+app.get('/services/:slug', (req, res) => {
+  res.sendFile(path.join(__dirname, 'service.html'));
+});
+
+// Route: /admin  →  serves admin.html
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'admin.html'));
+});
+
+// API: /api/services/:slug  →  returns JSON for that service
+app.get('/api/services/:slug', (req, res) => {
+  try {
+    const services = db.prepare('SELECT * FROM services ORDER BY order_num ASC, id ASC').all();
+    const match = services.find(s => slugify(s.title) === req.params.slug);
+    if (!match) return res.status(404).json({ error: 'Service not found' });
+    try { match.features = JSON.parse(match.features); } catch(e) { match.features = [match.features]; }
+    // Attach all services (for related links) 
+    const all = services.map(s => {
+      try { s.features = JSON.parse(s.features); } catch(e) {}
+      return { ...s, slug: slugify(s.title) };
+    });
+    res.json({ service: { ...match, slug: slugify(match.title) }, all });
+  } catch(err) {
+    res.status(500).json({ error: 'Failed to fetch service' });
+  }
+});
+
+// ════════════════════════════════════════════════════════════
 // PUBLIC ROUTES
 // ════════════════════════════════════════════════════════════
 
@@ -407,6 +443,6 @@ app.get('/api/admin/stats', requireAdmin, (req, res) => {
 
 app.listen(PORT, () => {
   console.log(`\n✦ Sacred Healing Server running at http://localhost:${PORT}`);
-  console.log(`✦ Admin Panel: http://localhost:${PORT}/admin.html`);
+  console.log(`✦ Admin Panel: http://localhost:${PORT}/admin`);
   console.log(`✦ Admin Password: ${ADMIN_PASSWORD}\n`);
 });

@@ -29,7 +29,20 @@ module.exports = {
         status      TEXT DEFAULT 'pending',
         created_at  TEXT DEFAULT (datetime('now'))
       );
+
+      CREATE TABLE IF NOT EXISTS faqs (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        question    TEXT NOT NULL,
+        answer      TEXT NOT NULL,
+        order_num   INTEGER DEFAULT 0
+      );
     `);
+
+    try {
+      db.exec('ALTER TABLE services ADD COLUMN extra_details TEXT DEFAULT "{}"');
+    } catch(e) {
+      // Ignore if column already exists
+    }
 
     // Seed Initial Content if empty
     const contentCount = db.prepare('SELECT COUNT(*) as c FROM site_content').get().c;
@@ -129,7 +142,9 @@ module.exports = {
         
         const reviews = db.prepare("SELECT author, comment, created_at FROM reviews WHERE status = 'approved' ORDER BY id DESC LIMIT 10").all();
         
-        res.json({ content, services, reviews });
+        const faqs = db.prepare('SELECT * FROM faqs ORDER BY order_num ASC, id ASC').all();
+
+        res.json({ content, services, reviews, faqs });
       } catch (err) {
         res.status(500).json({ error: 'Failed to fetch content' });
       }
@@ -189,10 +204,11 @@ module.exports = {
     // Services Management
     app.post('/api/admin/services', requireAdmin, express.json(), (req, res) => {
         try {
-            const { title, description, features, duration, price, order_num } = req.body;
+            const { title, description, features, duration, price, order_num, extra_details } = req.body;
             const featureStr = JSON.stringify(Array.isArray(features) ? features : features.split('\\n'));
-            db.prepare('INSERT INTO services (title, description, features, duration, price, order_num) VALUES (?, ?, ?, ?, ?, ?)')
-              .run(title, description, featureStr, duration, price, order_num || 0);
+            const extraStr = extra_details ? JSON.stringify(extra_details) : "{}";
+            db.prepare('INSERT INTO services (title, description, features, duration, price, order_num, extra_details) VALUES (?, ?, ?, ?, ?, ?, ?)')
+              .run(title, description, featureStr, duration, price, order_num || 0, extraStr);
             res.json({ success: true });
         } catch (err) {
             res.status(500).json({ error: 'Failed to add service' });
@@ -202,10 +218,11 @@ module.exports = {
     app.put('/api/admin/services/:id', requireAdmin, express.json(), (req, res) => {
         try {
             const id = req.params.id;
-            const { title, description, features, duration, price, order_num } = req.body;
+            const { title, description, features, duration, price, order_num, extra_details } = req.body;
             const featureStr = JSON.stringify(Array.isArray(features) ? features : features.split('\\n'));
-            db.prepare('UPDATE services SET title=?, description=?, features=?, duration=?, price=?, order_num=? WHERE id=?')
-              .run(title, description, featureStr, duration, price, order_num || 0, id);
+            const extraStr = extra_details ? JSON.stringify(extra_details) : "{}";
+            db.prepare('UPDATE services SET title=?, description=?, features=?, duration=?, price=?, order_num=?, extra_details=? WHERE id=?')
+              .run(title, description, featureStr, duration, price, order_num || 0, extraStr, id);
             res.json({ success: true });
         } catch (err) {
             res.status(500).json({ error: 'Failed to update service' });
@@ -218,6 +235,38 @@ module.exports = {
             res.json({ success: true });
         } catch (err) {
             res.status(500).json({ error: 'Failed to delete service' });
+        }
+    });
+    
+    // FAQ Management
+    app.post('/api/admin/faqs', requireAdmin, express.json(), (req, res) => {
+        try {
+            const { question, answer, order_num } = req.body;
+            db.prepare('INSERT INTO faqs (question, answer, order_num) VALUES (?, ?, ?)')
+              .run(question, answer, order_num || 0);
+            res.json({ success: true });
+        } catch (err) {
+            res.status(500).json({ error: 'Failed to add faq' });
+        }
+    });
+
+    app.put('/api/admin/faqs/:id', requireAdmin, express.json(), (req, res) => {
+        try {
+            const { question, answer, order_num } = req.body;
+            db.prepare('UPDATE faqs SET question=?, answer=?, order_num=? WHERE id=?')
+              .run(question, answer, order_num || 0, req.params.id);
+            res.json({ success: true });
+        } catch (err) {
+            res.status(500).json({ error: 'Failed to update faq' });
+        }
+    });
+
+    app.delete('/api/admin/faqs/:id', requireAdmin, (req, res) => {
+        try {
+            db.prepare('DELETE FROM faqs WHERE id=?').run(req.params.id);
+            res.json({ success: true });
+        } catch (err) {
+            res.status(500).json({ error: 'Failed to delete faq' });
         }
     });
     

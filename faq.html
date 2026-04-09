@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FAQ - Sacred Healing</title>
+  <meta name="description" content="Frequently Asked Questions about our healing services." />
+  <link rel="icon" type="image/png" href="/assets/logo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,600&family=Raleway:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+
+  <!-- ============ NAVIGATION ============ -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="/" class="nav-logo">
+        <img src="/assets/logo.png" alt="Sacred Healing Logo" class="logo-img" id="logo_img" />
+        <div class="logo-text">
+          <div class="logo-main">Sacred Healing</div>
+          <div class="logo-slogan">सफलं जन्म प्रवासः</div>
+        </div>
+      </a>
+      <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="nav-links">
+        <li><a href="/" class="nav-link">Home</a></li>
+        <li><a href="/#about" class="nav-link">About</a></li>
+        <li><a href="/#services" class="nav-link">Services</a></li>
+        <li><a href="/#testimonials" class="nav-link">Testimonials</a></li>
+        <li><a href="/#contact" class="nav-link">Contact</a></li>
+        <li><a href="/faq.html" class="nav-link active">FAQ</a></li>
+      </ul>
+      <button class="btn btn-gold nav-cta" onclick="window.location.href='/#contact'">Book Session</button>
+    </div>
+  </nav>
+
+  <!-- ============ HEADER ============ -->
+  <section class="hero" style="min-height: 40vh; padding: 10rem 0 5rem;">
+    <div class="hero-bg">
+      <img src="/assets/sacred_healing_hero_bg.png" alt="Cosmic background" class="hero-bg-img" />
+      <div class="hero-overlay"></div>
+    </div>
+    <div class="hero-content" style="text-align: center;">
+      <h1 class="hero-title" style="margin: 0;">Frequently Asked <em>Questions</em></h1>
+    </div>
+  </section>
+
+  <!-- ============ FAQ ============ -->
+  <section class="process" style="background: rgba(0,0,0,0.2);">
+    <div class="container">
+      <div id="faqs-container" style="max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem;">
+        <!-- Loaded dynamically -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/" class="footer-logo">
+            <span class="logo-icon">✦</span>
+            Sacred Healing
+          </a>
+          <p class="footer-tagline">Ancient Wisdom · Infinite Healing<br />Croydon, London &amp; Online Sessions Available</p>
+          <div class="footer-socials">
+            <a href="#" class="social-link" aria-label="Instagram">◈</a>
+            <a href="#" class="social-link" aria-label="Facebook">◉</a>
+            <a href="#" class="social-link" aria-label="YouTube">▶</a>
+          </div>
+        </div>
+        <div class="footer-nav">
+          <h4>Explore</h4>
+          <ul>
+            <li><a href="/#home">Home</a></li>
+            <li><a href="/#about">About Us</a></li>
+            <li><a href="/#services">Services</a></li>
+            <li><a href="/#testimonials">Testimonials</a></li>
+            <li><a href="/#contact">Book Session</a></li>
+            <li><a href="/faq.html">FAQ</a></li>
+          </ul>
+        </div>
+        <div class="footer-nav">
+          <h4>Healing Services</h4>
+          <ul>
+            <li><a href="/#services">Spiritual Healing</a></li>
+            <li><a href="/#services">Psychic Reading</a></li>
+            <li><a href="/#services">Past Life Regression</a></li>
+            <li><a href="/#services">Ancestral Healing</a></li>
+          </ul>
+        </div>
+        <div class="footer-contact">
+          <h4>Connect</h4>
+            <li>📧 <span id="contact_email">hello@soulbody.healing.com</span></li>
+            <li>📍 <span id="contact_location">Croydon, London</span></li>
+            <li>⏰ <span id="contact_phone">+44 7700 900000</span></li>
+            <li>🌐 Online Sessions Available</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/script.js"></script>
+  <script src="/cms_frontend.js"></script>
+</body>
+</html>

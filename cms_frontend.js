@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                   <div class="service-price" style="color:var(--gold); font-size:1.2rem; margin-bottom:1.5rem; font-family:'Cormorant Garamond', serif;">
                     <span>£${s.price}</span> <span style="font-size:0.9rem; color:var(--cream-dim)">/ ${s.duration} mins</span>
                   </div>
-                  <a href="#" class="service-link" onclick="openBookingModal(); return false;">Reserve This Path →</a>
+                  <a href="/services/${s.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}" class="service-link">Reserve This Path →</a>
                 </div>
                 `;
             });
@@ -68,6 +68,20 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <button class="btn btn-outline" style="width:100%" onclick="openReviewModal()">Write a Review</button>
             </div>
             `;
+        }
+
+        // 4. Populate FAQs (faq.html)
+        const faqsContainer = document.getElementById('faqs-container');
+        if (faqsContainer && data.faqs) {
+            faqsContainer.innerHTML = '';
+            data.faqs.forEach(faq => {
+                faqsContainer.innerHTML += `
+                <div class="card" style="padding: 1.5rem 2rem;">
+                  <h4 style="color:var(--gold); margin-bottom:0.75rem;">${faq.question}</h4>
+                  <p style="color:var(--cream-dim); line-height:1.8;">${faq.answer}</p>
+                </div>
+                `;
+            });
         }
     } catch(err) {
         console.error('CMS Error', err);

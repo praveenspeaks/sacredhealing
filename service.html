@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Service Details — SoulBody Healing</title>
+  <meta name="description" content="Discover our transformative healing services. Book a session with Reena today." />
+  <link rel="icon" type="image/png" href="/assets/logo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,600&family=Raleway:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    /* ── Service Detail Page Specific Styles ── */
+    .service-hero {
+      min-height: 50vh;
+      display: flex;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      padding: 8rem 0 5rem;
+    }
+
+    .service-hero-bg {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 70% 50%, rgba(123, 47, 190, 0.25) 0%, transparent 60%),
+                  radial-gradient(ellipse at 20% 80%, rgba(201, 168, 76, 0.1) 0%, transparent 50%);
+    }
+
+    .service-hero-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 4rem;
+      align-items: center;
+    }
+
+    .service-hero-eyebrow {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.25em;
+      color: var(--gold);
+      text-transform: uppercase;
+      margin-bottom: 1.5rem;
+    }
+
+    .service-hero-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.5rem, 5vw, 4.5rem);
+      font-weight: 300;
+      color: var(--cream);
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+    }
+
+    .service-hero-title em {
+      font-style: italic;
+      background: linear-gradient(135deg, var(--gold-light), var(--gold));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .service-hero-desc {
+      font-size: 1.1rem;
+      color: var(--cream-dim);
+      line-height: 1.8;
+      margin-bottom: 2.5rem;
+    }
+
+    .service-hero-actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    /* Stats block */
+    .service-stats-panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 2.5rem;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+    }
+
+    .service-stat-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 1.25rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .service-stat-row:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .stat-icon {
+      font-size: 1.5rem;
+      flex-shrink: 0;
+      width: 2.5rem;
+      text-align: center;
+    }
+
+    .stat-meta-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--gold);
+      margin-bottom: 0.3rem;
+    }
+
+    .stat-meta-value {
+      font-size: 1rem;
+      color: var(--cream);
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.1rem;
+    }
+
+    /* Price badge */
+    .price-hero-badge {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 0.25rem;
+      background: linear-gradient(135deg, rgba(201,168,76,0.15), rgba(201,168,76,0.05));
+      border: 1px solid var(--gold);
+      border-radius: 12px;
+      padding: 0.75rem 1.5rem;
+      margin-top: 1rem;
+    }
+
+    .price-hero-badge .price-val {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2rem;
+      color: var(--gold-light);
+      font-weight: 300;
+    }
+
+    .price-hero-badge .price-per {
+      font-size: 0.85rem;
+      color: var(--cream-dim);
+    }
+
+    /* Content sections */
+    .service-content {
+      padding: 5rem 0;
+    }
+
+    .service-content-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 3rem;
+      align-items: start;
+    }
+
+    .content-block {
+      margin-bottom: 3rem;
+    }
+
+    .content-block-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.8rem;
+      color: var(--cream);
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .content-block-title em {
+      font-style: italic;
+      color: var(--gold-light);
+    }
+
+    .content-block p {
+      color: var(--cream-dim);
+      line-height: 1.9;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    /* What to Expect list */
+    .expect-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      margin-top: 1rem;
+    }
+
+    .expect-list li {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+    }
+
+    .expect-num {
+      flex-shrink: 0;
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--gold), rgba(201,168,76,0.4));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--midnight);
+      margin-top: 0.1rem;
+    }
+
+    .expect-text { color: var(--cream-dim); line-height: 1.7; }
+    .expect-text strong { color: var(--cream); display: block; margin-bottom: 0.2rem; }
+
+    /* Features grid */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .feature-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: rgba(201,168,76,0.06);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.85rem 1.25rem;
+      transition: border-color 0.3s;
+    }
+
+    .feature-pill:hover { border-color: var(--gold); }
+    .feature-pill-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gold); flex-shrink: 0; }
+    .feature-pill span { color: var(--cream-dim); font-size: 0.9rem; }
+
+    /* Sidebar */
+    .service-sidebar {
+      position: sticky;
+      top: 6rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .sidebar-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+    }
+
+    .sidebar-card-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.2rem;
+      color: var(--cream);
+      margin-bottom: 1.25rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-book-price {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.5rem;
+      font-weight: 300;
+      color: var(--gold-light);
+      margin-bottom: 0.25rem;
+    }
+
+    .sidebar-book-duration {
+      font-size: 0.85rem;
+      color: var(--muted);
+      margin-bottom: 1.5rem;
+    }
+
+    .sidebar-book-btn {
+      display: block;
+      width: 100%;
+      padding: 1rem;
+      text-align: center;
+      background: linear-gradient(135deg, var(--gold), #b8922a);
+      color: var(--midnight);
+      font-weight: 700;
+      font-size: 0.95rem;
+      border: none;
+      border-radius: 50px;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      transition: all 0.3s;
+      margin-bottom: 0.75rem;
+    }
+
+    .sidebar-book-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(201,168,76,0.3); }
+
+    .sidebar-trial-btn {
+      display: block;
+      width: 100%;
+      padding: 0.85rem;
+      text-align: center;
+      background: transparent;
+      color: var(--gold);
+      font-size: 0.85rem;
+      border: 1px solid var(--border);
+      border-radius: 50px;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-decoration: none;
+    }
+
+    .sidebar-trial-btn:hover { border-color: var(--gold); background: rgba(201,168,76,0.05); }
+
+    /* Guarantee badges */
+    .guarantee-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .guarantee-list li {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-size: 0.85rem;
+      color: var(--cream-dim);
+    }
+
+    .guarantee-list li span:first-child { color: var(--gold); }
+
+    /* Related services */
+    .related-services {
+      padding: 5rem 0;
+      border-top: 1px solid var(--border);
+    }
+
+    /* Breadcrumb */
+    .breadcrumb {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+      margin-bottom: 2rem;
+    }
+
+    .breadcrumb a { color: var(--gold); text-decoration: none; }
+    .breadcrumb a:hover { color: var(--gold-light); }
+    .breadcrumb span { color: var(--border-strong); }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .service-hero-grid,
+      .service-content-grid { grid-template-columns: 1fr; }
+      .service-sidebar { position: static; }
+    }
+
+    /* Booking modal reused from main site */
+    .modal-overlay {
+      position: fixed; inset: 0; z-index: 2000;
+      background: rgba(0,0,0,0.75);
+      backdrop-filter: blur(8px);
+      display: flex; align-items: center; justify-content: center;
+      padding: 1.5rem;
+      opacity: 0; pointer-events: none;
+      transition: opacity 0.35s ease;
+    }
+    .modal-overlay.open { opacity: 1; pointer-events: all; }
+    .modal-box {
+      background: var(--indigo);
+      border: 1px solid var(--border-strong);
+      border-radius: 20px;
+      padding: 2.5rem;
+      width: 100%; max-width: 480px;
+      max-height: 90vh; overflow-y: auto;
+      position: relative;
+    }
+    .modal-close {
+      position: absolute; top: 1.25rem; right: 1.25rem;
+      background: none; border: none; color: var(--muted);
+      font-size: 1.1rem; cursor: pointer; padding: 0.25rem;
+      transition: color 0.2s;
+    }
+    .modal-close:hover { color: var(--cream); }
+    .modal-title { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; color: var(--cream); margin-bottom: 1.5rem; }
+    .modal-title em { font-style: italic; background: linear-gradient(135deg, var(--gold-light), var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .modal-form-group { margin-bottom: 1.25rem; }
+    .modal-form-group label { display: block; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.4rem; }
+    .modal-input { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--cream); padding: 0.85rem 1rem; border-radius: 10px; font-size: 0.9rem; outline: none; transition: border-color 0.2s; font-family: 'Raleway', sans-serif; resize: vertical; }
+    .modal-input:focus { border-color: var(--gold); background: rgba(201,168,76,0.05); }
+    .modal-submit { width: 100%; padding: 1rem; background: linear-gradient(135deg, var(--gold), #b8922a); color: var(--midnight); font-weight: 700; font-size: 0.95rem; border: none; border-radius: 50px; cursor: pointer; margin-top: 0.5rem; transition: transform 0.2s; }
+    .modal-submit:hover { transform: translateY(-2px); }
+    .modal-success { text-align: center; padding: 2rem 0; }
+    .modal-success .success-icon { font-size: 3rem; color: var(--gold); margin-bottom: 1rem; }
+    .modal-success h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; color: var(--cream); margin-bottom: 1rem; }
+    .modal-success p { color: var(--cream-dim); margin-bottom: 1.5rem; }
+  </style>
+</head>
+<body>
+  <canvas id="particles-canvas"></canvas>
+
+  <!-- ── NAV ── -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="/" class="nav-logo">
+        <img src="/assets/logo.png" alt="SoulBody Healing Logo" class="logo-img" />
+        <div class="logo-text">
+          <div class="logo-main">Sacred Healing</div>
+          <div class="logo-slogan">सफलं जन्म प्रवासः</div>
+        </div>
+      </a>
+      <div class="nav-links" id="nav-links">
+        <a href="/#about" class="nav-link">About</a>
+        <a href="/#services" class="nav-link">Services</a>
+        <a href="/#testimonials" class="nav-link">Testimonials</a>
+        <a href="/#faq" class="nav-link">FAQ</a>
+        <a href="/#contact" class="nav-link">Book</a>
+      </div>
+      <button class="btn btn-gold nav-cta" onclick="openBooking()">Book Session</button>
+      <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- ── MAIN ── -->
+  <main id="service-main" style="padding-top: 0;">
+
+    <!-- Hero -->
+    <section class="service-hero">
+      <div class="service-hero-bg"></div>
+      <div class="container" style="width:100%;">
+        <div class="breadcrumb">
+          <a href="/">Home</a>
+          <span>›</span>
+          <a href="/#services">Services</a>
+          <span>›</span>
+          <span id="breadcrumb-title">Loading…</span>
+        </div>
+        <div class="service-hero-grid">
+          <div>
+            <div class="service-hero-eyebrow">
+              <span id="hero-icon">✦</span>
+              <span id="hero-tag">SoulBody Healing</span>
+            </div>
+            <h1 class="service-hero-title">
+              <span id="hero-title-line1">Healing</span><br />
+              <em id="hero-title-line2">Session</em>
+            </h1>
+            <p class="service-hero-desc" id="hero-desc">
+              Loading service details…
+            </p>
+            <div class="service-hero-actions">
+              <button class="btn btn-gold" onclick="openBooking()">Book This Session �'</button>
+              <a href="/#contact" class="btn btn-outline">View Available Slots</a>
+            </div>
+          </div>
+
+          <div class="service-stats-panel" id="stats-panel">
+            <div class="service-stat-row">
+              <span class="stat-icon">⏱</span>
+              <div>
+                <div class="stat-meta-label">Session Duration</div>
+                <div class="stat-meta-value" id="stat-duration">—</div>
+              </div>
+            </div>
+            <div class="service-stat-row">
+              <span class="stat-icon">📍</span>
+              <div>
+                <div class="stat-meta-label">Session Type</div>
+                <div class="stat-meta-value" id="stat-type">—</div>
+              </div>
+            </div>
+            <div class="service-stat-row">
+              <span class="stat-icon">✨</span>
+              <div>
+                <div class="stat-meta-label">Best For</div>
+                <div class="stat-meta-value" id="stat-best">—</div>
+              </div>
+            </div>
+            <div class="price-hero-badge">
+              <span class="price-val" id="stat-price">—</span>
+              <span class="price-per" id="stat-price-sub">/ session</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Content + Sidebar -->
+    <section class="service-content">
+      <div class="container">
+        <div class="service-content-grid">
+
+          <!-- Main content -->
+          <div>
+            <div class="content-block">
+              <h2 class="content-block-title">About This <em>Service</em></h2>
+              <div id="long-description">
+                <p>Loading…</p>
+              </div>
+            </div>
+
+            <div class="content-block">
+              <h2 class="content-block-title">What to <em>Expect</em></h2>
+              <ol class="expect-list" id="expect-list"></ol>
+            </div>
+
+            <div class="content-block">
+              <h2 class="content-block-title">What's <em>Included</em></h2>
+              <div class="features-grid" id="features-grid"></div>
+            </div>
+          </div>
+
+          <!-- Sidebar -->
+          <aside class="service-sidebar">
+            <div class="sidebar-card">
+              <div class="sidebar-card-title">Book Your Session</div>
+              <div class="sidebar-book-price" id="sidebar-price">—</div>
+              <div class="sidebar-book-duration" id="sidebar-duration">—</div>
+              <button class="sidebar-book-btn" onclick="openBooking()">Reserve Your Spot �'</button>
+              <a href="/#contact" class="sidebar-trial-btn">🕐 Try a Free 15-min Call</a>
+            </div>
+
+            <div class="sidebar-card">
+              <div class="sidebar-card-title">Our Promise</div>
+              <ul class="guarantee-list">
+                <li><span>�'</span><span>100% Confidential Sessions</span></li>
+                <li><span>�'�</span><span>Safe, Non-Judgmental Space</span></li>
+                <li><span>🌐</span><span>In-Person & Remote Available</span></li>
+                <li><span>✦</span><span>Divinely Guided Practice</span></li>
+                <li><span>📋</span><span>UK Law Compliant</span></li>
+              </ul>
+            </div>
+
+            <div class="sidebar-card">
+              <div class="sidebar-card-title">Other Services</div>
+              <div id="related-services" style="display:flex; flex-direction:column; gap:0.75rem;"></div>
+            </div>
+          </aside>
+
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ── FOOTER ── -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/" class="footer-logo">
+            <span class="logo-icon">✦</span>
+            SoulBody Healing
+          </a>
+          <p class="footer-tagline">Ancient Wisdom · Infinite Healing<br />Croydon, London & Online</p>
+        </div>
+        <div class="footer-nav">
+          <h4>Healing Services</h4>
+          <ul id="footer-services-list"></ul>
+        </div>
+        <div class="footer-contact">
+          <h4>Connect</h4>
+          <ul>
+            <li>📧 <span id="contact_email">hello@soulbody.healing.com</span></li>
+            <li>📍 <span id="contact_location">Croydon, London</span></li>
+            <li>⏰ <span id="contact_phone">+44 7700 900000</span></li>
+            <li>🌐 Online Sessions Available</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>© 2025 SoulBody Healing · Reena. All rights reserved. Crafted with ✦ love &amp; light.</p>
+        <div class="footer-bottom-links">
+          <a href="#">Privacy Policy</a><span>·</span><a href="#">Terms</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ── BOOKING MODAL ── -->
+  <div class="modal-overlay" id="booking-modal" onclick="if(event.target===this)closeBooking()">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeBooking()">✕</button>
+      <div id="booking-form-wrap">
+        <h2 class="modal-title">Book Your <em>Session</em></h2>
+        <div class="modal-form-group">
+          <label>Service</label>
+          <input type="text" id="b-service" class="modal-input" readonly />
+        </div>
+        <div class="modal-form-group">
+          <label>Your Full Name *</label>
+          <input type="text" id="b-name" class="modal-input" placeholder="e.g. Sarah Johnson" required />
+        </div>
+        <div class="modal-form-group">
+          <label>Email Address *</label>
+          <input type="email" id="b-email" class="modal-input" placeholder="your@email.com" required />
+        </div>
+        <div class="modal-form-group">
+          <label>Phone (optional)</label>
+          <input type="tel" id="b-phone" class="modal-input" placeholder="+44 7700 000000" />
+        </div>
+        <div class="modal-form-group">
+          <label>Your Intention (optional)</label>
+          <textarea id="b-msg" class="modal-input" rows="3" placeholder="Share anything you'd like Reena to know before your session…"></textarea>
+        </div>
+        <button class="modal-submit" onclick="submitSimpleBooking()">Confirm Enquiry �'</button>
+      </div>
+      <div class="modal-success" id="booking-success" style="display:none;">
+        <div class="success-icon">✦</div>
+        <h3>Enquiry Sent!</h3>
+        <p>Thank you. Reena will be in touch to confirm your session time.</p>
+        <button class="btn btn-outline" onclick="closeBooking()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/script.js"></script>
+  <script>
+    // ── Service extended detail data ──
+    const SERVICE_DETAIL = {}; // Legacy object, no longer hardcoded
+
+    // ── Load service from clean URL path /services/:slug ──
+    let currentService = null;
+
+    async function loadServicePage() {
+      // Extract slug from URL: /services/spiritual-healing �' "spiritual-healing"
+      const slug = window.location.pathname.replace(/^\/services\//, '').replace(/\/$/, '');
+
+      try {
+        const res = await fetch('/api/services/' + slug);
+        if (!res.ok) { document.getElementById('hero-desc').textContent = 'Service not found.'; return; }
+        const data = await res.json();
+        const service = data.service;
+        const allServices = data.all || [];
+
+        currentService = service;
+        let detail = {};
+        if (service.extra_details) {
+          try { detail = JSON.parse(service.extra_details); } catch(e){}
+        }
+
+        // Update page title & meta (important for SEO)
+        document.title = service.title + ' | SoulBody Healing — Croydon, London';
+        document.querySelector('meta[name="description"]').content = service.description;
+
+        // Breadcrumb
+        document.getElementById('breadcrumb-title').textContent = service.title;
+
+        // Hero
+        document.getElementById('hero-icon').textContent = detail.icon || '✦';
+        document.getElementById('hero-tag').textContent = detail.tag || 'SoulBody Healing';
+        document.getElementById('hero-title-line1').textContent = detail.titleLine1 || service.title;
+        document.getElementById('hero-title-line2').textContent = detail.titleLine2 || '';
+        document.getElementById('hero-desc').textContent = service.description;
+
+        // Stats
+        const durLabel = service.duration <= 30 ? service.duration + ' minutes' :
+                         service.duration === 60 ? '60 minutes (1 hour)' :
+                         service.duration <= 90 ? '60–90 minutes' : '90–120 minutes';
+        document.getElementById('stat-duration').textContent = durLabel;
+        document.getElementById('stat-type').textContent = detail.sessionType || 'In-person or Remote';
+        document.getElementById('stat-best').textContent = detail.bestFor || (service.features || []).join(', ') || '—';
+        document.getElementById('stat-price').textContent = service.price > 0 ? '£' + service.price : 'Free';
+        document.getElementById('stat-price-sub').textContent = '/ ' + durLabel + ' session';
+
+        // Sidebar
+        document.getElementById('sidebar-price').textContent = service.price > 0 ? '£' + service.price : 'FREE';
+        document.getElementById('sidebar-duration').textContent = durLabel + ' session';
+
+        // Long description
+        const descEl = document.getElementById('long-description');
+        const paragraphs = (detail.longDescription && detail.longDescription.length > 0) ? detail.longDescription : [service.description];
+        descEl.innerHTML = paragraphs.map(p => `<p>${p}</p>`).join('');
+
+        // Expect list
+        const expectEl = document.getElementById('expect-list');
+        const steps = (detail.expect && detail.expect.length > 0) ? detail.expect : service.features?.map(f => ({ title: f, text: 'This is covered in your session.' })) || [];
+        expectEl.innerHTML = steps.map((s, i) => `
+          <li>
+            <span class="expect-num">${i + 1}</span>
+            <div class="expect-text">
+              <strong>${s.title}</strong>
+              ${s.text}
+            </div>
+          </li>
+        `).join('');
+
+        // Features grid
+        const featEl = document.getElementById('features-grid');
+        const features = service.features || [];
+        featEl.innerHTML = features.map(f => `
+          <div class="feature-pill">
+            <span class="feature-pill-dot"></span>
+            <span>${f}</span>
+          </div>
+        `).join('');
+
+        // Related services
+        const relEl = document.getElementById('related-services');
+        const others = allServices.filter(s => s.id !== service.id).slice(0, 4);
+        relEl.innerHTML = others.map(s => `
+          <a href="/services/$\{s.slug\}" style="display:flex; align-items:center; justify-content:space-between; text-decoration:none; color:var(--cream-dim); font-size:0.9rem; padding:0.6rem 0; border-bottom:1px solid var(--border); transition:color 0.2s;"
+             onmouseover="this.style.color='var(--gold)'" onmouseout="this.style.color='var(--cream-dim)'">
+            <span>${s.title}</span>
+            <span style="color:var(--gold);">�'</span>
+          </a>
+        `).join('');
+
+        // Footer services
+        const footerEl = document.getElementById('footer-services-list');
+        footerEl.innerHTML = allServices.map(s => `<li><a href="/services/$\{s.slug\}" style="color:var(--cream-dim); text-decoration:none;">${s.title}</a></li>`).join('');
+
+      } catch(err) {
+        console.error(err);
+        document.getElementById('hero-desc').textContent = 'Unable to load service details.';
+      }
+    }
+
+    function openBooking() {
+      if (currentService) {
+        document.getElementById('b-service').value = currentService.title;
+      }
+      document.getElementById('booking-modal').classList.add('open');
+    }
+
+    function closeBooking() {
+      document.getElementById('booking-modal').classList.remove('open');
+    }
+
+    async function submitSimpleBooking() {
+      const name = document.getElementById('b-name').value.trim();
+      const email = document.getElementById('b-email').value.trim();
+      if (!name || !email) { alert('Please enter your name and email.'); return; }
+      // Simple enquiry — just show success (in a full build this would POST to an endpoint)
+      document.getElementById('booking-form-wrap').style.display = 'none';
+      document.getElementById('booking-success').style.display = 'block';
+    }
+
+    // Navbar scroll effect
+    window.addEventListener('scroll', () => {
+      document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
+    });
+
+    // Nav toggle
+    document.getElementById('nav-toggle')?.addEventListener('click', () => {
+      document.getElementById('nav-links')?.classList.toggle('open');
+    });
+
+    loadServicePage();
+  </script>
+  <script src="/cms_frontend.js"></script>
+</body>
+</html>

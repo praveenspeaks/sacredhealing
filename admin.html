@@ -9,161 +9,262 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Raleway:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    
     :root {
-      --midnight: #0D1117; --panel: #181830; --card: #1e1e40; --indigo: #1a1a3e;
-      --gold: #C9A84C; --gold-light: #E8C97A; --gold-glow: rgba(201,168,76,0.2);
-      --amethyst: #7B2FBE; --cream: #F5EDD6; --cream-dim: #C9BFA8; --muted: #6B6080;
-      --border: rgba(201,168,76,0.15); --border-strong: rgba(201,168,76,0.4);
-      --success: #2ECC71; --warning: #E8A838; --danger: #E74C3C; --info: #5B8AF5;
-      --radius: 10px; --transition: 0.25s ease;
+      /* Premium Dark Theme */
+      --midnight: #0a0a0a; 
+      --panel: #111111; 
+      --card: #18181A; 
+      --indigo: #202024;
+      --gold: #DAB467; 
+      --gold-light: #FBE5AC; 
+      --gold-glow: rgba(218,180,103,0.15);
+      --amethyst: #7B2FBE; 
+      --cream: #FDFCF8; 
+      --cream-dim: #A1A1AA; 
+      --muted: #71717A;
+      --border: rgba(255, 255, 255, 0.08); 
+      --border-strong: rgba(218,180,103,0.3);
+      --success: #10B981; 
+      --warning: #F59E0B; 
+      --danger: #EF4444; 
+      --info: #3B82F6;
+      --radius: 12px; 
+      --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --shadow: 0 4px 24px rgba(0,0,0,0.5);
+      --shadow-hover: 0 8px 32px rgba(0,0,0,0.6);
+      font-family: 'Inter', sans-serif;
     }
+
+    html[data-theme="light"] {
+      /* Premium Light Theme */
+      --midnight: #F8FAFC; 
+      --panel: #FFFFFF; 
+      --card: #FFFFFF; 
+      --indigo: #F1F5F9;
+      --gold: #A57C27; 
+      --gold-light: #CBA551; 
+      --gold-glow: rgba(165,124,39,0.1);
+      --cream: #09090B; 
+      --cream-dim: #3F3F46; 
+      --muted: #71717A;
+      --border: rgba(0,0,0,0.08); 
+      --border-strong: rgba(0,0,0,0.2);
+      --shadow: 0 2px 12px rgba(0,0,0,0.04);
+      --shadow-hover: 0 8px 24px rgba(0,0,0,0.08);
+    }
+
     html { font-size: 15px; scroll-behavior: smooth; }
-    body { font-family: 'Raleway', sans-serif; background: var(--midnight); color: var(--cream); min-height: 100vh; }
+    
+    body { 
+      background: var(--midnight); 
+      color: var(--cream); 
+      min-height: 100vh; 
+      transition: background var(--transition), color var(--transition);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+    
     a { text-decoration: none; color: inherit; }
-    button { cursor: pointer; font-family: 'Raleway', sans-serif; }
-    input, select, textarea { font-family: 'Raleway', sans-serif; }
+    button { cursor: pointer; font-family: inherit; outline: none; }
+    input, select, textarea { font-family: inherit; }
 
     /* ── LOGIN ── */
     #login-screen {
       min-height: 100vh; display: flex; align-items: center; justify-content: center;
-      background: radial-gradient(ellipse at center, rgba(123,47,190,0.15) 0%, transparent 70%);
+      background: radial-gradient(circle at center, var(--panel) 0%, var(--midnight) 100%);
     }
     .login-card {
-      background: var(--panel); border: 1px solid var(--border-strong); border-radius: 20px;
-      padding: 3rem 2.5rem; width: 100%; max-width: 380px; text-align: center;
+      background: var(--card); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 3.5rem 3rem; width: 100%; max-width: 420px; text-align: center;
+      box-shadow: var(--shadow); position: relative; overflow: hidden;
     }
-    .login-logo { font-family: 'Cormorant Garamond', serif; font-size: 1.8rem; color: var(--cream); margin-bottom: 0.3rem; }
+    .login-logo { font-family: 'Cormorant Garamond', serif; font-size: 2.2rem; color: var(--cream); margin-bottom: 0.5rem; font-weight: 600; }
     .login-logo span { color: var(--gold); }
-    .login-sub { font-size: 0.78rem; color: var(--muted); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 2rem; display: block; }
-    #login-error { color: var(--danger); font-size: 0.82rem; margin-top: 0.75rem; display: none; }
+    .login-sub { font-size: 0.8rem; color: var(--muted); letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 2.5rem; display: block; font-weight: 500;}
+    #login-error { color: var(--danger); font-size: 0.85rem; margin-top: 1rem; display: none; font-weight: 500;}
 
     /* ── APP ── */
     #app { display: none; min-height: 100vh; }
 
     /* ── SIDEBAR ── */
     .sidebar {
-      position: fixed; left: 0; top: 0; bottom: 0; width: 240px;
+      position: fixed; left: 0; top: 0; bottom: 0; width: 260px;
       background: var(--panel); border-right: 1px solid var(--border);
       display: flex; flex-direction: column; z-index: 100;
+      box-shadow: 4px 0 24px rgba(0,0,0,0.02);
     }
-    .sidebar-logo { padding: 1.5rem; border-bottom: 1px solid var(--border); font-family: 'Cormorant Garamond', serif; font-size: 1.25rem; color: var(--cream); }
-    .sidebar-logo span { color: var(--gold); margin-right: 0.4rem; }
-    .sidebar-sub { font-size: 0.65rem; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; display: block; margin-top: 0.15rem; }
-    .sidebar-nav { flex: 1; padding: 1rem 0; }
+    .sidebar-logo { 
+      padding: 2rem 1.5rem; 
+      font-family: 'Cormorant Garamond', serif; font-size: 1.4rem; color: var(--cream); 
+      font-weight: 600; text-align: center;
+    }
+    .sidebar-logo span { color: var(--gold); margin-right: 0.3rem; }
+    .sidebar-sub { font-size: 0.65rem; font-family: 'Inter', sans-serif; color: var(--muted); letter-spacing: 0.15em; text-transform: uppercase; display: block; margin-top: 0.5rem; font-weight: 500; }
+    
+    .sidebar-nav { flex: 1; padding: 1rem 0.75rem; display: flex; flex-direction: column; gap: 0.25rem; }
     .nav-item {
-      display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1.5rem;
-      font-size: 0.87rem; font-weight: 500; color: var(--muted);
-      border-left: 3px solid transparent; transition: var(--transition); cursor: pointer;
+      display: flex; align-items: center; gap: 0.85rem; padding: 0.85rem 1rem;
+      font-size: 0.9rem; font-weight: 500; color: var(--muted);
+      border-radius: 8px; transition: var(--transition); cursor: pointer;
     }
-    .nav-item:hover { color: var(--cream-dim); background: rgba(255,255,255,0.03); }
-    .nav-item.active { color: var(--gold); background: rgba(201,168,76,0.07); border-left-color: var(--gold); }
-    .nav-item .nav-icon { font-size: 1.1rem; width: 20px; text-align: center; }
-    .sidebar-footer { padding: 1.25rem 1.5rem; border-top: 1px solid var(--border); }
-    .logout-btn { display: flex; align-items: center; gap: 0.5rem; font-size: 0.82rem; color: var(--muted); background: none; border: none; transition: var(--transition); padding: 0; cursor: pointer; }
-    .logout-btn:hover { color: var(--danger); }
+    .nav-item:hover { color: var(--cream); background: var(--indigo); }
+    .nav-item.active { 
+      color: var(--gold); 
+      background: var(--gold-glow); 
+      font-weight: 600;
+    }
+    .nav-item .nav-icon { font-size: 1.1rem; width: 22px; text-align: center; }
+    
+    .sidebar-footer { padding: 1.5rem; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 0.5rem; }
+    .logout-btn { 
+      display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1rem;
+      font-size: 0.85rem; font-weight: 500; color: var(--muted); 
+      background: none; border: none; transition: var(--transition); border-radius: 8px;
+    }
+    .logout-btn:hover { background: var(--indigo); color: var(--cream); }
 
     /* ── MAIN CONTENT ── */
-    .main-content { margin-left: 240px; padding: 2rem 2.5rem; min-height: 100vh; }
-    .page { display: none; }
+    .main-content { margin-left: 260px; padding: 2.5rem 3.5rem; min-height: 100vh; }
+    .page { display: none; animation: fadeIn 0.4s ease; }
     .page.active { display: block; }
+    
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
     /* ── PAGE HEADER ── */
-    .page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
-    .page-title { font-family: 'Cormorant Garamond', serif; font-size: 2rem; color: var(--cream); }
-    .page-title em { font-style: italic; background: linear-gradient(135deg, var(--gold-light), var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .page-header { display: flex; align-items: flex-end; justify-content: space-between; margin-bottom: 2.5rem; flex-wrap: wrap; gap: 1rem; padding-bottom: 1.5rem; border-bottom: 1px solid var(--border); }
+    .page-title { font-family: 'Cormorant Garamond', serif; font-size: 2.4rem; color: var(--cream); font-weight: 400; line-height: 1.1; }
+    .page-title em { font-style: italic; color: var(--gold); }
 
     /* ── STATS ── */
-    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem; }
-    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem 1.5rem; transition: var(--transition); }
-    .stat-card:hover { border-color: var(--border-strong); }
-    .stat-card-value { font-family: 'Cormorant Garamond', serif; font-size: 2.2rem; font-weight: 300; background: linear-gradient(135deg, var(--gold-light), var(--gold)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; line-height: 1; margin-bottom: 0.3rem; }
-    .stat-card-label { font-size: 0.75rem; color: var(--muted); font-weight: 500; letter-spacing: 0.05em; }
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2.5rem; }
+    .stat-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 0.5rem; position: relative; overflow: hidden; transition: var(--transition); }
+    .stat-card::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 4px; background: var(--border); transition: var(--transition); }
+    .stat-card:hover::before { background: var(--gold); }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-hover); border-color: var(--border-strong); }
+    .stat-card-value { font-family: 'Inter', sans-serif; font-size: 2rem; font-weight: 700; color: var(--cream); }
+    .stat-card-label { font-size: 0.8rem; color: var(--muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
 
     /* ── CARD ── */
-    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.75rem; margin-bottom: 1.5rem; }
-    .card-title { font-family: 'Cormorant Garamond', serif; font-size: 1.2rem; color: var(--cream); margin-bottom: 1.25rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem; }
+    .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; align-items: start; margin-bottom: 1.5rem; }
+    .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 2.25rem; margin-bottom: 2rem; box-shadow: var(--shadow); transition: var(--transition); }
+    .cards-grid .card { margin-bottom: 0; }
+    .card-title { font-size: 1.1rem; font-weight: 600; color: var(--cream); margin-bottom: 1.75rem; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
 
     /* ── FORMS ── */
-    .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1rem; }
+    .form-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; margin-bottom: 1.5rem; }
     .form-group { margin-bottom: 0; }
-    .form-group label { display: block; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--gold); margin-bottom: 0.4rem; }
-    .form-control { width: 100%; background: rgba(255,255,255,0.04); border: 1px solid var(--border); color: var(--cream); padding: 0.75rem 1rem; border-radius: 8px; font-size: 0.9rem; transition: var(--transition); outline: none; }
-    .form-control:focus { border-color: var(--gold); background: rgba(201,168,76,0.05); }
-    select.form-control { appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='%23C9A84C'%3E%3Cpath d='M0 0l6 8 6-8z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 1rem center; padding-right: 2.5rem; }
+    .form-group label { display: block; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.05em; color: var(--muted); margin-bottom: 0.5rem; text-transform: uppercase; }
+    
+    .form-control { 
+      width: 100%; background: var(--indigo); border: 1px solid transparent; color: var(--cream); 
+      padding: 0.9rem 1.1rem; border-radius: 8px; font-size: 0.95rem; 
+      transition: var(--transition); outline: none; line-height: 1.5;
+    }
+    .form-control::placeholder { color: var(--muted); opacity: 0.6; }
+    .form-control:focus { background: var(--card); border-color: var(--gold); box-shadow: 0 0 0 4px var(--gold-glow); }
+    
+    select.form-control { 
+      appearance: none; 
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='gray' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M1 1l5 5 5-5'/%3E%3C/svg%3E"); 
+      background-repeat: no-repeat; background-position: right 1.1rem center; padding-right: 3rem; 
+    }
+    select.form-control option { background: var(--card); color: var(--cream); }
 
     /* ── PRICE INPUT GROUP ── */
-    .price-group { display: flex; gap: 0; }
-    .price-group select { border-radius: 8px 0 0 8px; border-right: none; width: 90px; flex-shrink: 0; }
+    .price-group { display: flex; }
+    .price-group select { border-radius: 8px 0 0 8px; border-right: 1px solid var(--border); width: 100px; flex-shrink: 0; }
     .price-group input { border-radius: 0 8px 8px 0; flex: 1; }
 
     /* ── DURATION PILLS SELECTOR ── */
-    .duration-pills { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.4rem; }
+    .duration-pills { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.25rem; }
     .duration-pill {
-      padding: 0.4rem 1rem; border-radius: 50px; border: 1px solid var(--border);
-      background: rgba(255,255,255,0.03); color: var(--cream-dim);
-      font-size: 0.8rem; font-weight: 600; cursor: pointer; transition: var(--transition);
+      padding: 0.6rem 1.25rem; border-radius: 50px; border: 1px solid var(--border);
+      background: var(--indigo); color: var(--muted);
+      font-size: 0.85rem; font-weight: 500; cursor: pointer; transition: var(--transition);
+      display: inline-flex; align-items: center; justify-content: center;
     }
-    .duration-pill:hover { border-color: var(--border-strong); }
-    .duration-pill.selected { background: linear-gradient(135deg, var(--gold-light), var(--gold)); color: var(--midnight); border-color: transparent; }
+    .duration-pill:hover { border-color: var(--muted); color: var(--cream); }
+    .duration-pill.selected { background: var(--gold); color: #000; border-color: var(--gold); font-weight: 600; box-shadow: 0 4px 12px var(--gold-glow); }
     .duration-pill input[type=radio] { display: none; }
 
     /* ── BUTTONS ── */
-    .btn-add { display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.7rem 1.5rem; background: linear-gradient(135deg, var(--gold-light), var(--gold)); color: var(--midnight); border: none; border-radius: 50px; font-weight: 700; font-size: 0.85rem; transition: var(--transition); cursor: pointer; }
-    .btn-add:hover { opacity: 0.9; transform: translateY(-1px); box-shadow: 0 4px 16px var(--gold-glow); }
-    .btn-sm { padding: 0.3rem 0.75rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600; border: none; transition: var(--transition); cursor: pointer; }
-    .btn-danger { background: rgba(231,76,60,0.15); color: var(--danger); border: 1px solid rgba(231,76,60,0.3); }
-    .btn-danger:hover { background: rgba(231,76,60,0.25); }
-    .btn-success { background: rgba(46,204,113,0.15); color: var(--success); border: 1px solid rgba(46,204,113,0.3); }
-    .btn-success:hover { background: rgba(46,204,113,0.25); }
-    .btn-primary { width: 100%; padding: 0.85rem; background: linear-gradient(135deg, var(--gold-light), var(--gold)); color: var(--midnight); border: none; border-radius: 50px; font-weight: 700; font-size: 0.9rem; letter-spacing: 0.05em; cursor: pointer; }
-    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
-    .btn-blue { background: rgba(91,138,245,0.15); color: var(--info); border: 1px solid rgba(91,138,245,0.3); }
-    .btn-blue:hover { background: rgba(91,138,245,0.25); }
-    .btn-warning { background: rgba(232,168,56,0.15); color: var(--warning); border: 1px solid rgba(232,168,56,0.3); }
-    .btn-warning:hover { background: rgba(232,168,56,0.25); }
+    .btn-primary { 
+      padding: 0.9rem 2rem; background: var(--gold); color: #000; border: none; 
+      border-radius: 8px; font-weight: 600; font-size: 0.95rem; 
+      transition: var(--transition); cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+    }
+    .btn-primary:hover { background: var(--gold-light); transform: translateY(-1px); box-shadow: 0 4px 12px var(--gold-glow); }
+    
+    .btn-add { 
+      padding: 0.6rem 1.25rem; background: var(--indigo); color: var(--cream); border: 1px solid var(--border); 
+      border-radius: 8px; font-weight: 500; font-size: 0.85rem; 
+      transition: var(--transition); cursor: pointer;
+    }
+    .btn-add:hover { background: var(--card); border-color: var(--gold); color: var(--gold); }
+    
+    .btn-sm { padding: 0.4rem 0.8rem; border-radius: 6px; font-size: 0.8rem; font-weight: 500; border: none; transition: var(--transition); cursor: pointer; }
+    
+    .btn-danger { background: rgba(239, 68, 68, 0.1); color: var(--danger); border: none; }
+    .btn-danger:hover { background: var(--danger); color: #fff; }
+    
+    .btn-success { background: rgba(16, 185, 129, 0.1); color: var(--success); border: none; }
+    .btn-success:hover { background: var(--success); color: #fff; }
+    
+    .btn-blue { background: rgba(59, 130, 246, 0.1); color: var(--info); border: none; }
+    .btn-blue:hover { background: var(--info); color: #fff; }
+    
+    .btn-warning { background: rgba(245, 158, 11, 0.1); color: var(--warning); border: none; }
+    .btn-warning:hover { background: var(--warning); color: #fff; }
 
     /* ── TABLE ── */
-    .table-wrap { overflow-x: auto; }
-    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
-    thead th { text-align: left; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); padding: 0.75rem 1rem; border-bottom: 1px solid var(--border); white-space: nowrap; }
-    tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); transition: var(--transition); }
+    .table-wrap { overflow-x: auto; margin-top: 0.5rem; border: 1px solid var(--border); border-radius: var(--radius); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    thead th { 
+      text-align: left; font-size: 0.75rem; font-weight: 600; color: var(--muted); 
+      text-transform: uppercase; letter-spacing: 0.05em; padding: 1.25rem 1.5rem; 
+      background: var(--indigo); border-bottom: 1px solid var(--border); 
+    }
+    tbody tr { border-bottom: 1px solid var(--border); transition: var(--transition); }
     tbody tr:last-child { border-bottom: none; }
-    tbody tr:hover { background: rgba(255,255,255,0.02); }
-    tbody td { padding: 0.85rem 1rem; color: var(--cream-dim); vertical-align: middle; }
-    .td-actions { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+    tbody tr:hover { background: rgba(255, 255, 255, 0.02); }
+    html[data-theme="light"] tbody tr:hover { background: rgba(0, 0, 0, 0.01); }
+    tbody td { padding: 1.25rem 1.5rem; color: var(--cream); vertical-align: middle; }
+    .td-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
 
     /* ── BADGES ── */
-    .badge { display: inline-flex; align-items: center; padding: 0.2rem 0.6rem; border-radius: 50px; font-size: 0.7rem; font-weight: 600; letter-spacing: 0.05em; }
-    .badge-available { background: rgba(46,204,113,0.15); color: var(--success); }
-    .badge-booked { background: rgba(201,168,76,0.15); color: var(--gold); }
-    .badge-pending { background: rgba(232,168,56,0.15); color: var(--warning); }
-    .badge-confirmed { background: rgba(46,204,113,0.15); color: var(--success); }
-    .badge-cancelled { background: rgba(231,76,60,0.15); color: var(--danger); }
-    .badge-free { background: rgba(91,138,245,0.15); color: var(--info); }
-
+    .badge { display: inline-flex; align-items: center; padding: 0.35rem 0.75rem; border-radius: 50px; font-size: 0.75rem; font-weight: 600; }
+    .badge-available { background: rgba(16, 185, 129, 0.15); color: var(--success); }
+    .badge-booked { background: var(--indigo); color: var(--muted); }
+    .badge-pending { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .badge-confirmed { background: rgba(59, 130, 246, 0.15); color: var(--info); }
+    .badge-cancelled { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+    .badge-free { background: var(--gold-glow); color: var(--gold); border: 1px solid rgba(218,180,103, 0.3); }
+    
     /* ── PRICE DISPLAY ── */
-    .price-tag { font-family: 'Cormorant Garamond', serif; font-size: 1.1rem; color: var(--gold-light); font-weight: 400; }
-    .price-tag.free { color: var(--info); font-size: 0.85rem; font-family: 'Raleway', sans-serif; font-weight: 700; letter-spacing: 0.05em; }
+    .price-tag { font-weight: 600; font-variant-numeric: tabular-nums; }
+    .price-tag.free { color: var(--info); font-size: 0.85rem; font-family: 'Inter', sans-serif; font-weight: 700; letter-spacing: 0.05em; }
 
     /* ── DURATION BADGE ── */
-    .dur-badge { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.2rem 0.6rem; border-radius: 50px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.05em; }
-    .dur-15 { background: rgba(91,138,245,0.15); color: var(--info); }
-    .dur-30 { background: rgba(46,204,113,0.12); color: var(--success); }
-    .dur-60 { background: rgba(201,168,76,0.15); color: var(--gold); }
-    .dur-90 { background: rgba(123,47,190,0.2); color: #b47bfa; }
-    .dur-120 { background: rgba(232,168,56,0.15); color: var(--warning); }
+    .dur-badge { display: inline-flex; align-items: center; gap: 0.3rem; padding: 0.3rem 0.6rem; border-radius: 6px; font-size: 0.8rem; font-weight: 600; background: var(--indigo); color: var(--muted); border: 1px solid var(--border); }
+    .dur-15 { background: rgba(59, 130, 246, 0.15); color: var(--info); border-color: rgba(59, 130, 246, 0.3); }
+    .dur-30 { background: rgba(16, 185, 129, 0.12); color: var(--success); border-color: rgba(16, 185, 129, 0.3); }
+    .dur-60 { background: rgba(218, 180, 103, 0.15); color: var(--gold); border-color: rgba(218, 180, 103, 0.3); }
+    .dur-90 { background: rgba(123, 47, 190, 0.15); color: #b47bfa; border-color: rgba(123, 47, 190, 0.3); }
+    .dur-120 { background: rgba(245, 158, 11, 0.15); color: var(--warning); border-color: rgba(245, 158, 11, 0.3); }
 
     /* ── FILTER BAR ── */
     .filter-bar { display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center; }
-    .filter-bar select.form-control { max-width: 200px; padding: 0.5rem 2.5rem 0.5rem 0.85rem; }
+    .filter-bar select.form-control { max-width: 200px; padding: 0.6rem 2.5rem 0.6rem 0.85rem; }
 
     /* ── BULK PREVIEW ── */
-    .bulk-preview { max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.3); border: 1px solid var(--border); border-radius: 8px; padding: 0.75rem; margin-top: 0.75rem; font-size: 0.8rem; color: var(--cream-dim); display: none; }
-    .bulk-preview p { padding: 0.2rem 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .bulk-preview { max-height: 200px; overflow-y: auto; background: var(--indigo); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; margin-top: 1rem; font-size: 0.85rem; color: var(--cream-dim); display: none; }
+    .bulk-preview p { padding: 0.3rem 0; border-bottom: 1px solid var(--border); }
     .bulk-preview p:last-child { border-bottom: none; }
 
     /* ── EMPTY STATE ── */
-    .empty-state { text-align: center; padding: 3rem; color: var(--muted); }
+    .empty-state { text-align: center; padding: 3.5rem; color: var(--muted); }
     .empty-state .empty-icon { font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.4; }
 
     /* ── LOADING ── */
@@ -171,25 +272,25 @@
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* ── TOAST ── */
-    .toast-container { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; }
-    .toast { padding: 0.85rem 1.25rem; border-radius: 10px; font-size: 0.85rem; font-weight: 500; min-width: 280px; box-shadow: 0 4px 20px rgba(0,0,0,0.4); animation: slideIn 0.3s ease, fadeOut 0.4s ease 2.8s forwards; border-left: 3px solid; }
-    .toast-success { background: rgba(46,204,113,0.12); border-left-color: var(--success); color: var(--success); }
-    .toast-error { background: rgba(231,76,60,0.12); border-left-color: var(--danger); color: var(--danger); }
-    .toast-info { background: rgba(201,168,76,0.12); border-left-color: var(--gold); color: var(--gold); }
-    @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-    @keyframes fadeOut { from { opacity: 1; } to { opacity: 0; pointer-events: none; } }
-
-    /* ── HELP TEXT ── */
-    .help-text { font-size: 0.75rem; color: var(--muted); margin-top: 0.3rem; }
+    .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
+    .toast { min-width: 280px; padding: 1rem 1.5rem; background: var(--panel); border: 1px solid var(--border); border-left: 4px solid var(--gold); color: var(--cream); border-radius: var(--radius); font-size: 0.9rem; font-weight: 500; box-shadow: var(--shadow-hover); animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
+    .toast-success { border-left-color: var(--success); }
+    .toast-error { border-left-color: var(--danger); }
+    .toast-info { border-left-color: var(--info); }
+    @keyframes slideIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
 
     /* ── REVENUE HIGHLIGHT ── */
-    .revenue-card .stat-card-value { font-size: 1.8rem; }
+    .revenue-card .stat-card-value { font-size: 2.2rem; }
 
-    @media (max-width: 768px) {
-      .sidebar { width: 60px; }
-      .sidebar-logo, .sidebar-sub, .nav-item span:not(.nav-icon), .sidebar-footer span, .logout-btn span { display: none; }
-      .nav-item { justify-content: center; padding: 0.75rem; }
-      .main-content { margin-left: 60px; padding: 1.5rem; }
+    /* ── RESPONSIVE ── */
+    @media (max-width: 900px) {
+      .sidebar { width: 70px; }
+      .sidebar-logo span:not(:first-child), .sidebar-sub, .nav-item span:not(.nav-icon), .sidebar-footer span, .logout-btn span { display: none; }
+      .sidebar-logo { padding: 1.5rem 0; text-align: center; }
+      .sidebar-logo span { margin: 0; font-size: 1.4rem; }
+      .nav-item { justify-content: center; padding: 1rem; }
+      .nav-item .nav-icon { margin: 0; font-size: 1.25rem; }
+      .main-content { margin-left: 70px; padding: 1.5rem; }
     }
   </style>
 </head>
@@ -218,10 +319,18 @@
       <div class="nav-item" onclick="showPage('slots')" id="nav-slots"><span class="nav-icon">📅</span><span>Manage Slots</span></div>
       <div class="nav-item" onclick="showPage('bookings')" id="nav-bookings"><span class="nav-icon">📋</span><span>Bookings</span></div>
       <div class="nav-item" onclick="showPage('content')" id="nav-content"><span class="nav-icon">✍</span><span>Site Content</span></div>
+      <div class="nav-item" onclick="showPage('faqs')" id="nav-faqs"><span class="nav-icon">❓</span><span>FAQ</span></div>
       <div class="nav-item" onclick="showPage('services')" id="nav-services"><span class="nav-icon">✨</span><span>Services</span></div>
       <div class="nav-item" onclick="showPage('reviews')" id="nav-reviews"><span class="nav-icon">⭐</span><span>Reviews</span></div>
     </nav>
-    <div class="sidebar-footer"><button class="logout-btn" onclick="handleLogout()">⟵ <span>Logout</span></button></div>
+    <div class="sidebar-footer">
+      <button class="logout-btn" onclick="toggleTheme()" style="margin-bottom:1rem;color:var(--gold);">
+        <span class="nav-icon" id="theme-icon" style="font-size:1.1rem; width:20px; text-align:center; padding-right:8px;">🔆</span> <span>Toggle Theme</span>
+      </button>
+      <button class="logout-btn" onclick="handleLogout()">
+        <span class="nav-icon" style="font-size:1.1rem; width:20px; text-align:center; padding-right:8px;">🚪</span> <span>Logout</span>
+      </button>
+    </div>
   </aside>
 
   <main class="main-content">
@@ -250,106 +359,105 @@
     <div class="page" id="page-slots">
       <div class="page-header"><h1 class="page-title">Manage <em>Slots</em></h1></div>
 
-      <!-- Add Single Slot -->
-      <div class="card">
-        <div class="card-title">Add New Availability Slot</div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Date</label>
-            <input type="date" class="form-control" id="slot-date" />
-          </div>
-          <div class="form-group">
-            <label>Start Time</label>
-            <input type="time" class="form-control" id="slot-time" />
-          </div>
-        </div>
-        <div class="form-group" style="margin-bottom:1rem;">
-          <label>Session Duration</label>
-          <div class="duration-pills" id="slot-duration-pills">
-            <label class="duration-pill"><input type="radio" name="slot-dur" value="15" /> ✨ 15 min – Free Consult</label>
-            <label class="duration-pill"><input type="radio" name="slot-dur" value="30" /> 🌙 30 min</label>
-            <label class="duration-pill selected"><input type="radio" name="slot-dur" value="60" checked /> ⭐ 60 min</label>
-            <label class="duration-pill"><input type="radio" name="slot-dur" value="90" /> 🌟 90 min</label>
-            <label class="duration-pill"><input type="radio" name="slot-dur" value="120" /> 💫 120 min</label>
-          </div>
-          <span class="help-text">15-minute slots are always free (consultation only)</span>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Price</label>
-            <div class="price-group">
-              <select class="form-control" id="slot-currency">
-                <option value="GBP">£ GBP</option>
-                <option value="USD">$ USD</option>
-                <option value="EUR">€ EUR</option>
-                <option value="INR">₹ INR</option>
-              </select>
-              <input type="number" class="form-control" id="slot-price" min="0" step="0.01" value="0" placeholder="0 = Free" />
-            </div>
-            <span class="help-text">Set to 0 for a free consultation slot</span>
-          </div>
-          <div class="form-group">
-            <label>Internal Note (optional)</label>
-            <input type="text" class="form-control" id="slot-note" placeholder="e.g. Zoom link, prep instructions" />
-          </div>
-        </div>
-        <button class="btn-add" onclick="addSlot()">+ Add Slot</button>
-      </div>
+      <!-- Two-column: Add Slot + Bulk Generator -->
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:1.5rem; align-items:start; margin-bottom:2rem;">
 
-      <!-- Bulk Generator -->
-      <div class="card">
-        <div class="card-title">
-          Bulk Slot Generator
-          <span style="font-size:0.75rem;color:var(--muted);font-weight:400;">Generate a week or month of slots at once</span>
-        </div>
-        <div class="form-row">
-          <div class="form-group"><label>Start Date</label><input type="date" class="form-control" id="bulk-start" /></div>
-          <div class="form-group"><label>End Date</label><input type="date" class="form-control" id="bulk-end" /></div>
-          <div class="form-group">
-            <label>Days of Week</label>
-            <div style="display:flex;gap:0.4rem;flex-wrap:wrap;margin-top:0.4rem;">
-              <label style="display:flex;align-items:center;gap:0.25rem;font-size:0.8rem;color:var(--cream-dim);cursor:pointer;"><input type="checkbox" id="day-mon" value="1" checked style="accent-color:var(--gold);" /> Mon</label>
-              <label style="display:flex;align-items:center;gap:0.25rem;font-size:0.8rem;color:var(--cream-dim);cursor:pointer;"><input type="checkbox" id="day-tue" value="2" checked style="accent-color:var(--gold);" /> Tue</label>
-              <label style="display:flex;align-items:center;gap:0.25rem;font-size:0.8rem;color:var(--cream-dim);cursor:pointer;"><input type="checkbox" id="day-wed" value="3" checked style="accent-color:var(--gold);" /> Wed</label>
-              <label style="display:flex;align-items:center;gap:0.25rem;font-size:0.8rem;color:var(--cream-dim);cursor:pointer;"><input type="checkbox" id="day-thu" value="4" checked style="accent-color:var(--gold);" /> Thu</label>
-              <label style="display:flex;align-items:center;gap:0.25rem;font-size:0.8rem;color:var(--cream-dim);cursor:pointer;"><input type="checkbox" id="day-fri" value="5" checked style="accent-color:var(--gold);" /> Fri</label>
-              <label style="display:flex;align-items:center;gap:0.25rem;font-size:0.8rem;color:var(--cream-dim);cursor:pointer;"><input type="checkbox" id="day-sat" value="6" style="accent-color:var(--gold);" /> Sat</label>
-              <label style="display:flex;align-items:center;gap:0.25rem;font-size:0.8rem;color:var(--cream-dim);cursor:pointer;"><input type="checkbox" id="day-sun" value="0" style="accent-color:var(--gold);" /> Sun</label>
+        <!-- Add Single Slot -->
+        <div class="card" style="margin-bottom:0;">
+          <div class="card-title">Add Single Slot</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Date</label>
+              <input type="date" class="form-control" id="slot-date" />
+            </div>
+            <div class="form-group">
+              <label>Start Time</label>
+              <input type="time" class="form-control" id="slot-time" />
             </div>
           </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Time Slots (comma-separated)</label>
-            <input type="text" class="form-control" id="bulk-times" value="09:00, 11:00, 14:00, 16:00" placeholder="09:00, 11:00, 14:00" />
-          </div>
-          <div class="form-group">
+          <div class="form-group" style="margin-bottom:1rem;">
             <label>Session Duration</label>
-            <div class="duration-pills" id="bulk-duration-pills">
-              <label class="duration-pill"><input type="radio" name="bulk-dur" value="15" /> ✨ 15 min</label>
-              <label class="duration-pill"><input type="radio" name="bulk-dur" value="30" /> 🌙 30 min</label>
-              <label class="duration-pill selected"><input type="radio" name="bulk-dur" value="60" checked /> ⭐ 60 min</label>
-              <label class="duration-pill"><input type="radio" name="bulk-dur" value="90" /> 🌟 90 min</label>
+            <div class="duration-pills" id="slot-duration-pills">
+              <label class="duration-pill"><input type="radio" name="slot-dur" value="15" /> 15 min (Free)</label>
+              <label class="duration-pill"><input type="radio" name="slot-dur" value="30" /> 30 min</label>
+              <label class="duration-pill selected"><input type="radio" name="slot-dur" value="60" checked /> 60 min</label>
+              <label class="duration-pill"><input type="radio" name="slot-dur" value="90" /> 90 min</label>
+              <label class="duration-pill"><input type="radio" name="slot-dur" value="120" /> 120 min</label>
             </div>
           </div>
-          <div class="form-group">
-            <label>Price per Slot</label>
-            <div class="price-group">
-              <select class="form-control" id="bulk-currency">
-                <option value="GBP">£ GBP</option>
-                <option value="USD">$ USD</option>
-                <option value="EUR">€ EUR</option>
-                <option value="INR">₹ INR</option>
-              </select>
-              <input type="number" class="form-control" id="bulk-price" min="0" step="0.01" value="75" placeholder="Price" />
+          <div class="form-row">
+            <div class="form-group">
+              <label>Price</label>
+              <div class="price-group">
+                <select class="form-control" id="slot-currency">
+                  <option value="GBP">£ GBP</option>
+                  <option value="USD">$ USD</option>
+                  <option value="EUR">€ EUR</option>
+                  <option value="INR">₹ INR</option>
+                </select>
+                <input type="number" class="form-control" id="slot-price" min="0" step="0.01" value="0" placeholder="0 = Free" />
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Internal Note</label>
+              <input type="text" class="form-control" id="slot-note" placeholder="Zoom link, prep note..." />
             </div>
           </div>
+          <button class="btn-primary" onclick="addSlot()" style="margin-top:0.5rem;">+ Add Slot</button>
         </div>
-        <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
-          <button class="btn-add btn-blue" style="background:rgba(91,138,245,0.2);color:var(--info);border:1px solid rgba(91,138,245,0.4);" onclick="previewBulk()">👁 Preview</button>
-          <button class="btn-add" onclick="addBulkSlots()">+ Generate All Slots</button>
+
+        <!-- Bulk Generator -->
+        <div class="card" style="margin-bottom:0;">
+          <div class="card-title">Bulk Slot Generator</div>
+          <div class="form-row">
+            <div class="form-group"><label>Start Date</label><input type="date" class="form-control" id="bulk-start" /></div>
+            <div class="form-group"><label>End Date</label><input type="date" class="form-control" id="bulk-end" /></div>
+          </div>
+          <div class="form-group" style="margin-bottom:1rem;">
+            <label>Days of Week</label>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.5rem;">
+              <label style="display:flex;align-items:center;gap:0.25rem;font-size:0.85rem;color:var(--cream);cursor:pointer;"><input type="checkbox" id="day-mon" value="1" checked style="accent-color:var(--gold);" /> Mon</label>
+              <label style="display:flex;align-items:center;gap:0.25rem;font-size:0.85rem;color:var(--cream);cursor:pointer;"><input type="checkbox" id="day-tue" value="2" checked style="accent-color:var(--gold);" /> Tue</label>
+              <label style="display:flex;align-items:center;gap:0.25rem;font-size:0.85rem;color:var(--cream);cursor:pointer;"><input type="checkbox" id="day-wed" value="3" checked style="accent-color:var(--gold);" /> Wed</label>
+              <label style="display:flex;align-items:center;gap:0.25rem;font-size:0.85rem;color:var(--cream);cursor:pointer;"><input type="checkbox" id="day-thu" value="4" checked style="accent-color:var(--gold);" /> Thu</label>
+              <label style="display:flex;align-items:center;gap:0.25rem;font-size:0.85rem;color:var(--cream);cursor:pointer;"><input type="checkbox" id="day-fri" value="5" checked style="accent-color:var(--gold);" /> Fri</label>
+              <label style="display:flex;align-items:center;gap:0.25rem;font-size:0.85rem;color:var(--cream);cursor:pointer;"><input type="checkbox" id="day-sat" value="6" style="accent-color:var(--gold);" /> Sat</label>
+              <label style="display:flex;align-items:center;gap:0.25rem;font-size:0.85rem;color:var(--cream);cursor:pointer;"><input type="checkbox" id="day-sun" value="0" style="accent-color:var(--gold);" /> Sun</label>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom:1rem;">
+            <label>Time Slots (comma-separated)</label>
+            <input type="text" class="form-control" id="bulk-times" value="09:00, 11:00, 14:00, 16:00" />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Duration</label>
+              <div class="duration-pills" id="bulk-duration-pills">
+                <label class="duration-pill"><input type="radio" name="bulk-dur" value="15" /> 15m</label>
+                <label class="duration-pill"><input type="radio" name="bulk-dur" value="30" /> 30m</label>
+                <label class="duration-pill selected"><input type="radio" name="bulk-dur" value="60" checked /> 60m</label>
+                <label class="duration-pill"><input type="radio" name="bulk-dur" value="90" /> 90m</label>
+              </div>
+            </div>
+            <div class="form-group">
+              <label>Price per Slot</label>
+              <div class="price-group">
+                <select class="form-control" id="bulk-currency">
+                  <option value="GBP">£ GBP</option>
+                  <option value="USD">$ USD</option>
+                  <option value="EUR">€ EUR</option>
+                  <option value="INR">₹ INR</option>
+                </select>
+                <input type="number" class="form-control" id="bulk-price" min="0" step="0.01" value="75" placeholder="Price" />
+              </div>
+            </div>
+          </div>
+          <div style="display:flex;gap:0.75rem;flex-wrap:wrap;margin-top:0.5rem;">
+            <button class="btn-add" style="background:rgba(59,130,246,0.15);color:var(--info);border:1px solid rgba(59,130,246,0.3);" onclick="previewBulk()">👁 Preview</button>
+            <button class="btn-primary" onclick="addBulkSlots()">⚡ Generate Slots</button>
+          </div>
+          <div class="bulk-preview" id="bulk-preview"></div>
         </div>
-        <div class="bulk-preview" id="bulk-preview"></div>
       </div>
 
       <!-- Slots Table -->
@@ -400,73 +508,77 @@
         <h1 class="page-title">Site <em>Content</em></h1>
         <button class="btn-add" onclick="saveContent()">💾 Save Changes</button>
       </div>
-      <div class="card">
-        <div class="card-title">Homepage Texts</div>
-        <div class="form-group" style="margin-bottom:1.5rem">
-          <label>Hero Title</label>
-          <input type="text" id="cms-hero_title" class="form-control" />
+      
+      <div class="cards-grid">
+        <div class="card">
+          <div class="card-title">Homepage Texts</div>
+          <div class="form-group" style="margin-bottom:1.5rem">
+            <label>Hero Title</label>
+            <input type="text" id="cms-hero_title" class="form-control" />
+          </div>
+          <div class="form-group" style="margin-bottom:1.5rem">
+            <label>Hero Subtitle</label>
+            <input type="text" id="cms-hero_subtitle" class="form-control" />
+          </div>
+          <div class="form-group" style="margin-bottom:1.5rem">
+            <label>Primary Button (Begin Journey)</label>
+            <input type="text" id="cms-hero_button_text" class="form-control" />
+          </div>
+          <div class="form-group" style="margin-bottom:1.5rem">
+            <label>Secondary Button (Explore)</label>
+            <input type="text" id="cms-explore_button_text" class="form-control" />
+          </div>
         </div>
-        <div class="form-group" style="margin-bottom:1.5rem">
-          <label>Hero Subtitle</label>
-          <input type="text" id="cms-hero_subtitle" class="form-control" />
-        </div>
-        <div class="form-group" style="margin-bottom:1.5rem">
-          <label>Primary Button (Begin Journey)</label>
-          <input type="text" id="cms-hero_button_text" class="form-control" />
-        </div>
-        <div class="form-group" style="margin-bottom:1rem">
-          <label>Secondary Button (Explore)</label>
-          <input type="text" id="cms-explore_button_text" class="form-control" />
+        
+        <div class="card">
+          <div class="card-title">About Section</div>
+          <div class="form-group" style="margin-bottom:1.5rem">
+            <label>About Title</label>
+            <input type="text" id="cms-about_title" class="form-control" />
+          </div>
+          <div class="form-group" style="margin-bottom:1.5rem">
+            <label>Paragraph 1</label>
+            <textarea id="cms-about_paragraph1" class="form-control" style="height:115px; resize:vertical;"></textarea>
+          </div>
+          <div class="form-group" style="margin-bottom:1.5rem">
+            <label>Paragraph 2</label>
+            <textarea id="cms-about_paragraph2" class="form-control" style="height:115px; resize:vertical;"></textarea>
+          </div>
         </div>
       </div>
       
-      <div class="card">
-        <div class="card-title">About Section</div>
-        <div class="form-group" style="margin-bottom:1rem">
-          <label>About Title</label>
-          <input type="text" id="cms-about_title" class="form-control" />
-        </div>
-        <div class="form-group" style="margin-bottom:1.5rem">
-          <label>Paragraph 1</label>
-          <textarea id="cms-about_paragraph1" class="form-control" style="height:100px; resize:vertical;"></textarea>
-        </div>
-        <div class="form-group" style="margin-bottom:1rem">
-          <label>Paragraph 2</label>
-          <textarea id="cms-about_paragraph2" class="form-control" style="height:100px; resize:vertical;"></textarea>
-        </div>
-      </div>
-      
-      <div class="card">
-        <div class="card-title">Image Uploads</div>
-        <p style="color:var(--muted); font-size:0.8rem; margin-bottom:1rem">Upload new images carefully. The system will process and store them securely.</p>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Site Logo</label>
-            <input type="file" id="upload-logo_img" class="form-control" accept="image/*" />
-            <button class="btn-sm btn-primary" style="margin-top:0.5rem" onclick="uploadImage('logo_img')">Upload Logo</button>
-            <div style="margin-top:1rem; border: 1px dashed var(--border); border-radius: 8px; padding: 1rem; text-align:center;">
-              <p style="font-size:0.7rem; color:var(--muted); margin-bottom:0.5rem;">Current Live Image</p>
-              <img id="preview-logo_img" src="" style="max-height:80px; max-width:100%; border-radius:4px;" alt="Logo Preview" />
+      <div class="cards-grid">
+        <div class="card">
+          <div class="card-title">Contact & Footer Info</div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Contact Email</label>
+              <input type="email" id="cms-contact_email" class="form-control" />
+            </div>
+            <div class="form-group">
+              <label>Contact Phone</label>
+              <input type="text" id="cms-contact_phone" class="form-control" />
             </div>
           </div>
-          <div class="form-group">
-            <label>Hero Background</label>
-            <input type="file" id="upload-hero_bg_img" class="form-control" accept="image/*" />
-            <button class="btn-sm btn-primary" style="margin-top:0.5rem" onclick="uploadImage('hero_bg_img')">Upload Background</button>
-            <div style="margin-top:1rem; border: 1px dashed var(--border); border-radius: 8px; padding: 1rem; text-align:center;">
-              <p style="font-size:0.7rem; color:var(--muted); margin-bottom:0.5rem;">Current Live Image</p>
-              <img id="preview-hero_bg_img" src="" style="max-height:80px; max-width:100%; border-radius:4px; object-fit:cover;" alt="Hero Preview" />
-            </div>
+          <div class="form-group" style="margin-top:1.5rem;margin-bottom:1.5rem;">
+            <label>Location / Address</label>
+            <input type="text" id="cms-contact_location" class="form-control" />
           </div>
         </div>
-        <div class="form-row" style="margin-top:1rem;">
-          <div class="form-group">
-            <label>Meet Your Guide Image</label>
-            <input type="file" id="upload-healer_img" class="form-control" accept="image/*" />
-            <button class="btn-sm btn-primary" style="margin-top:0.5rem" onclick="uploadImage('healer_img')">Upload Guide Image</button>
-            <div style="margin-top:1rem; border: 1px dashed var(--border); border-radius: 8px; padding: 1rem; text-align:center;">
-              <p style="font-size:0.7rem; color:var(--muted); margin-bottom:0.5rem;">Current Live Image</p>
-              <img id="preview-healer_img" src="" style="max-height:80px; max-width:100%; border-radius:4px; object-fit:cover;" alt="Guide Preview" />
+
+        <div class="card">
+          <div class="card-title">Image Uploads</div>
+          <p style="color:var(--muted); font-size:0.8rem; margin-bottom:1.5rem">Upload new images carefully. The system will process and store them securely.</p>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Site Logo</label>
+              <input type="file" id="upload-logo_img" class="form-control" accept="image/*" />
+              <button class="btn-sm btn-primary" style="margin-top:0.5rem" onclick="uploadImage('logo_img')">Upload Logo</button>
+            </div>
+            <div class="form-group">
+              <label>Hero Background</label>
+              <input type="file" id="upload-hero_bg_img" class="form-control" accept="image/*" />
+              <button class="btn-sm btn-primary" style="margin-top:0.5rem" onclick="uploadImage('hero_bg_img')">Upload Background</button>
             </div>
           </div>
         </div>
@@ -478,38 +590,73 @@
       <div class="page-header">
         <h1 class="page-title">Manage <em>Services</em></h1>
       </div>
-      
-      <div class="card">
-        <div class="card-title">Add New Service</div>
-        <div class="form-row">
-          <div class="form-group">
+
+      <!-- Two-column: Form left, Table right -->
+      <div style="display:grid; grid-template-columns: 420px 1fr; gap:1.5rem; align-items:start;">
+
+        <!-- Add/Edit Form -->
+        <div class="card" style="margin-bottom:0; position:sticky; top:1.5rem;">
+          <div class="card-title">Add / Edit Service</div>
+          <div class="form-group" style="margin-bottom:1rem;">
             <label>Service Title</label>
             <input type="text" id="srv-title" class="form-control" placeholder="e.g. Energy Reset" />
           </div>
-          <div class="form-group">
-            <label>Duration (mins) &amp; Price</label>
-            <div class="price-group">
-              <select id="srv-duration" class="form-control"><option value="30">30 min</option><option value="60">60 min</option><option value="90">90 min</option></select>
-              <input type="number" id="srv-price" class="form-control" placeholder="Price (£)" />
+          <div class="form-row">
+            <div class="form-group">
+              <label>Duration</label>
+              <select id="srv-duration" class="form-control">
+                <option value="30">30 min</option>
+                <option value="60">60 min</option>
+                <option value="90">90 min</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Price (£)</label>
+              <input type="number" id="srv-price" class="form-control" placeholder="e.g. 75" />
             </div>
           </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label>Description</label>
-            <textarea id="srv-desc" class="form-control" style="height:60px;"></textarea>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Icon</label>
+              <input type="text" id="srv-icon" class="form-control" placeholder="🌀" />
+            </div>
+            <div class="form-group">
+              <label>Tag</label>
+              <input type="text" id="srv-tag" class="form-control" placeholder="Energy Work" />
+            </div>
+            <div class="form-group">
+              <label>Session Type</label>
+              <input type="text" id="srv-sessionType" class="form-control" placeholder="In-person" />
+            </div>
           </div>
-          <div class="form-group">
-            <label>Features (One per line)</label>
-            <textarea id="srv-features" class="form-control" style="height:60px;" placeholder="Aura Cleansing\nChakra Balancing"></textarea>
+          <div class="form-group" style="margin-bottom:1rem;">
+            <label>Best For</label>
+            <input type="text" id="srv-bestFor" class="form-control" placeholder="Emotional release, energy restoration..." />
           </div>
+          <div class="form-group" style="margin-bottom:1rem;">
+            <label>Short Description</label>
+            <textarea id="srv-desc" class="form-control" style="height:55px; resize:vertical;"></textarea>
+          </div>
+          <div class="form-group" style="margin-bottom:1rem;">
+            <label>Features (one per line)</label>
+            <textarea id="srv-features" class="form-control" style="height:55px; resize:vertical;" placeholder="Aura Cleansing&#10;Chakra Balancing"></textarea>
+          </div>
+          <div class="form-group" style="margin-bottom:1rem;">
+            <label>Long Description (paragraphs, one per line)</label>
+            <textarea id="srv-longDescription" class="form-control" style="height:65px; resize:vertical;"></textarea>
+          </div>
+          <div class="form-group" style="margin-bottom:1.5rem;">
+            <label>What to Expect (Title|Desc, one per line)</label>
+            <textarea id="srv-expect" class="form-control" style="height:65px; resize:vertical;" placeholder="Initial Assessment|Tuning into your energy field."></textarea>
+          </div>
+          <button class="btn-primary" onclick="addService()">💾 Save Service</button>
         </div>
-        <button class="btn-primary" onclick="addService()" style="max-width:200px">Add Service</button>
-      </div>
 
-      <div class="card">
-        <div class="card-title">Current Services</div>
-        <div class="table-wrap" id="services-table"></div>
+        <!-- Current Services Table -->
+        <div class="card" style="margin-bottom:0;">
+          <div class="card-title">Current Services</div>
+          <div class="table-wrap" id="services-table"></div>
+        </div>
       </div>
     </div>
 
@@ -521,6 +668,37 @@
       <div class="card">
         <div class="card-title">User Submitted Reviews</div>
         <div class="table-wrap" id="reviews-table"></div>
+      </div>
+    </div>
+
+    <!-- ── FAQS ── -->
+    <div class="page" id="page-faqs">
+      <div class="page-header">
+        <h1 class="page-title">Manage <em>FAQs</em></h1>
+      </div>
+
+      <!-- Two-column: Add form left, Table right -->
+      <div style="display:grid; grid-template-columns: 380px 1fr; gap:1.5rem; align-items:start;">
+
+        <!-- Add FAQ Form -->
+        <div class="card" style="margin-bottom:0; position:sticky; top:1.5rem;">
+          <div class="card-title">Add / Edit FAQ</div>
+          <div class="form-group" style="margin-bottom:1.25rem;">
+            <label>Question</label>
+            <input type="text" id="faq-question" class="form-control" placeholder="e.g. Do you offer remote sessions?" />
+          </div>
+          <div class="form-group" style="margin-bottom:1.5rem;">
+            <label>Answer</label>
+            <textarea id="faq-answer" class="form-control" style="height:120px; resize:vertical;"></textarea>
+          </div>
+          <button class="btn-primary" onclick="addFaq()">💾 Save FAQ</button>
+        </div>
+
+        <!-- FAQ Table -->
+        <div class="card" style="margin-bottom:0;">
+          <div class="card-title">Current FAQs</div>
+          <div class="table-wrap" id="faqs-table"></div>
+        </div>
       </div>
     </div>
 
@@ -848,6 +1026,24 @@
       if (res.success) { toast(`Booking ${status}`, status === 'confirmed' ? 'success' : 'info'); loadBookings(); refreshDashboard(); }
       else toast(res.error || 'Failed', 'error');
     } catch(e) { toast('Server error', 'error'); }
+  }
+
+  // ── THEME SWITCHING ──
+  function toggleTheme() {
+    const current = document.documentElement.getAttribute('data-theme');
+    const next = current === 'light' ? 'dark' : 'light';
+    document.documentElement.setAttribute('data-theme', next);
+    localStorage.setItem('adminTheme', next);
+    const iconEl = document.getElementById('theme-icon');
+    if (iconEl) iconEl.textContent = next === 'light' ? '🌙' : '🔆';
+  }
+
+  // Initialize Theme
+  const savedTheme = localStorage.getItem('adminTheme');
+  if (savedTheme === 'light') {
+    document.documentElement.setAttribute('data-theme', 'light');
+    const iconEl = document.getElementById('theme-icon');
+    if (iconEl) iconEl.textContent = '🌙';
   }
 </script>
 <script src="cms_admin.js"></script>
