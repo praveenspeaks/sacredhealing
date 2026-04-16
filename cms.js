@@ -44,6 +44,11 @@ module.exports = {
       // Ignore if column already exists
     }
 
+    // Migration: fix logo path if it still points to the old non-existent file
+    db.prepare(
+      "UPDATE site_content SET value = 'assets/logo-sbh.png' WHERE key = 'logo_img' AND value = 'assets/logo.png'"
+    ).run();
+
     // Seed Initial Content if empty
     const contentCount = db.prepare('SELECT COUNT(*) as c FROM site_content').get().c;
     if (contentCount === 0) {
@@ -59,7 +64,7 @@ module.exports = {
         'contact_email': 'hello@sacredhealing.com',
         'contact_phone': '+44 7700 900000',
         'contact_location': 'Elysian Fields, London, UK',
-        'logo_img': 'assets/logo.png',
+        'logo_img': 'assets/logo-sbh.png',
         'hero_bg_img': 'assets/sacred_healing_hero_bg.png',
         'chakra_img': 'assets/mandala.png',
         'healer_img': 'assets/healer.jpg'
