@@ -79,6 +79,9 @@ module.exports = {
       "DELETE FROM services WHERE title IN ('Quantum Energy Reset','The Deep Awakening','Celestial Harmony Session')"
     ).run();
 
+    // ── Unique index on title must exist BEFORE prepare() uses ON CONFLICT(title)
+    db.exec('CREATE UNIQUE INDEX IF NOT EXISTS services_title_unique ON services(title)');
+
     // ── Upsert real services ──────────────────────────────────
     const upsertService = db.prepare(`
       INSERT INTO services (title, description, features, duration, price, order_num, extra_details)
@@ -91,9 +94,6 @@ module.exports = {
         order_num     = excluded.order_num,
         extra_details = excluded.extra_details
     `);
-
-    // Add unique index on title if it doesn't exist yet
-    try { db.exec('CREATE UNIQUE INDEX IF NOT EXISTS services_title_unique ON services(title)'); } catch(e) {}
 
     const realServices = [
       {
