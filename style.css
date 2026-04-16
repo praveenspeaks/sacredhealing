@@ -285,21 +285,22 @@ em {
   color: var(--cream-dim);
 }
 
-/* Push navbar down when announce bar is visible */
-.navbar {
-  top: 36px;
-}
-
 /* ============================================================
    NAVIGATION
    ============================================================ */
 .navbar {
   position: fixed;
+  top: 0;
   left: 0;
   right: 0;
   z-index: 1000;
   padding: 1.25rem 0;
   transition: var(--transition);
+}
+
+/* Only push navbar down on pages that have the announce bar */
+body.has-announce .navbar {
+  top: 36px;
 }
 
 .navbar.scrolled {
@@ -359,20 +360,46 @@ em {
 
 /* ---- LOGO CIRCLE CLIP (removes transparent padding from PNG) ---- */
 .logo-circle {
-  width: 54px;
-  height: 54px;
+  width: 68px;
+  height: 68px;
   border-radius: 50%;
   overflow: hidden;        /* clips the scaled image — this is the key */
   flex-shrink: 0;
+
+  /* Gold border ring */
+  border: 2px solid rgba(201, 168, 76, 0.75);
+
+  /* Embossed effect:
+     1. outer gold glow  — makes the ring luminous
+     2. depth shadow     — pushes it visually forward off the navbar
+     3. inner highlight  — simulates light catching the top-left of a raised disc */
+  box-shadow:
+    0 0 0 1px rgba(201, 168, 76, 0.25),        /* faint outer halo */
+    0 0 12px rgba(201, 168, 76, 0.45),          /* gold glow */
+    0 4px 14px rgba(0, 0, 0, 0.55),             /* drop shadow for depth */
+    inset 0 1px 3px rgba(255, 240, 180, 0.35);  /* inner top highlight */
+
+  transition: box-shadow 0.35s ease, border-color 0.35s ease, transform 0.35s ease;
+}
+
+.logo-circle:hover {
+  border-color: rgba(201, 168, 76, 1);
+  box-shadow:
+    0 0 0 2px rgba(201, 168, 76, 0.35),
+    0 0 22px rgba(201, 168, 76, 0.7),
+    0 6px 20px rgba(0, 0, 0, 0.65),
+    inset 0 1px 4px rgba(255, 240, 180, 0.5);
+  transform: scale(1.06);
 }
 
 .logo-img {
-  /* Scale to 125%: pushes the ~10% transparent edge out of the overflow:hidden circle */
-  width: 125%;
-  height: 125%;
-  margin: -12.5%;          /* re-centres the scaled image */
+  /* No scaling — the edge text ("Soul Body Healing", "successful life and journey")
+     sits right at the circle border; any zoom clips it.
+     The 2px gold border on .logo-circle hides the hairline transparent gap. */
+  width: 100%;
+  height: 100%;
   display: block;
-  filter: contrast(1.1);
+  filter: contrast(1.1) brightness(1.05);
 }
 
 .nav-links {

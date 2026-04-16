@@ -5,13 +5,71 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Sacred Healing - Awaken Your Soul</title>
   <meta name="description" content="Discover transformative spiritual healing through energy work, psychic readings, past life healing, and ancestral pattern healing. Begin your sacred journey to wholeness." />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Sacred Healing — Awaken Your Soul" />
+  <meta property="og:description" content="Transformative spiritual healing through energy work, psychic readings, past life healing, and ancestral pattern healing. Based in Croydon, London & online." />
+  <meta property="og:image" content="assets/sacred_healing_hero_bg.png" />
+  <meta property="og:url" content="https://soulbody.healing.com" />
+  <meta property="og:site_name" content="Sacred Healing" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Sacred Healing — Awaken Your Soul" />
+  <meta name="twitter:description" content="Transformative spiritual healing through energy work, psychic readings, past life healing, and ancestral pattern healing." />
+  <meta name="twitter:image" content="assets/sacred_healing_hero_bg.png" />
+
   <link rel="icon" type="image/png" href="assets/logo-sbh.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,600&family=Raleway:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
+
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "Sacred Healing — SoulBody Healing",
+    "description": "Transformative spiritual healing through energy work, psychic readings, past life healing, and ancestral pattern healing.",
+    "url": "https://soulbody.healing.com",
+    "logo": "https://soulbody.healing.com/assets/logo-sbh.png",
+    "image": "https://soulbody.healing.com/assets/sacred_healing_hero_bg.png",
+    "telephone": "+44 7700 900000",
+    "email": "hello@soulbody.healing.com",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Croydon",
+      "addressRegion": "London",
+      "addressCountry": "GB"
+    },
+    "openingHoursSpecification": {
+      "@type": "OpeningHoursSpecification",
+      "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],
+      "opens": "09:00",
+      "closes": "19:00"
+    },
+    "hasOfferCatalog": {
+      "@type": "OfferCatalog",
+      "name": "Healing Services",
+      "itemListElement": [
+        {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Spiritual Healing"}},
+        {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Psychic Reading"}},
+        {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Past Life Healing"}},
+        {"@type": "Offer", "itemOffered": {"@type": "Service", "name": "Ancestral Healing"}}
+      ]
+    },
+    "founder": {
+      "@type": "Person",
+      "name": "Reena",
+      "jobTitle": "Spiritual Healer & Regression Therapist"
+    },
+    "areaServed": ["Croydon", "London", "Online"]
+  }
+  </script>
 </head>
-<body>
+<body class="has-announce">
 
   <!-- ============ PARTICLES ============ -->
   <canvas id="particles-canvas"></canvas>
@@ -23,9 +81,12 @@
       <span class="announce-text">
         ✨ <strong>Free 15-minute consultations</strong> now available — <a href="#contact" onclick="filterSlots(document.querySelector('[data-dur=\'15\']'), '15')" class="announce-link">See open slots →</a>
       </span>
-      <button class="announce-close" onclick="document.getElementById('announce-bar').style.display='none'" aria-label="Close">✕</button>
+      <button class="announce-close" id="announce-close-btn" aria-label="Close">✕</button>
     </div>
   </div>
+
+  <!-- Mobile nav backdrop -->
+  <div id="nav-backdrop" style="display:none;position:fixed;inset:0;z-index:998;background:rgba(0,0,0,0.5);backdrop-filter:blur(2px);"></div>
 
   <!-- ============ NAVIGATION ============ -->
   <nav class="navbar" id="navbar">
@@ -503,6 +564,12 @@
         <button class="btn btn-outline" onclick="closeBookingModal()">Close</button>
       </div>
     </div>
+  </div>
+
+  <!-- Stripe cancel / info banner -->
+  <div id="info-banner" style="display:none;position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);z-index:9999;background:rgba(20,10,30,0.95);border:1px solid rgba(201,168,76,0.4);color:#FDFCF8;padding:0.9rem 1.5rem;border-radius:10px;font-size:0.9rem;max-width:90vw;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+    <span id="info-banner-msg"></span>
+    <button onclick="document.getElementById('info-banner').style.display='none'" style="margin-left:1rem;background:none;border:none;color:#DAB467;cursor:pointer;font-size:1rem;" aria-label="Dismiss">✕</button>
   </div>
 
   <script src="script.js"></script>

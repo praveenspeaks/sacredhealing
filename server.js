@@ -5,12 +5,16 @@ const Database = require('better-sqlite3');
 require('dotenv').config();
 
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder');
+const { sendBookingConfirmation, sendAdminAlert } = require('./mailer');
+
+const crypto = require('crypto');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ── Middleware ──────────────────────────────────────────────
-app.use(cors());
+const corsOrigin = process.env.ALLOWED_ORIGIN;
+app.use(cors(corsOrigin ? { origin: corsOrigin } : {}));
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
@@ -52,8 +56,14 @@ db.exec(`
   );
 `);
 
+// Add cancel_token column if it doesn't exist (migration)
+try { db.exec('ALTER TABLE bookings ADD COLUMN cancel_token TEXT DEFAULT NULL'); } catch(e) { /* already exists */ }
+
 // Admin config
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'sacred2024';
+if (!process.env.ADMIN_PASSWORD) {
+  console.warn('⚠️  ADMIN_PASSWORD not set in environment — using insecure default. Set it in .env before deploying.');
+}
 
 function requireAdmin(req, res, next) {
   const auth = req.headers['x-admin-password'];
@@ -86,6 +96,46 @@ app.get('/services/:slug', (req, res) => {
 // Route: /admin  →  serves admin.html
 app.get('/admin', (req, res) => {
   res.sendFile(path.join(__dirname, 'admin.html'));
+});
+
+// Route: /cancel?token=xxx  →  customer self-cancellation
+app.get('/cancel', (req, res) => {
+  const { token } = req.query;
+  if (!token) return res.redirect('/');
+
+  const booking = db.prepare(`
+    SELECT b.*, s.date, s.time, s.duration FROM bookings b
+    JOIN slots s ON s.id = b.slot_id
+    WHERE b.cancel_token = ? AND b.status != 'cancelled'
+  `).get(token);
+
+  if (!booking) {
+    return res.send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Sacred Healing</title>
+      <style>body{font-family:Georgia,serif;background:#0a0a0a;color:#FDFCF8;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;}
+      .box{text-align:center;padding:3rem;max-width:480px;}h1{color:#DAB467;}a{color:#DAB467;}</style></head>
+      <body><div class="box"><h1>✦ Sacred Healing</h1><p>This cancellation link is invalid or has already been used.</p>
+      <p><a href="/">Return to Sacred Healing →</a></p></div></body></html>`);
+  }
+
+  // Perform cancellation
+  db.transaction(() => {
+    db.prepare("UPDATE bookings SET status = 'cancelled', cancel_token = NULL WHERE id = ?").run(booking.id);
+    db.prepare('UPDATE slots SET is_booked = 0 WHERE id = ?').run(booking.slot_id);
+  })();
+
+  res.send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Booking Cancelled — Sacred Healing</title>
+    <style>body{font-family:Georgia,serif;background:#0a0a0a;color:#FDFCF8;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;}
+    .box{text-align:center;padding:3rem;max-width:520px;}h1{color:#DAB467;margin-bottom:0.5rem;}
+    p{color:#A1A1AA;line-height:1.7;}a{color:#DAB467;}</style></head>
+    <body><div class="box">
+      <h1>✦ Sacred Healing</h1>
+      <h2 style="margin-bottom:1.5rem;">Booking Cancelled</h2>
+      <p>Your <strong>${booking.service}</strong> session on
+         <strong>${new Date(booking.date + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</strong>
+         at <strong>${booking.time}</strong> has been cancelled.</p>
+      <p style="margin-top:1.5rem;">We hope to see you again soon.</p>
+      <p style="margin-top:2rem;"><a href="/">Return to Sacred Healing →</a></p>
+    </div></body></html>`);
 });
 
 // API: /api/services/:slug  →  returns JSON for that service
@@ -155,9 +205,11 @@ app.post('/api/bookings', async (req, res) => {
       return res.status(409).json({ error: 'This slot is no longer available. Please choose another time.' });
     }
 
+    const cancelToken = crypto.randomBytes(32).toString('hex');
+
     const insertBooking = db.prepare(`
-      INSERT INTO bookings (slot_id, service, customer_name, customer_email, customer_phone, message)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO bookings (slot_id, service, customer_name, customer_email, customer_phone, message, cancel_token)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `);
     const markBooked = db.prepare('UPDATE slots SET is_booked = 1 WHERE id = ?');
 
@@ -168,13 +220,16 @@ app.post('/api/bookings', async (req, res) => {
         customer_name.trim(),
         customer_email.trim().toLowerCase(),
         (customer_phone || '').trim(),
-        (message || '').trim()
+        (message || '').trim(),
+        cancelToken
       );
       markBooked.run(slot_id);
       return info.lastInsertRowid;
     });
 
     const bookingId = transaction();
+    const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+    const cancelUrl = `${baseUrl}/cancel?token=${cancelToken}`;
 
     // If there is a price and Stripe is somewhat configured (not empty string)
     if (slot.price > 0 && process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY.startsWith('sk_')) {
@@ -193,8 +248,8 @@ app.post('/api/bookings', async (req, res) => {
             quantity: 1,
           }],
           mode: 'payment',
-          success_url: `${req.protocol}://${req.get('host')}/api/bookings/success?session_id={CHECKOUT_SESSION_ID}`,
-          cancel_url: `${req.protocol}://${req.get('host')}/api/bookings/cancel?session_id={CHECKOUT_SESSION_ID}`,
+          success_url: `${process.env.BASE_URL || `${req.protocol}://${req.get('host')}`}/api/bookings/success?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url: `${process.env.BASE_URL || `${req.protocol}://${req.get('host')}`}/api/bookings/cancel?session_id={CHECKOUT_SESSION_ID}`,
           metadata: { booking_id: bookingId },
         });
 
@@ -208,6 +263,12 @@ app.post('/api/bookings', async (req, res) => {
         return res.status(500).json({ error: 'Failed to initialize payment gateway. Please ensure Stripe is configured or contact support.' });
       }
     }
+
+    // Send email notifications (non-blocking)
+    sendBookingConfirmation({ customerName: customer_name, customerEmail: customer_email, service, slot, cancelUrl })
+      .catch(err => console.error('Confirmation email error:', err));
+    sendAdminAlert({ customerName: customer_name, customerEmail: customer_email, customerPhone: customer_phone, service, slot, message, cancelUrl })
+      .catch(err => console.error('Admin alert email error:', err));
 
     // Default flow for free slots
     res.status(201).json({
@@ -438,6 +499,36 @@ app.get('/api/admin/stats', requireAdmin, (req, res) => {
     res.json(stats);
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch stats' });
+  }
+});
+
+// GET /api/admin/bookings/export  — CSV download of all bookings
+app.get('/api/admin/bookings/export', requireAdmin, (req, res) => {
+  try {
+    const bookings = db.prepare(`
+      SELECT b.id, b.customer_name, b.customer_email, b.customer_phone,
+             b.service, b.status, b.message, b.created_at,
+             s.date, s.time, s.duration, s.price, s.currency
+      FROM   bookings b
+      JOIN   slots s ON s.id = b.slot_id
+      ORDER  BY b.created_at DESC
+    `).all();
+
+    const headers = ['ID','Name','Email','Phone','Service','Status','Date','Time','Duration(min)','Price','Currency','Message','BookedAt'];
+    const escape = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const rows = bookings.map(b => [
+      b.id, b.customer_name, b.customer_email, b.customer_phone,
+      b.service, b.status, b.date, b.time, b.duration, b.price, b.currency,
+      b.message, b.created_at
+    ].map(escape).join(','));
+
+    const csv = [headers.join(','), ...rows].join('\r\n');
+    const filename = `bookings-${new Date().toISOString().split('T')[0]}.csv`;
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(csv);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to export bookings' });
   }
 });
 

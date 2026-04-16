@@ -10,6 +10,25 @@
 document.addEventListener('DOMContentLoaded', () => {
 
   // ============================================================
+  // 0. ANNOUNCE BAR — persist dismissed state across reloads
+  // ============================================================
+  const announceBar = document.getElementById('announce-bar');
+  const announceClose = document.getElementById('announce-close-btn');
+  if (announceBar) {
+    if (sessionStorage.getItem('announce-dismissed')) {
+      announceBar.style.display = 'none';
+      document.body.classList.remove('has-announce');
+    }
+    if (announceClose) {
+      announceClose.addEventListener('click', () => {
+        announceBar.style.display = 'none';
+        document.body.classList.remove('has-announce');
+        sessionStorage.setItem('announce-dismissed', '1');
+      });
+    }
+  }
+
+  // ============================================================
   // 1. PARTICLE CANVAS
   // ============================================================
   const canvas = document.getElementById('particles-canvas');
@@ -123,22 +142,67 @@ document.addEventListener('DOMContentLoaded', () => {
   const navToggle = document.getElementById('nav-toggle');
   const navLinks = document.getElementById('nav-links');
 
+  const navBackdrop = document.getElementById('nav-backdrop');
+
+  function openMobileNav() {
+    navLinks.classList.add('open');
+    navToggle.classList.add('active');
+    if (navBackdrop) navBackdrop.style.display = 'block';
+  }
+
+  function closeMobileNav() {
+    navLinks.classList.remove('open');
+    navToggle.classList.remove('active');
+    if (navBackdrop) navBackdrop.style.display = 'none';
+  }
+
   navToggle.addEventListener('click', () => {
-    navLinks.classList.toggle('open');
-    navToggle.classList.toggle('active');
+    navLinks.classList.contains('open') ? closeMobileNav() : openMobileNav();
   });
+
+  if (navBackdrop) navBackdrop.addEventListener('click', closeMobileNav);
 
   // Close nav when a link is clicked
   navLinks.querySelectorAll('.nav-link').forEach(link => {
-    link.addEventListener('click', () => {
-      navLinks.classList.remove('open');
-      navToggle.classList.remove('active');
-    });
+    link.addEventListener('click', closeMobileNav);
   });
 
 
   // ============================================================
-  // 4. SCROLL REVEAL ANIMATIONS
+  // 4. STATS COUNT-UP ANIMATION
+  // ============================================================
+  function animateCountUp(el, target, duration) {
+    const start = performance.now();
+    const isDecimal = target % 1 !== 0;
+    function step(now) {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      // ease-out
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const value = eased * target;
+      el.textContent = isDecimal ? value.toFixed(1) : Math.floor(value) + '+';
+      if (progress < 1) requestAnimationFrame(step);
+      else el.textContent = target + (Number.isInteger(target) ? '+' : '');
+    }
+    requestAnimationFrame(step);
+  }
+
+  const statsObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const item = entry.target;
+      const value = parseFloat(item.dataset.value);
+      if (isNaN(value)) return;
+      const numEl = item.querySelector('.stat-number');
+      if (numEl) animateCountUp(numEl, value, 1500);
+      statsObserver.unobserve(item);
+    });
+  }, { threshold: 0.5 });
+
+  document.querySelectorAll('.stat-item[data-value]').forEach(el => statsObserver.observe(el));
+
+  // ============================================================
+  // 5. SCROLL REVEAL ANIMATIONS
   // ============================================================
   function addRevealClass() {
     const targets = document.querySelectorAll(
@@ -339,30 +403,32 @@ function filterSlots(btn, duration) {
 let _currentSlotId = null;
 
 function openBookingModal(slotId, date, time, duration, price, currency) {
-  const modal   = document.getElementById('booking-modal');
+  // Called without a slot (e.g. from navbar CTA) — just scroll to the booking section
+  if (!slotId) {
+    document.getElementById('contact').scrollIntoView({ behavior: 'smooth' });
+    return;
+  }
+
+  const modal    = document.getElementById('booking-modal');
   const slotInfo = document.getElementById('modal-slot-info');
-  const form    = document.getElementById('booking-form');
-  const success = document.getElementById('modal-success');
+  const form     = document.getElementById('booking-form');
+  const success  = document.getElementById('modal-success');
 
   form.reset();
   form.style.display = 'block';
   success.style.display = 'none';
 
-  if (slotId) {
-    _currentSlotId = slotId;
-    document.getElementById('booking-slot-id').value = slotId;
-    const sym = CURR_SYMBOLS[currency] || '£';
-    const priceStr = (!price || parseFloat(price) === 0) ? 'Free' : `${sym}${parseFloat(price) % 1 === 0 ? parseInt(price) : parseFloat(price).toFixed(2)}`;
-    slotInfo.innerHTML = `
-      <span>${new Date(date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
-      <span>·</span><span>${formatTime12h(time)}</span>
-      <span>·</span><span>${duration} min</span>
-      <span>·</span><span>${priceStr}</span>`;
-    modal.classList.add('open');
-    document.body.style.overflow = 'hidden';
-  } else {
-    document.getElementById('contact').scrollIntoView({ behavior: 'smooth' });
-  }
+  _currentSlotId = slotId;
+  document.getElementById('booking-slot-id').value = slotId;
+  const sym = CURR_SYMBOLS[currency] || '£';
+  const priceStr = (!price || parseFloat(price) === 0) ? 'Free' : `${sym}${parseFloat(price) % 1 === 0 ? parseInt(price) : parseFloat(price).toFixed(2)}`;
+  slotInfo.innerHTML = `
+    <span>${new Date(date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
+    <span>·</span><span>${formatTime12h(time)}</span>
+    <span>·</span><span>${duration} min</span>
+    <span>·</span><span>${priceStr}</span>`;
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
 }
 
 function closeBookingModal() {
@@ -442,6 +508,19 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeBookingModal();
 });
 
+// ── Info Banner ───────────────────────────────────────────────
+function showInfoBanner(msg, autoDismissMs = 8000) {
+  const banner = document.getElementById('info-banner');
+  const msgEl  = document.getElementById('info-banner-msg');
+  if (!banner || !msgEl) return;
+  msgEl.textContent = msg;
+  banner.style.display = 'flex';
+  banner.style.alignItems = 'center';
+  if (autoDismissMs) {
+    setTimeout(() => { banner.style.display = 'none'; }, autoDismissMs);
+  }
+}
+
 // Check for Stripe success/cancel params
 window.addEventListener('DOMContentLoaded', () => {
   const params = new URLSearchParams(window.location.search);
@@ -455,7 +534,7 @@ window.addEventListener('DOMContentLoaded', () => {
     document.body.style.overflow = 'hidden';
     window.history.replaceState({}, '', '/');
   } else if (params.get('booking') === 'cancel') {
-    alert('Booking payment was cancelled. Your slot remains available.');
+    showInfoBanner('Payment was cancelled — your slot is still available. Choose a session below to try again.');
     window.history.replaceState({}, '', '/');
   }
 });

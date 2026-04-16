@@ -115,6 +115,7 @@ module.exports = {
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
+    const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
     const storage = multer.diskStorage({
       destination: function (req, file, cb) {
         cb(null, uploadDir)
@@ -124,7 +125,17 @@ module.exports = {
         cb(null, file.fieldname + '-' + Date.now() + ext)
       }
     });
-    const upload = multer({ storage: storage });
+    const upload = multer({
+      storage: storage,
+      limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+      fileFilter: function (req, file, cb) {
+        if (ALLOWED_MIME.includes(file.mimetype)) {
+          cb(null, true);
+        } else {
+          cb(new Error('Only image files are allowed (JPEG, PNG, WebP, GIF, SVG)'));
+        }
+      }
+    });
     app.use('/assets', express.static(uploadDir));
 
     // ── PUBLIC CMS ENDPOINTS ──────────────────────────────────

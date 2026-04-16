@@ -1,6 +1,19 @@
 node_modules/
 .env
-sacredhealing.db
-sacredhealing.db-wal
-sacredhealing.db-shm
+
+# SQLite database files (root and data/ directory)
+*.db
+*.db-wal
+*.db-shm
+data/
+
+# OS
 .DS_Store
+Thumbs.db
+
+# Uploaded assets (images uploaded via admin panel)
+assets/image_file-*
+assets/logo_img-*
+assets/hero_bg_img-*
+assets/chakra_img-*
+assets/healer_img-*
