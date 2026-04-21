@@ -71,9 +71,6 @@
 </head>
 <body class="has-announce">
 
-  <!-- ============ PARTICLES ============ -->
-  <canvas id="particles-canvas"></canvas>
-
   <!-- ============ ANNOUNCEMENT BAR ============ -->
   <div class="announce-bar" id="announce-bar">
     <div class="announce-inner">
@@ -117,30 +114,36 @@
 
   <!-- ============ HERO ============ -->
   <section class="hero" id="home">
-    <div class="hero-bg">
-      <img src="assets/sacred_healing_hero_bg.png" alt="Cosmic background" class="hero-bg-img" id="hero_bg_img" />
-      <div class="hero-overlay"></div>
-    </div>
     <div class="hero-content">
-      <div class="hero-badge">
-        <span class="badge-dot"></span>
-        <span>CROYDON · LONDON · ONLINE</span>
-        <span class="badge-dot"></span>
+      <!-- Left: text -->
+      <div class="hero-text">
+        <div class="hero-badge">
+          <span class="badge-dot"></span>
+          <span>CROYDON · LONDON · ONLINE</span>
+          <span class="badge-dot"></span>
+        </div>
+        <h1 class="hero-title" id="hero_title">
+          Sacred<br />
+          <em>Journey</em>
+        </h1>
+        <p class="hero-subtitle" id="hero_subtitle">
+          Your healing sanctuary. Guiding you on a journey of self-discovery,
+          self-love, healing and well-being. Unlock your true potential.
+        </p>
+        <div class="hero-actions">
+          <button class="btn btn-gold" id="hero_button_text" onclick="openBookingModal()">Begin Your Journey →</button>
+          <a href="#services" class="btn btn-outline" id="explore_button_text">Explore Services</a>
+        </div>
       </div>
-      <h1 class="hero-title" id="hero_title">
-        Welcome to<br />
-        <em class="gold-text">SoulBody Healing</em>
-      </h1>
-      <p class="hero-subtitle" id="hero_subtitle">
-        Your healing sanctuary. Guiding you on a journey of self-discovery,
-        self-love, healing and well-being. Unlock your true potential.
-      </p>
-      <div class="hero-actions">
-        <button class="btn btn-gold" id="hero_button_text" onclick="openBookingModal()">Begin Your Journey →</button>
-        <a href="#services" class="btn btn-outline" id="explore_button_text">Explore Services</a>
-      </div>
-      <div class="hero-float-card">
-        <img src="assets/mandala.png" alt="Sacred Mandala" class="float-card-mandala" id="chakra_img" />
+      <!-- Right: healer image -->
+      <div class="hero-image-col">
+        <div class="hero-img-wrap">
+          <img src="assets/healer.jpg" alt="Sacred Healing — Reena" id="healer_hero_img"
+            onerror="this.src='https://images.unsplash.com/photo-1544367567-0f2fcb046eb9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';" />
+        </div>
+        <div class="hero-quote-card">
+          <p>"The soul always knows the way to heal itself."</p>
+        </div>
       </div>
     </div>
     <div class="hero-scroll-indicator">
@@ -182,9 +185,6 @@
       <div class="about-grid">
         <div class="about-visual">
           <div class="healer-wrapper">
-            <div class="mandala-ring mandala-ring-1"></div>
-            <div class="mandala-ring mandala-ring-2"></div>
-            <div class="mandala-ring mandala-ring-3"></div>
             <img src="assets/healer.jpg" alt="Your Spiritual Healer" class="healer-img" id="healer_img" onerror="this.src='https://images.unsplash.com/photo-1544367567-0f2fcb046eb9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';" />
           </div>
           <div class="about-quote-card">
@@ -267,7 +267,12 @@
           <p class="about-text">We believe that true healing comes from within, and our role is to facilitate your connection to your own inner wisdom and divine guidance.</p>
           <a href="#services" class="btn btn-gold" style="margin-top:1rem;">Explore Our Services →</a>
         </div>
-        <div class="values-grid">
+        <div class="story-image-col">
+          <div class="story-img-wrap">
+            <img src="assets/story-room.jpg" alt="Sacred Healing space"
+              onerror="this.parentElement.style.background='linear-gradient(135deg,#e8e0d0,#d4c8b0)'; this.style.display='none';" />
+          </div>
+          <div class="values-grid" style="margin-top:1.5rem;">
           <div class="value-card">
             <div class="value-icon">♡</div>
             <h4>Compassion</h4>
@@ -293,7 +298,8 @@
             <h4>Confidential</h4>
             <p>Your session, your story, your insights and journey during the session remain fully confidential — always.</p>
           </div>
-        </div>
+          </div><!-- /values-grid -->
+        </div><!-- /story-image-col -->
       </div>
     </div>
   </section>
@@ -306,63 +312,84 @@
         <h2 class="section-title">Our Healing <em>Services</em></h2>
         <p class="section-subtitle">Each session is a personal convergence of ancient philosophy and intuitive insight. Our practice is an invitation to pause and reconnect with your true potential.</p>
       </div>
-      <div class="services-grid">
+      <!-- Alternating image + text rows (like reference design) -->
+      <div class="services-list">
 
-        <div class="service-card" id="service-spiritual">
-          <div class="service-card-glow"></div>
-          <div class="service-number">01</div>
-          <div class="service-icon">🌀</div>
-          <h3 class="service-title">Spiritual Healing</h3>
-          <p class="service-desc">Realign your energy centres and restore harmony between body, mind, and spirit through powerful energy work and chakra balancing.</p>
-          <ul class="service-features">
-            <li>Chakra alignment & clearing</li>
-            <li>Aura cleansing & protection</li>
-            <li>Energy cord cutting</li>
-          </ul>
-          <button class="service-link" onclick="openBookingModal('Spiritual Healing')">Book a Session →</button>
+        <!-- 1: text left, image right -->
+        <div class="service-row" id="service-spiritual">
+          <div class="service-row-text">
+            <div class="service-row-number">01</div>
+            <h3 class="service-row-title">Spiritual Healing</h3>
+            <p class="service-row-desc">Realign your energy centres and restore harmony between body, mind, and spirit through powerful energy work and chakra balancing.</p>
+            <ul class="service-features">
+              <li>Chakra alignment &amp; clearing</li>
+              <li>Aura cleansing &amp; protection</li>
+              <li>Energy cord cutting</li>
+            </ul>
+            <button class="service-link" onclick="openBookingModal('Spiritual Healing')">Book a Session →</button>
+          </div>
+          <div class="service-row-img">
+            <img src="assets/service-spiritual.jpg" alt="Spiritual Healing session"
+              onerror="this.parentElement.style.background='linear-gradient(135deg,#e8e0d0,#d4c8b0)'; this.style.display='none';" />
+          </div>
         </div>
 
-        <div class="service-card featured" id="service-psychic">
-          <div class="service-card-glow"></div>
-          <div class="service-card-badge">Most Popular</div>
-          <div class="service-number">02</div>
-          <div class="service-icon">🔮</div>
-          <h3 class="service-title">Psychic Reading</h3>
-          <p class="service-desc">Receive clear, compassionate intuitive guidance to illuminate your path, understand your relationships, and navigate life's crossroads.</p>
-          <ul class="service-features">
-            <li>Soul purpose clarity</li>
-            <li>Relationship insights</li>
-            <li>Future path guidance</li>
-          </ul>
-          <button class="service-link" onclick="openBookingModal('Psychic Reading')">Book a Session →</button>
+        <!-- 2: image left, text right -->
+        <div class="service-row reverse" id="service-psychic">
+          <div class="service-row-text">
+            <div class="service-card-badge">Most Popular</div>
+            <div class="service-row-number">02</div>
+            <h3 class="service-row-title">Psychic Reading</h3>
+            <p class="service-row-desc">Receive clear, compassionate intuitive guidance to illuminate your path, understand your relationships, and navigate life's crossroads.</p>
+            <ul class="service-features">
+              <li>Soul purpose clarity</li>
+              <li>Relationship insights</li>
+              <li>Future path guidance</li>
+            </ul>
+            <button class="service-link" onclick="openBookingModal('Psychic Reading')">Book a Session →</button>
+          </div>
+          <div class="service-row-img">
+            <img src="assets/service-psychic.jpg" alt="Psychic Reading session"
+              onerror="this.parentElement.style.background='linear-gradient(135deg,#e0d8c8,#ccc0a8)'; this.style.display='none';" />
+          </div>
         </div>
 
-        <div class="service-card" id="service-past-life">
-          <div class="service-card-glow"></div>
-          <div class="service-number">03</div>
-          <div class="service-icon">⏳</div>
-          <h3 class="service-title">Past Life Healing</h3>
-          <p class="service-desc">Explore the stories written in your soul's memory across lifetimes and release the patterns, fears, and wounds carried through time.</p>
-          <ul class="service-features">
-            <li>Past life regression</li>
-            <li>Soul wound healing</li>
-            <li>Karmic pattern release</li>
-          </ul>
-          <button class="service-link" onclick="openBookingModal('Past Life Healing')">Book a Session →</button>
+        <!-- 3: text left, image right -->
+        <div class="service-row" id="service-past-life">
+          <div class="service-row-text">
+            <div class="service-row-number">03</div>
+            <h3 class="service-row-title">Past Life Healing</h3>
+            <p class="service-row-desc">Explore the stories written in your soul's memory across lifetimes and release the patterns, fears, and wounds carried through time.</p>
+            <ul class="service-features">
+              <li>Past life regression</li>
+              <li>Soul wound healing</li>
+              <li>Karmic pattern release</li>
+            </ul>
+            <button class="service-link" onclick="openBookingModal('Past Life Healing')">Book a Session →</button>
+          </div>
+          <div class="service-row-img">
+            <img src="assets/service-pastlife.jpg" alt="Past Life Healing session"
+              onerror="this.parentElement.style.background='linear-gradient(135deg,#ddd5c5,#c8bca5)'; this.style.display='none';" />
+          </div>
         </div>
 
-        <div class="service-card" id="service-ancestral">
-          <div class="service-card-glow"></div>
-          <div class="service-number">04</div>
-          <div class="service-icon">🌿</div>
-          <h3 class="service-title">Ancestral Healing</h3>
-          <p class="service-desc">Break free from inherited trauma and unconscious family patterns that have shaped your life, and reclaim your true heritage of wholeness.</p>
-          <ul class="service-features">
-            <li>Generational trauma release</li>
-            <li>Family constellation work</li>
-            <li>Ancestral blessings</li>
-          </ul>
-          <button class="service-link" onclick="openBookingModal('Ancestral Healing')">Book a Session →</button>
+        <!-- 4: image left, text right -->
+        <div class="service-row reverse" id="service-ancestral">
+          <div class="service-row-text">
+            <div class="service-row-number">04</div>
+            <h3 class="service-row-title">Ancestral Healing</h3>
+            <p class="service-row-desc">Break free from inherited trauma and unconscious family patterns that have shaped your life, and reclaim your true heritage of wholeness.</p>
+            <ul class="service-features">
+              <li>Generational trauma release</li>
+              <li>Family constellation work</li>
+              <li>Ancestral blessings</li>
+            </ul>
+            <button class="service-link" onclick="openBookingModal('Ancestral Healing')">Book a Session →</button>
+          </div>
+          <div class="service-row-img">
+            <img src="assets/service-ancestral.jpg" alt="Ancestral Healing session"
+              onerror="this.parentElement.style.background='linear-gradient(135deg,#d8d0c0,#c4b8a0)'; this.style.display='none';" />
+          </div>
         </div>
 
       </div>
@@ -413,7 +440,7 @@
         <div class="guidance-cta-text">
           <div class="section-tag">✦ Need Guidance?</div>
           <h2 class="section-title" style="margin-bottom:0.75rem;">Not Sure Which Service is<br /><em>Right for You?</em></h2>
-          <p style="color:var(--cream-dim); line-height:1.75; max-width:520px;">Many people come to us feeling lost or disconnected — overwhelmed by life's challenges, struggling with recurring patterns, or simply seeking a deeper understanding of their life's purpose. If you're seeking clarity, emotional release, or spiritual guidance, we're here to help. Reach out for a complimentary 15-minute consultation.</p>
+          <p style="color:var(--text-body); line-height:1.75; max-width:520px;">Many people come to us feeling lost or disconnected — overwhelmed by life's challenges, struggling with recurring patterns, or simply seeking a deeper understanding of their life's purpose. If you're seeking clarity, emotional release, or spiritual guidance, we're here to help. Reach out for a complimentary 15-minute consultation.</p>
         </div>
         <div class="guidance-cta-actions">
           <a href="#contact" class="btn btn-gold btn-large">Schedule a Free Consultation →</a>

@@ -1,0 +1,196 @@
+================================================================
+  SACRED HEALING — AI IMAGE GENERATION PROMPTS
+  Tool: Nano Banana Pro
+  Theme: Warm Minimal Spiritual Wellness
+  Palette: Cream, warm beige, soft olive green, golden light
+  NOTE: No people in any image — objects, spaces, nature only
+================================================================
+
+GLOBAL STYLE NOTE (add to every prompt):
+  photorealistic, warm cream and beige tones, soft golden natural
+  light, minimal clean aesthetic, no text, no watermarks, no people,
+  editorial wellness photography style, shallow depth of field,
+  film grain, high detail, serene and calming mood
+
+
+================================================================
+  1. HERO / ABOUT — Healing Space Still Life
+================================================================
+  File name  : healer.jpg
+  Used in    : Hero section (right column) + About section
+  Size       : 800 × 1000 px  (portrait, 4:5 ratio)
+  Orientation: Portrait
+
+  NOTE: Use a real photo of Reena for this slot if available.
+        Use this AI image as a placeholder until then.
+
+  PROMPT:
+  A serene meditation corner in a bright minimal room, soft cream
+  linen cushion on a low wooden platform, a small arrangement of
+  dried pampas grass and eucalyptus in a neutral ceramic vase beside
+  it, warm afternoon sunlight streaming through sheer curtains casting
+  long soft shadows on the wooden floor, a lit white pillar candle
+  nearby, small potted jade plant, beige and white walls, clean and
+  calm, photorealistic, warm cream and beige tones, soft golden natural
+  light, no people, no text, editorial interior wellness photography,
+  shallow depth of field, portrait orientation, film grain, serene mood
+
+  NEGATIVE PROMPT:
+  people, person, hands, face, body, dark background, neon, glowing
+  effects, galaxy, cosmic, dramatic shadows, harsh lighting, text,
+  watermark, cartoon, illustration, anime, fantasy, clutter
+
+
+================================================================
+  2. SPIRITUAL HEALING — Service Image
+================================================================
+  File name  : service-spiritual.jpg
+  Used in    : Services section — row 1 (right side)
+  Size       : 1200 × 900 px  (landscape, 4:3 ratio)
+  Orientation: Landscape
+
+  PROMPT:
+  A peaceful healing table draped in soft cream linen fabric, a single
+  white orchid in a minimal ceramic vase beside it, warm afternoon
+  sunlight coming through a large window casting gentle light and soft
+  shadows across the fabric, green indoor plants softly blurred in the
+  background, clean beige walls, calm healing room atmosphere, empty
+  table ready for a session, photorealistic, warm cream and beige tones,
+  soft golden natural light, no people, no text, editorial wellness
+  photography, shallow depth of field, serene and calming mood,
+  landscape composition
+
+  NEGATIVE PROMPT:
+  people, person, hands, face, dark background, neon, glowing effects,
+  dramatic shadows, harsh lighting, text, watermark, cartoon,
+  illustration, fantasy, smoke, candles, crystals
+
+
+================================================================
+  3. PSYCHIC READING — Service Image
+================================================================
+  File name  : service-psychic.jpg
+  Used in    : Services section — row 2 (left side)
+  Size       : 1200 × 900 px  (landscape, 4:3 ratio)
+  Orientation: Landscape
+
+  PROMPT:
+  Elegant flat lay of tarot cards spread on a neutral cream linen cloth
+  on a wooden table, small clear quartz and rose quartz crystals placed
+  around the cards, a single white taper candle with a warm gentle flame,
+  dried flowers in soft beige tones, soft warm window light coming from
+  the side casting gentle long shadows, clean minimal tabletop, no hands
+  or people in the image, photorealistic, warm cream and amber tones,
+  soft golden natural light, no text, editorial still life photography,
+  shallow depth of field, serene calming mood, high detail
+
+  NEGATIVE PROMPT:
+  people, person, hands, face, dark moody, gothic, heavy smoke, crystal
+  ball, fortune teller cliche, dramatic lighting, text, watermark,
+  cartoon, illustration, glowing effects, neon
+
+
+================================================================
+  4. PAST LIFE HEALING — Service Image
+================================================================
+  File name  : service-pastlife.jpg
+  Used in    : Services section — row 3 (right side)
+  Size       : 1200 × 900 px  (landscape, 4:3 ratio)
+  Orientation: Landscape
+
+  PROMPT:
+  A bright minimalist room with a soft cream yoga mat laid out neatly
+  on warm wooden floorboards, a small potted plant in the corner, a
+  single lit white candle on a low wooden tray nearby, sheer cream
+  curtains gently catching afternoon light, neutral beige and white
+  walls, the room is empty and peaceful, ready and inviting, soft long
+  shadows from afternoon sun across the floor, photorealistic, warm
+  cream and beige tones, soft golden natural light, no people, no text,
+  editorial wellness interior photography, shallow depth of field,
+  serene and deeply calm mood, landscape orientation
+
+  NEGATIVE PROMPT:
+  people, person, hands, face, dark, dramatic, cosmic, galaxy, ghost,
+  fantasy, harsh shadows, text, watermark, cartoon, illustration,
+  clutter, busy background
+
+
+================================================================
+  5. ANCESTRAL HEALING — Service Image
+================================================================
+  File name  : service-ancestral.jpg
+  Used in    : Services section — row 4 (left side)
+  Size       : 1200 × 900 px  (landscape, 4:3 ratio)
+  Orientation: Landscape
+
+  PROMPT:
+  Ancient large tree with beautiful exposed gnarled roots in a sunlit
+  peaceful forest clearing, warm golden hour light filtering through
+  tall trees creating beautiful light rays, green moss covering the
+  roots, soft bokeh of distant forest in background, earthy warm tones
+  of amber, olive green and cream, fallen leaves on forest floor,
+  photorealistic, soft golden natural light, no people, no text,
+  editorial nature photography, shallow depth of field, serene and
+  grounding mood, cinematic wide angle, high detail bark and root
+  texture, warm morning light, landscape orientation
+
+  NEGATIVE PROMPT:
+  people, person, dark forest, scary, night, dramatic, storm, harsh
+  shadows, text, watermark, cartoon, illustration, fantasy,
+  supernatural glow, neon
+
+
+================================================================
+  6. OUR STORY — Healing Room Interior
+================================================================
+  File name  : story-room.jpg
+  Used in    : Our Story section (right side)
+  Size       : 1200 × 900 px  (landscape, 4:3 ratio)
+  Orientation: Landscape
+
+  PROMPT:
+  Bright minimal healing room interior, large window with sheer cream
+  curtains letting in warm afternoon light, a low wooden meditation
+  platform with a neatly placed cream cushion, small shelf with a few
+  green plants in neutral ceramic pots, a smooth wooden bowl, a white
+  pillar candle, neutral beige and white walls, warm wooden floorboards,
+  one simple framed art print on the wall, clean and uncluttered,
+  Japandi style, photorealistic, warm cream and beige interior, soft
+  golden natural light, no people, no text, architectural interior
+  photography, shallow depth of field, serene calming mood,
+  landscape orientation
+
+  NEGATIVE PROMPT:
+  people, person, dark, moody, dramatic, cluttered, heavy furniture,
+  gothic, excessive crystals, smoke, text, watermark, cartoon,
+  illustration, fantasy, neon, busy patterns
+
+
+================================================================
+  QUICK REFERENCE — ALL SIZES
+================================================================
+
+  healer.jpg            800  x 1000 px   Portrait   4:5
+  service-spiritual.jpg 1200 x 900 px    Landscape  4:3
+  service-psychic.jpg   1200 x 900 px    Landscape  4:3
+  service-pastlife.jpg  1200 x 900 px    Landscape  4:3
+  service-ancestral.jpg 1200 x 900 px    Landscape  4:3
+  story-room.jpg        1200 x 900 px    Landscape  4:3
+
+  Save all files into the  assets/  folder.
+
+================================================================
+  STYLE CONSISTENCY TIPS
+================================================================
+
+  - No people, hands, or faces in any generated image
+  - For healer.jpg — use a real photo of Reena when available
+  - Always warm, soft, natural light — never studio flash or neon
+  - Color palette: cream (#F2EDE4), warm beige, olive green, gold
+  - Avoid dark, dramatic, cosmic, or fantasy themes in all images
+  - Shallow depth of field gives a professional editorial look
+  - If generator has a "style" setting: use Photorealistic / Editorial
+  - Try to keep the same light direction (soft side window light)
+    across all images for a consistent feel on the website
+
+================================================================

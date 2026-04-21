@@ -29,94 +29,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ============================================================
-  // 1. PARTICLE CANVAS
+  // 1. PARTICLE CANVAS — disabled (warm minimal theme)
   // ============================================================
-  const canvas = document.getElementById('particles-canvas');
-  const ctx = canvas.getContext('2d');
 
-  let particles = [];
-  let animationId;
-
-  function resizeCanvas() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-  }
-
-  class Particle {
-    constructor() {
-      this.reset();
-    }
-
-    reset() {
-      this.x = Math.random() * canvas.width;
-      this.y = Math.random() * canvas.height;
-      this.size = Math.random() * 1.5 + 0.3;
-      this.opacity = Math.random() * 0.7 + 0.1;
-      this.speedX = (Math.random() - 0.5) * 0.15;
-      this.speedY = (Math.random() - 0.5) * 0.15;
-      this.twinkleSpeed = Math.random() * 0.02 + 0.005;
-      this.twinkleOffset = Math.random() * Math.PI * 2;
-      // Occasionally gold, mostly white/cream
-      const r = Math.random();
-      if (r < 0.15) {
-        this.color = `rgba(201, 168, 76, `;  // gold
-      } else if (r < 0.25) {
-        this.color = `rgba(155, 79, 222, `;  // amethyst
-      } else {
-        this.color = `rgba(245, 237, 214, `;  // cream
-      }
-    }
-
-    update(time) {
-      this.x += this.speedX;
-      this.y += this.speedY;
-      this.currentOpacity = this.opacity * (0.5 + 0.5 * Math.sin(time * this.twinkleSpeed + this.twinkleOffset));
-
-      if (this.x < -5) this.x = canvas.width + 5;
-      if (this.x > canvas.width + 5) this.x = -5;
-      if (this.y < -5) this.y = canvas.height + 5;
-      if (this.y > canvas.height + 5) this.y = -5;
-    }
-
-    draw() {
-      ctx.beginPath();
-      ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-      ctx.fillStyle = `${this.color}${this.currentOpacity})`;
-      ctx.fill();
-    }
-  }
-
-  function initParticles() {
-    particles = [];
-    const count = Math.floor((canvas.width * canvas.height) / 8000);
-    for (let i = 0; i < Math.min(count, 200); i++) {
-      particles.push(new Particle());
-    }
-  }
-
-  let startTime = null;
-  function animateParticles(timestamp) {
-    if (!startTime) startTime = timestamp;
-    const elapsed = timestamp - startTime;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    particles.forEach(p => {
-      p.update(elapsed);
-      p.draw();
-    });
-
-    animationId = requestAnimationFrame(animateParticles);
-  }
-
-  resizeCanvas();
-  initParticles();
-  animationId = requestAnimationFrame(animateParticles);
-
-  window.addEventListener('resize', () => {
-    resizeCanvas();
-    initParticles();
-  });
 
 
   // ============================================================
