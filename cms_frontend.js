@@ -1,12 +1,85 @@
+const FONT_GOOGLE_PARAMS = {
+  'Cormorant Garamond': 'Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400',
+  'Playfair Display':   'Playfair+Display:ital,wght@0,400;0,600;1,400',
+  'Libre Baskerville':  'Libre+Baskerville:ital,wght@0,400;1,400',
+  'Merriweather':       'Merriweather:ital,wght@0,300;0,400;1,300',
+  'EB Garamond':        'EB+Garamond:ital,wght@0,400;0,500;1,400',
+  'Lora':               'Lora:ital,wght@0,400;0,600;1,400',
+  'Cardo':              'Cardo:ital,wght@0,400;1,400',
+  'Crimson Pro':        'Crimson+Pro:ital,wght@0,400;0,600;1,400',
+  'Cinzel':             'Cinzel:wght@400;600',
+  'Spectral':           'Spectral:ital,wght@0,400;0,600;1,400',
+  'Gilda Display':      'Gilda+Display',
+  'Josefin Slab':       'Josefin+Slab:ital,wght@0,300;0,400;1,300',
+  'Raleway':            'Raleway:wght@300;400;500;600;700',
+  'Inter':              'Inter:wght@300;400;500;600',
+  'Nunito':             'Nunito:wght@300;400;500;600',
+  'Lato':               'Lato:wght@300;400;700',
+  'Open Sans':          'Open+Sans:wght@300;400;500;600',
+  'Montserrat':         'Montserrat:wght@300;400;500;600',
+  'Poppins':            'Poppins:wght@300;400;500;600',
+  'Jost':               'Jost:wght@300;400;500;600',
+  'DM Sans':            'DM+Sans:wght@300;400;500;600',
+  'Source Sans 3':      'Source+Sans+3:wght@300;400;500;600',
+};
+
+const ACCENT_PALETTES_FE = {
+  olive:       { main:'#5C5B47', dark:'#3D3C2E', mid:'#4A4938', light:'#7A7860', glow:'rgba(92,91,71,0.12)',   border:'rgba(92,91,71,0.12)',   borderStrong:'rgba(92,91,71,0.28)'   },
+  forest:      { main:'#2D5016', dark:'#1a2e0d', mid:'#24400f', light:'#4a7a2a', glow:'rgba(45,80,22,0.12)',   border:'rgba(45,80,22,0.12)',   borderStrong:'rgba(45,80,22,0.28)'   },
+  indigo:      { main:'#4B4E6D', dark:'#2d2f4a', mid:'#3d3f5e', light:'#6b6f90', glow:'rgba(75,78,109,0.12)', border:'rgba(75,78,109,0.12)', borderStrong:'rgba(75,78,109,0.28)' },
+  terracotta:  { main:'#9B4A2E', dark:'#6b2f1a', mid:'#7d3c23', light:'#bc6b50', glow:'rgba(155,74,46,0.12)', border:'rgba(155,74,46,0.12)', borderStrong:'rgba(155,74,46,0.28)' },
+  sage:        { main:'#7A8C6E', dark:'#526040', mid:'#647858', light:'#96a88c', glow:'rgba(122,140,110,0.12)',border:'rgba(122,140,110,0.12)',borderStrong:'rgba(122,140,110,0.28)'},
+  navy:        { main:'#1E3A5F', dark:'#0f1f35', mid:'#162d4a', light:'#2e5080', glow:'rgba(30,58,95,0.12)',  border:'rgba(30,58,95,0.12)',  borderStrong:'rgba(30,58,95,0.28)'  },
+  burgundy:    { main:'#6B2737', dark:'#3d1520', mid:'#581f2c', light:'#8c3d4e', glow:'rgba(107,39,55,0.12)', border:'rgba(107,39,55,0.12)', borderStrong:'rgba(107,39,55,0.28)' },
+  gold:        { main:'#8B6914', dark:'#5a420c', mid:'#715510', light:'#b08a36', glow:'rgba(139,105,20,0.12)',border:'rgba(139,105,20,0.12)',borderStrong:'rgba(139,105,20,0.28)'},
+};
+
+function applyTheme(content) {
+  const headingFont = content.font_heading;
+  const bodyFont    = content.font_body;
+  const accentKey   = content.accent_preset;
+
+  if (headingFont || bodyFont) {
+    const families = [];
+    if (headingFont && headingFont !== 'Cormorant Garamond' && FONT_GOOGLE_PARAMS[headingFont])
+      families.push(FONT_GOOGLE_PARAMS[headingFont]);
+    if (bodyFont && bodyFont !== 'Raleway' && FONT_GOOGLE_PARAMS[bodyFont])
+      families.push(FONT_GOOGLE_PARAMS[bodyFont]);
+
+    if (families.length) {
+      const link = document.createElement('link');
+      link.rel  = 'stylesheet';
+      link.href = `https://fonts.googleapis.com/css2?${families.map(f => 'family=' + f).join('&')}&display=swap`;
+      document.head.appendChild(link);
+    }
+
+    if (headingFont) document.documentElement.style.setProperty('--font-heading', `'${headingFont}', serif`);
+    if (bodyFont)    document.documentElement.style.setProperty('--font-body',    `'${bodyFont}', sans-serif`);
+  }
+
+  if (accentKey && accentKey !== 'olive' && ACCENT_PALETTES_FE[accentKey]) {
+    const p = ACCENT_PALETTES_FE[accentKey];
+    document.documentElement.style.setProperty('--olive',        p.main);
+    document.documentElement.style.setProperty('--olive-dark',   p.dark);
+    document.documentElement.style.setProperty('--olive-mid',    p.mid);
+    document.documentElement.style.setProperty('--olive-light',  p.light);
+    document.documentElement.style.setProperty('--olive-glow',   p.glow);
+    document.documentElement.style.setProperty('--border',       p.border);
+    document.documentElement.style.setProperty('--border-strong',p.borderStrong);
+  }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const res = await fetch('/api/content');
         const data = await res.json();
-        
-        // 1. Populate text fields automatically
+
         const content = data.content;
-        
-        // Find elements by id corresponding to the keys
+
+        // Apply fonts + accent colour before rendering
+        applyTheme(content);
+
+        // Populate text fields automatically
         for (const [key, val] of Object.entries(content)) {
             const el = document.getElementById(key);
             if (el) {
@@ -19,8 +92,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 }
             }
         }
-        
-        // 2. Populate Services
+
+        // Populate Services
         const servicesGrid = document.querySelector('.services-grid');
         if (data.services && servicesGrid) {
             servicesGrid.innerHTML = '';
@@ -29,7 +102,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const number = (idx+1).toString().padStart(2, '0');
                 const isFeatured = idx === 1 ? 'featured' : '';
                 const featuredBadge = idx === 1 ? `<div class="service-card-badge">Most Loved</div>` : '';
-                
+
                 servicesGrid.innerHTML += `
                 <div class="service-card ${isFeatured}">
                   <div class="service-card-glow"></div>
@@ -38,16 +111,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                   <h3 class="service-title">${s.title}</h3>
                   <p class="service-desc">${s.description}</p>
                   <ul class="service-features">${fHTML}</ul>
-                  <div class="service-price" style="color:var(--gold); font-size:1.2rem; margin-bottom:1.5rem; font-family:'Cormorant Garamond', serif;">
-                    <span>£${s.price}</span> <span style="font-size:0.9rem; color:var(--cream-dim)">/ ${s.duration} mins</span>
+                  <div class="service-price" style="color:var(--olive); font-size:1.2rem; margin-bottom:1.5rem; font-family:var(--font-heading);">
+                    <span>£${s.price}</span> <span style="font-size:0.9rem; color:var(--text-muted)">/ ${s.duration} mins</span>
                   </div>
                   <a href="/services/${s.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}" class="service-link">Reserve This Path →</a>
                 </div>
                 `;
             });
         }
-        
-        // 3. Populate Reviews
+
+        // Populate Reviews
         const reviewsGrid = document.querySelector('.testimonial-slider');
         if (data.reviews && reviewsGrid) {
             reviewsGrid.innerHTML = '';
@@ -60,25 +133,24 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
                 `;
             });
-            // add submit review button
             reviewsGrid.innerHTML += `
             <div class="testimonial-card submit-review-card" style="display:flex; flex-direction:column; justify-content:center; align-items:center; border: 1px dashed rgba(201,168,76,0.3); background: transparent;">
-                <h4 style="color:var(--gold); font-size:1.2rem; margin-bottom:0.5rem">Share Your Journey</h4>
-                <p style="text-align:center; margin-bottom:1.5rem; font-size:0.9rem; color:var(--cream-dim)">Your healing story can inspire others</p>
+                <h4 style="color:var(--olive); font-size:1.2rem; margin-bottom:0.5rem">Share Your Journey</h4>
+                <p style="text-align:center; margin-bottom:1.5rem; font-size:0.9rem; color:var(--text-muted)">Your healing story can inspire others</p>
                 <button class="btn btn-outline" style="width:100%" onclick="openReviewModal()">Write a Review</button>
             </div>
             `;
         }
 
-        // 4. Populate FAQs (faq.html)
+        // Populate FAQs (faq.html)
         const faqsContainer = document.getElementById('faqs-container');
         if (faqsContainer && data.faqs) {
             faqsContainer.innerHTML = '';
             data.faqs.forEach(faq => {
                 faqsContainer.innerHTML += `
                 <div class="card" style="padding: 1.5rem 2rem;">
-                  <h4 style="color:var(--gold); margin-bottom:0.75rem;">${faq.question}</h4>
-                  <p style="color:var(--cream-dim); line-height:1.8;">${faq.answer}</p>
+                  <h4 style="color:var(--olive); margin-bottom:0.75rem;">${faq.question}</h4>
+                  <p style="color:var(--text-body); line-height:1.8;">${faq.answer}</p>
                 </div>
                 `;
             });
@@ -96,10 +168,10 @@ function openReviewModal() {
                 <div class="modal-content" style="max-width: 400px; text-align:left;">
                     <span class="close-modal" onclick="document.getElementById('review-modal').classList.remove('active')">&times;</span>
                     <h2 class="modal-title" style="margin-bottom:1.5rem; text-align:center">Write a Review</h2>
-                    <input type="text" id="review-author" placeholder="Your Name" style="width:100%; padding:0.8rem; margin-bottom:1rem; border-radius:4px; border:1px solid var(--border); background:rgba(0,0,0,0.5); color:var(--cream); font-family:var(--font-main)" />
-                    <textarea id="review-comment" placeholder="Your Experience" style="width:100%; padding:0.8rem; margin-bottom:1.5rem; height:120px; border-radius:4px; border:1px solid var(--border); background:rgba(0,0,0,0.5); color:var(--cream); font-family:var(--font-main); resize:vertical"></textarea>
+                    <input type="text" id="review-author" placeholder="Your Name" style="width:100%; padding:0.8rem; margin-bottom:1rem; border-radius:4px; border:1px solid var(--border); background:rgba(0,0,0,0.5); color:var(--cream); font-family:var(--font-body)" />
+                    <textarea id="review-comment" placeholder="Your Experience" style="width:100%; padding:0.8rem; margin-bottom:1.5rem; height:120px; border-radius:4px; border:1px solid var(--border); background:rgba(0,0,0,0.5); color:var(--cream); font-family:var(--font-body); resize:vertical"></textarea>
                     <button class="btn btn-gold" style="width:100%" onclick="submitReview()">Submit Review</button>
-                    <div id="review-msg" style="margin-top:1rem; color:var(--gold); text-align:center; height:20px;"></div>
+                    <div id="review-msg" style="margin-top:1rem; color:var(--olive); text-align:center; height:20px;"></div>
                 </div>
             </div>
         `);
@@ -109,15 +181,12 @@ function openReviewModal() {
 }
 
 async function submitReview() {
-    const author = document.getElementById('review-author').value.trim();
+    const author  = document.getElementById('review-author').value.trim();
     const comment = document.getElementById('review-comment').value.trim();
-    const msgEl = document.getElementById('review-msg');
-    
-    if (!author || !comment) {
-        msgEl.innerText = 'Please fill all fields.';
-        return;
-    }
-    
+    const msgEl   = document.getElementById('review-msg');
+
+    if (!author || !comment) { msgEl.innerText = 'Please fill all fields.'; return; }
+
     msgEl.innerText = 'Submitting...';
     try {
         const res = await fetch('/api/reviews', {
@@ -125,12 +194,12 @@ async function submitReview() {
             headers:{'Content-Type':'application/json'},
             body: JSON.stringify({author, comment})
         });
-        
+
         if (res.ok) {
             msgEl.innerText = 'Thank you! Your review is pending approval.';
             setTimeout(() => {
                 document.getElementById('review-modal').classList.remove('active');
-                document.getElementById('review-author').value = '';
+                document.getElementById('review-author').value  = '';
                 document.getElementById('review-comment').value = '';
                 msgEl.innerText = '';
             }, 3000);

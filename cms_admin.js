@@ -402,3 +402,168 @@ async function updateReviewStatus(id, status) {
         toast('Error updating review', 'error');
     }
 }
+
+// ── THEME & FONTS ─────────────────────────────────────────────
+
+const HEADING_FONTS = [
+  { name: 'Cormorant Garamond', google: 'Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,400', category: 'Elegant Serif' },
+  { name: 'Playfair Display',   google: 'Playfair+Display:ital,wght@0,400;0,600;1,400',          category: 'Editorial Serif' },
+  { name: 'Libre Baskerville',  google: 'Libre+Baskerville:ital,wght@0,400;1,400',               category: 'Classic Serif' },
+  { name: 'Merriweather',       google: 'Merriweather:ital,wght@0,300;0,400;1,300',              category: 'Literary Serif' },
+  { name: 'EB Garamond',        google: 'EB+Garamond:ital,wght@0,400;0,500;1,400',               category: 'Renaissance Serif' },
+  { name: 'Lora',               google: 'Lora:ital,wght@0,400;0,600;1,400',                      category: 'Contemporary Serif' },
+  { name: 'Cardo',              google: 'Cardo:ital,wght@0,400;1,400',                            category: 'Humanist Serif' },
+  { name: 'Crimson Pro',        google: 'Crimson+Pro:ital,wght@0,400;0,600;1,400',               category: 'Transitional Serif' },
+  { name: 'Cinzel',             google: 'Cinzel:wght@400;600',                                    category: 'Roman Serif' },
+  { name: 'Spectral',           google: 'Spectral:ital,wght@0,400;0,600;1,400',                  category: 'Screen Serif' },
+  { name: 'Gilda Display',      google: 'Gilda+Display',                                          category: 'Art Deco Serif' },
+  { name: 'Josefin Slab',       google: 'Josefin+Slab:ital,wght@0,300;0,400;1,300',              category: 'Geometric Slab' },
+];
+
+const BODY_FONTS = [
+  { name: 'Raleway',       google: 'Raleway:wght@300;400;500;600;700',      category: 'Elegant Sans' },
+  { name: 'Inter',         google: 'Inter:wght@300;400;500;600',            category: 'Modern Sans' },
+  { name: 'Nunito',        google: 'Nunito:wght@300;400;500;600',           category: 'Friendly Rounded' },
+  { name: 'Lato',          google: 'Lato:wght@300;400;700',                 category: 'Humanist Sans' },
+  { name: 'Open Sans',     google: 'Open+Sans:wght@300;400;500;600',        category: 'Neutral Sans' },
+  { name: 'Montserrat',    google: 'Montserrat:wght@300;400;500;600',       category: 'Geometric Sans' },
+  { name: 'Poppins',       google: 'Poppins:wght@300;400;500;600',          category: 'Circular Sans' },
+  { name: 'Jost',          google: 'Jost:wght@300;400;500;600',             category: 'Clean Sans' },
+  { name: 'DM Sans',       google: 'DM+Sans:wght@300;400;500;600',          category: 'Low Contrast' },
+  { name: 'Source Sans 3', google: 'Source+Sans+3:wght@300;400;500;600',    category: 'Readable Sans' },
+];
+
+const ACCENT_PALETTES = [
+  { key: 'olive',      name: 'Olive',       main: '#5C5B47', dark: '#3D3C2E', mid: '#4A4938', light: '#7A7860', glow: 'rgba(92,91,71,0.12)',   border: 'rgba(92,91,71,0.12)',   borderStrong: 'rgba(92,91,71,0.28)'   },
+  { key: 'forest',     name: 'Forest',      main: '#2D5016', dark: '#1a2e0d', mid: '#24400f', light: '#4a7a2a', glow: 'rgba(45,80,22,0.12)',   border: 'rgba(45,80,22,0.12)',   borderStrong: 'rgba(45,80,22,0.28)'   },
+  { key: 'indigo',     name: 'Indigo',      main: '#4B4E6D', dark: '#2d2f4a', mid: '#3d3f5e', light: '#6b6f90', glow: 'rgba(75,78,109,0.12)', border: 'rgba(75,78,109,0.12)', borderStrong: 'rgba(75,78,109,0.28)' },
+  { key: 'terracotta', name: 'Terracotta',  main: '#9B4A2E', dark: '#6b2f1a', mid: '#7d3c23', light: '#bc6b50', glow: 'rgba(155,74,46,0.12)', border: 'rgba(155,74,46,0.12)', borderStrong: 'rgba(155,74,46,0.28)' },
+  { key: 'sage',       name: 'Sage',        main: '#7A8C6E', dark: '#526040', mid: '#647858', light: '#96a88c', glow: 'rgba(122,140,110,0.12)',border: 'rgba(122,140,110,0.12)',borderStrong: 'rgba(122,140,110,0.28)'},
+  { key: 'navy',       name: 'Navy',        main: '#1E3A5F', dark: '#0f1f35', mid: '#162d4a', light: '#2e5080', glow: 'rgba(30,58,95,0.12)',  border: 'rgba(30,58,95,0.12)',  borderStrong: 'rgba(30,58,95,0.28)'  },
+  { key: 'burgundy',   name: 'Burgundy',    main: '#6B2737', dark: '#3d1520', mid: '#581f2c', light: '#8c3d4e', glow: 'rgba(107,39,55,0.12)', border: 'rgba(107,39,55,0.12)', borderStrong: 'rgba(107,39,55,0.28)' },
+  { key: 'gold',       name: 'Gold',        main: '#8B6914', dark: '#5a420c', mid: '#715510', light: '#b08a36', glow: 'rgba(139,105,20,0.12)',border: 'rgba(139,105,20,0.12)',borderStrong: 'rgba(139,105,20,0.28)'},
+];
+
+let themeState = { font_heading: 'Cormorant Garamond', font_body: 'Raleway', accent_preset: 'olive' };
+
+function loadThemeAdminFonts() {
+    if (document.getElementById('admin-all-fonts')) return;
+    const all = [...HEADING_FONTS, ...BODY_FONTS].map(f => 'family=' + f.google).join('&');
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.id  = 'admin-all-fonts';
+    link.href = `https://fonts.googleapis.com/css2?${all}&display=swap`;
+    document.head.appendChild(link);
+}
+
+async function loadTheme() {
+    loadThemeAdminFonts();
+    try {
+        const res  = await fetch('/api/content');
+        const data = await res.json();
+        const c    = data.content || {};
+        themeState.font_heading  = c.font_heading  || 'Cormorant Garamond';
+        themeState.font_body     = c.font_body     || 'Raleway';
+        themeState.accent_preset = c.accent_preset || 'olive';
+        renderThemePickers();
+        updateThemePreview();
+    } catch(e) {
+        toast('Failed to load theme settings', 'error');
+    }
+}
+
+function renderThemePickers() {
+    // Heading fonts
+    document.getElementById('heading-font-grid').innerHTML = HEADING_FONTS.map(f => {
+        const active = f.name === themeState.font_heading;
+        return `
+        <div onclick="selectFont('heading','${f.name}')"
+          style="cursor:pointer;padding:1rem 0.75rem;border:2px solid ${active ? 'var(--gold)' : 'var(--border)'};
+                 border-radius:var(--radius);background:${active ? 'var(--gold-glow)' : 'var(--indigo)'};
+                 text-align:center;transition:var(--transition);"
+          onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='${active ? 'var(--gold)' : 'var(--border)'}'">
+          <div style="font-family:'${f.name}',serif;font-size:1.25rem;color:var(--cream);line-height:1.2;margin-bottom:0.35rem;">${f.name}</div>
+          <div style="font-size:0.6rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;">${f.category}</div>
+          ${active ? '<div style="font-size:0.6rem;color:var(--gold);margin-top:0.3rem;font-weight:700;">✓ Active</div>' : ''}
+        </div>`;
+    }).join('');
+
+    // Body fonts
+    document.getElementById('body-font-grid').innerHTML = BODY_FONTS.map(f => {
+        const active = f.name === themeState.font_body;
+        return `
+        <div onclick="selectFont('body','${f.name}')"
+          style="cursor:pointer;padding:1rem 0.75rem;border:2px solid ${active ? 'var(--gold)' : 'var(--border)'};
+                 border-radius:var(--radius);background:${active ? 'var(--gold-glow)' : 'var(--indigo)'};
+                 text-align:center;transition:var(--transition);"
+          onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='${active ? 'var(--gold)' : 'var(--border)'}'">
+          <div style="font-family:'${f.name}',sans-serif;font-size:1rem;color:var(--cream);margin-bottom:0.35rem;">${f.name}</div>
+          <div style="font-size:0.6rem;color:var(--muted);letter-spacing:0.1em;text-transform:uppercase;">${f.category}</div>
+          ${active ? '<div style="font-size:0.6rem;color:var(--gold);margin-top:0.3rem;font-weight:700;">✓ Active</div>' : ''}
+        </div>`;
+    }).join('');
+
+    // Accent colours
+    document.getElementById('accent-color-grid').innerHTML = ACCENT_PALETTES.map(p => {
+        const active = p.key === themeState.accent_preset;
+        return `
+        <div onclick="selectAccent('${p.key}')" style="cursor:pointer;text-align:center;display:flex;flex-direction:column;align-items:center;gap:0.4rem;">
+          <div style="width:50px;height:50px;border-radius:50%;background:${p.main};
+                      border:3px solid ${active ? '#fff' : 'transparent'};
+                      box-shadow:${active ? '0 0 0 3px var(--gold)' : '0 2px 8px rgba(0,0,0,0.3)'};
+                      transition:all 0.2s;"></div>
+          <div style="font-size:0.62rem;color:${active ? 'var(--gold)' : 'var(--muted)'};max-width:58px;text-align:center;font-weight:${active ? '700' : '400'};">${p.name}</div>
+        </div>`;
+    }).join('');
+}
+
+function selectFont(type, fontName) {
+    if (type === 'heading') themeState.font_heading = fontName;
+    else themeState.font_body = fontName;
+    renderThemePickers();
+    updateThemePreview();
+}
+
+function selectAccent(key) {
+    themeState.accent_preset = key;
+    renderThemePickers();
+    updateThemePreview();
+}
+
+function updateThemePreview() {
+    const hFont   = themeState.font_heading;
+    const bFont   = themeState.font_body;
+    const palette = ACCENT_PALETTES.find(p => p.key === themeState.accent_preset) || ACCENT_PALETTES[0];
+
+    const prevHeading = document.getElementById('prev-heading');
+    const prevBody    = document.getElementById('prev-body');
+    const prevBtn     = document.getElementById('prev-btn');
+    const prevTag     = document.getElementById('prev-tag');
+
+    if (prevHeading) prevHeading.style.fontFamily = `'${hFont}', serif`;
+    if (prevBody)    prevBody.style.fontFamily    = `'${bFont}', sans-serif`;
+    if (prevTag)     prevTag.style.fontFamily     = `'${bFont}', sans-serif`;
+    if (prevBtn) {
+        prevBtn.style.fontFamily   = `'${bFont}', sans-serif`;
+        prevBtn.style.background   = palette.main;
+        prevBtn.style.color        = '#fff';
+    }
+}
+
+async function saveTheme() {
+    try {
+        const res = await fetch('/api/admin/content', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'x-admin-password': adminToken },
+            body: JSON.stringify({ content: {
+                font_heading:  themeState.font_heading,
+                font_body:     themeState.font_body,
+                accent_preset: themeState.accent_preset,
+            }})
+        });
+        if (res.ok) toast('Theme saved — changes are live on the website!', 'success');
+        else        toast('Failed to save theme', 'error');
+    } catch(e) {
+        toast('Error saving theme', 'error');
+    }
+}

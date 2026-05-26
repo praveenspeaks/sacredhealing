@@ -46,6 +46,8 @@
   --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   --radius: 10px;
   --radius-lg: 16px;
+  --font-heading: 'Cormorant Garamond', serif;
+  --font-body: 'Raleway', sans-serif;
 }
 
 html {
@@ -54,7 +56,7 @@ html {
 }
 
 body {
-  font-family: 'Raleway', sans-serif;
+  font-family: var(--font-body);
   background-color: var(--cream);
   color: var(--charcoal);
   overflow-x: hidden;
@@ -71,7 +73,7 @@ body {
 
 /* ---- TYPOGRAPHY ---- */
 h1, h2, h3, h4 {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-heading);
   line-height: 1.15;
   color: var(--charcoal);
 }
@@ -96,7 +98,7 @@ em {
   gap: 0.5rem;
   padding: 0.8rem 1.9rem;
   border-radius: 6px;
-  font-family: 'Raleway', sans-serif;
+  font-family: var(--font-body);
   font-weight: 600;
   font-size: 0.875rem;
   letter-spacing: 0.04em;
@@ -291,7 +293,7 @@ body.has-announce .navbar {
 }
 
 .logo-main {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-heading);
   font-size: 1.3rem;
   font-weight: 600;
   line-height: 1;
@@ -299,7 +301,7 @@ body.has-announce .navbar {
 }
 
 .logo-slogan {
-  font-family: 'Raleway', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.6rem;
   color: var(--olive);
   letter-spacing: 0.06em;
@@ -509,7 +511,7 @@ body.has-announce .navbar {
 }
 
 .hero-quote-card p {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-heading);
   font-style: italic;
   font-size: 0.9rem;
   color: var(--text-body);
@@ -576,7 +578,7 @@ body.has-announce .navbar {
 
 .stat-number {
   display: block;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-heading);
   font-size: clamp(2.2rem, 4vw, 3.5rem);
   font-weight: 300;
   color: var(--olive);
@@ -662,7 +664,7 @@ body.has-announce .navbar {
 }
 
 .about-quote-card p {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-heading);
   font-style: italic;
   font-size: 0.9rem;
   color: var(--text-body);
@@ -697,7 +699,7 @@ body.has-announce .navbar {
 }
 
 .feature-item h4 {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-heading);
   font-size: 1rem;
   color: var(--charcoal);
   margin-bottom: 0.15rem;
@@ -779,7 +781,7 @@ body.has-announce .navbar {
 }
 
 .service-number {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-heading);
   font-size: 3rem;
   font-weight: 300;
   color: rgba(92, 91, 71, 0.10);
@@ -847,7 +849,7 @@ body.has-announce .navbar {
   border: none;
   cursor: pointer;
   padding: 0;
-  font-family: 'Raleway', sans-serif;
+  font-family: var(--font-body);
 }
 
 .service-link:hover {
@@ -882,7 +884,7 @@ body.has-announce .navbar {
 .service-row.reverse .service-row-img  { order: 1; }
 
 .service-row-number {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-heading);
   font-size: 4rem;
   font-weight: 300;
   color: rgba(92, 91, 71, 0.10);
@@ -995,7 +997,7 @@ body.has-announce .navbar {
 }
 
 .step-number {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-heading);
   font-size: 2.8rem;
   font-weight: 300;
   color: var(--olive);
@@ -1079,7 +1081,7 @@ body.has-announce .navbar {
 }
 
 .testimonial-quote {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-heading);
   font-size: 3.5rem;
   line-height: 0.7;
   color: rgba(255,255,255,0.25);
@@ -1087,7 +1089,7 @@ body.has-announce .navbar {
 }
 
 .testimonial-text {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-heading);
   font-size: 1.05rem;
   color: rgba(255,255,255,0.85);
   line-height: 1.8;
@@ -1110,7 +1112,7 @@ body.has-announce .navbar {
   display: flex;
   align-items: center;
   justify-content: center;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-heading);
   font-size: 1rem;
   font-weight: 600;
   color: rgba(255,255,255,0.9);
@@ -1170,7 +1172,7 @@ body.has-announce .navbar {
 }
 
 .philosophy-card h3 {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-heading);
   font-size: 1.4rem;
   color: var(--charcoal);
   margin-bottom: 0.85rem;
@@ -1229,7 +1231,7 @@ body.has-announce .navbar {
 }
 
 .value-card h4 {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-heading);
   font-size: 1.05rem;
   color: var(--charcoal);
   margin-bottom: 0.35rem;
@@ -1285,7 +1287,7 @@ body.has-announce .navbar {
 .disclaimer-header { margin-bottom: 2rem; }
 
 .disclaimer-title {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-heading);
   font-size: 1.4rem;
   color: var(--charcoal);
   margin-top: 0.6rem;
@@ -1373,7 +1375,7 @@ body.has-announce .navbar {
   border: 1px solid var(--border-strong);
   background: var(--white);
   color: var(--text-body);
-  font-family: 'Raleway', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.82rem;
   font-weight: 600;
   cursor: pointer;
@@ -1511,7 +1513,7 @@ body.has-announce .navbar {
 .slot-dur-tag.dur-120 { background: rgba(92,91,71,0.18); color: var(--olive-dark); }
 
 .slot-price {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-heading);
   font-size: 1.4rem;
   font-weight: 300;
   color: var(--charcoal);
@@ -1519,7 +1521,7 @@ body.has-announce .navbar {
 }
 
 .slot-price.is-free {
-  font-family: 'Raleway', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.12em;
@@ -1531,7 +1533,7 @@ body.has-announce .navbar {
 }
 
 .slot-date {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-heading);
   font-size: 1.35rem;
   color: var(--charcoal);
   margin-bottom: 0.2rem;
@@ -1557,7 +1559,7 @@ body.has-announce .navbar {
   border: 1px solid var(--border-strong);
   border-radius: 7px;
   color: var(--olive);
-  font-family: 'Raleway', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
@@ -1621,7 +1623,7 @@ body.has-announce .navbar {
   align-items: center;
   gap: 0.6rem;
   text-decoration: none;
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-heading);
   font-size: 1.3rem;
   color: rgba(255,255,255,0.9);
   margin-bottom: 1rem;
@@ -1659,7 +1661,7 @@ body.has-announce .navbar {
 }
 
 .footer-nav h4 {
-  font-family: 'Raleway', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.18em;
@@ -1688,7 +1690,7 @@ body.has-announce .navbar {
 }
 
 .footer-contact h4 {
-  font-family: 'Raleway', sans-serif;
+  font-family: var(--font-body);
   font-size: 0.75rem;
   font-weight: 600;
   letter-spacing: 0.18em;
@@ -1830,7 +1832,7 @@ body.has-announce .navbar {
 }
 
 .modal-title {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-heading);
   font-size: 1.75rem;
   color: var(--charcoal);
   margin-bottom: 0.65rem;
@@ -1882,7 +1884,7 @@ body.has-announce .navbar {
   padding: 0.72rem 1rem;
   border-radius: 7px;
   font-size: 0.9rem;
-  font-family: 'Raleway', sans-serif;
+  font-family: var(--font-body);
   outline: none;
   transition: var(--transition);
   width: 100%;
@@ -1919,7 +1921,7 @@ textarea.modal-input {
 }
 
 .modal-success h3 {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--font-heading);
   font-size: 1.9rem;
   color: var(--charcoal);
   margin-bottom: 0.65rem;
