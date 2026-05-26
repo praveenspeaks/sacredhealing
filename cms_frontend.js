@@ -84,11 +84,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             const el = document.getElementById(key);
             if (el) {
                 if (el.tagName === 'IMG') {
-                   el.src = val;
+                    el.src = val;
                 } else if (key.endsWith('_bg_img')) {
-                   el.style.backgroundImage = `url(${val})`;
+                    el.style.backgroundImage = `url(${val})`;
+                } else if (el.tagName === 'A') {
+                    if (val) el.href = val;
                 } else {
-                   el.innerHTML = val;
+                    el.innerHTML = val;
                 }
             }
         }

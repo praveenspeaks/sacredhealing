@@ -19,7 +19,7 @@ async function loadContent() {
         const data = await res.json();
         siteContent = data.content;
         
-        const textKeys = ['hero_title', 'hero_subtitle', 'hero_button_text', 'explore_button_text', 'about_title', 'about_paragraph1', 'about_paragraph2', 'contact_email', 'contact_phone', 'contact_location'];
+        const textKeys = ['hero_title', 'hero_subtitle', 'hero_button_text', 'explore_button_text', 'about_title', 'about_paragraph1', 'about_paragraph2', 'contact_email', 'contact_phone', 'contact_location', 'social_instagram', 'social_whatsapp'];
         textKeys.forEach(k => {
             const el = document.getElementById('cms-' + k);
             if (el && siteContent[k]) el.value = siteContent[k];
@@ -36,7 +36,7 @@ async function loadContent() {
 }
 
 async function saveContent() {
-    const textKeys = ['hero_title', 'hero_subtitle', 'hero_button_text', 'explore_button_text', 'about_title', 'about_paragraph1', 'about_paragraph2', 'contact_email', 'contact_phone', 'contact_location'];
+    const textKeys = ['hero_title', 'hero_subtitle', 'hero_button_text', 'explore_button_text', 'about_title', 'about_paragraph1', 'about_paragraph2', 'contact_email', 'contact_phone', 'contact_location', 'social_instagram', 'social_whatsapp'];
     const updates = {};
     textKeys.forEach(k => {
         const el = document.getElementById('cms-' + k);
