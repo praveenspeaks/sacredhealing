@@ -134,10 +134,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 `;
             });
             reviewsGrid.innerHTML += `
-            <div class="testimonial-card submit-review-card" style="display:flex; flex-direction:column; justify-content:center; align-items:center; border: 1px dashed rgba(201,168,76,0.3); background: transparent;">
-                <h4 style="color:var(--olive); font-size:1.2rem; margin-bottom:0.5rem">Share Your Journey</h4>
-                <p style="text-align:center; margin-bottom:1.5rem; font-size:0.9rem; color:var(--text-muted)">Your healing story can inspire others</p>
-                <button class="btn btn-outline" style="width:100%" onclick="openReviewModal()">Write a Review</button>
+            <div class="testimonial-card submit-review-card" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;background:rgba(255,255,255,0.13);border:1px solid rgba(255,255,255,0.28);padding:2.5rem 1.75rem;">
+                <div style="font-size:2rem;margin-bottom:1rem;opacity:0.85;">✦</div>
+                <h4 style="font-family:var(--font-heading);font-size:1.5rem;color:#fff;font-weight:400;margin-bottom:0.6rem;">Share Your Journey</h4>
+                <p style="font-size:0.88rem;color:rgba(255,255,255,0.7);line-height:1.75;margin-bottom:1.75rem;max-width:240px;">Your healing story could be the light that guides someone else's path.</p>
+                <button onclick="openReviewModal()" style="padding:0.75rem 1.6rem;background:#fff;color:var(--olive-dark,#3D3C2E);border:none;border-radius:6px;font-family:var(--font-body);font-size:0.85rem;font-weight:600;cursor:pointer;letter-spacing:0.03em;transition:opacity 0.2s;" onmouseover="this.style.opacity=0.88" onmouseout="this.style.opacity=1">Write a Review →</button>
             </div>
             `;
         }

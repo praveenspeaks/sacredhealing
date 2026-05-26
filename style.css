@@ -314,8 +314,8 @@ body.has-announce .navbar {
 
 /* Logo circle */
 .logo-circle {
-  width: 52px;
-  height: 52px;
+  width: 68px;
+  height: 68px;
   border-radius: 50%;
   overflow: hidden;
   flex-shrink: 0;
@@ -700,9 +700,11 @@ body.has-announce .navbar {
 
 .feature-item h4 {
   font-family: var(--font-heading);
-  font-size: 1rem;
+  font-size: 1.15rem;
+  font-weight: 600;
   color: var(--charcoal);
   margin-bottom: 0.15rem;
+  letter-spacing: 0.01em;
 }
 
 .feature-item p {
@@ -1232,7 +1234,8 @@ body.has-announce .navbar {
 
 .value-card h4 {
   font-family: var(--font-heading);
-  font-size: 1.05rem;
+  font-size: 1.15rem;
+  font-weight: 600;
   color: var(--charcoal);
   margin-bottom: 0.35rem;
 }
@@ -1659,6 +1662,9 @@ body.has-announce .navbar {
   border-color: rgba(255,255,255,0.55);
   color: rgba(255,255,255,0.9);
 }
+
+.social-instagram:hover { border-color: #e1306c; color: #e1306c; }
+.social-whatsapp:hover   { border-color: #25d366; color: #25d366; }
 
 .footer-nav h4 {
   font-family: var(--font-body);
