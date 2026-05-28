@@ -79,21 +79,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Apply fonts + accent colour before rendering
         applyTheme(content);
 
-        // Populate text fields automatically
+        // Populate text fields — querySelectorAll handles duplicate ids gracefully
         for (const [key, val] of Object.entries(content)) {
-            const el = document.getElementById(key);
-            if (el) {
+            document.querySelectorAll(`[id="${key}"]`).forEach(el => {
                 if (el.tagName === 'IMG') {
                     el.src = val;
                 } else if (key.endsWith('_bg_img')) {
                     el.style.backgroundImage = `url(${val})`;
                 } else if (el.tagName === 'A') {
-                    if (val) el.href = val;
+                    if (val) {
+                        // Preserve mailto: or other protocol prefix
+                        const orig = el.getAttribute('href') || '';
+                        el.href = orig.startsWith('mailto:') ? 'mailto:' + val : val;
+                        if (orig.startsWith('mailto:')) el.innerHTML = val;
+                    }
                 } else {
                     el.innerHTML = val;
                 }
-            }
+            });
         }
+        // Update any mailto links tagged with data-mailto (e.g. CTA buttons)
+        document.querySelectorAll('[data-mailto]').forEach(el => {
+            const key = el.getAttribute('data-mailto');
+            if (content[key]) el.href = 'mailto:' + content[key];
+        });
 
         // Populate Services
         const servicesGrid = document.querySelector('.services-grid');
