@@ -33,6 +33,12 @@ function requireAdmin(req, res, next) {
 // ── Currency helpers ────────────────────────────────────────
 const CURRENCY_SYMBOLS = { GBP: '£', USD: '$', EUR: '€', INR: '₹', AUD: 'A$' };
 
+// ── Booking reference generator ─────────────────────────────
+function generateBookingRef() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no confusable chars (0/O, 1/I)
+  return 'SH-' + Array.from({ length: 8 }, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+}
+
 // ── Database initialisation ─────────────────────────────────
 async function initDatabase() {
   await pool.query(`
@@ -69,6 +75,9 @@ async function initDatabase() {
   await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS cancel_token TEXT DEFAULT NULL`);
   // Unique constraint so ON CONFLICT (date,time) works in bulk insert
   await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS slots_date_time_idx ON slots(date, time)`);
+  // Booking reference column (human-readable unique ID sent in confirmation emails)
+  await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS booking_ref TEXT`);
+  await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS bookings_ref_idx ON bookings(booking_ref) WHERE booking_ref IS NOT NULL`);
 }
 
 // ════════════════════════════════════════════════════════════
@@ -216,15 +225,15 @@ app.post('/api/bookings', async (req, res) => {
     const stripeKey = process.env.STRIPE_SECRET_KEY || '';
     const stripeActive = stripeKey.startsWith('sk_test_') || stripeKey.startsWith('sk_live_');
 
-    // ── PAID SESSION: create pending booking, redirect to Stripe. Slot stays
-    //    unlocked — it's locked only after payment succeeds to avoid permanently
-    //    holding a slot if the customer abandons checkout.
+    // ── PAID SESSION: create PaymentIntent for embedded payment. Slot stays
+    //    unlocked until /api/bookings/confirm is called after payment succeeds.
     if (servicePrice > 0 && stripeActive) {
       let bookingId;
+      const bookingRef = generateBookingRef();
       try {
         const bookingResult = await pool.query(`
-          INSERT INTO bookings (slot_id, service, customer_name, customer_email, customer_phone, message, status, cancel_token)
-          VALUES ($1, $2, $3, $4, $5, $6, 'pending_payment', $7)
+          INSERT INTO bookings (slot_id, service, customer_name, customer_email, customer_phone, message, status, cancel_token, booking_ref)
+          VALUES ($1, $2, $3, $4, $5, $6, 'pending_payment', $7, $8)
           RETURNING id
         `, [
           slot_id,
@@ -233,29 +242,26 @@ app.post('/api/bookings', async (req, res) => {
           customer_email.trim().toLowerCase(),
           (customer_phone || '').trim(),
           (message || '').trim(),
-          cancelToken
+          cancelToken,
+          bookingRef
         ]);
         bookingId = bookingResult.rows[0].id;
 
-        const session = await stripe.checkout.sessions.create({
-          payment_method_types: ['card'],
-          line_items: [{
-            price_data: {
-              currency: 'gbp',
-              product_data: {
-                name: service + ' Session',
-                description: `Date: ${slot.date} at ${slot.time} (${slot.duration} min)`,
-              },
-              unit_amount: Math.round(servicePrice * 100),
-            },
-            quantity: 1,
-          }],
-          mode: 'payment',
-          success_url: `${baseUrl}/api/bookings/success?session_id={CHECKOUT_SESSION_ID}`,
-          cancel_url:  `${baseUrl}/api/bookings/cancel?session_id={CHECKOUT_SESSION_ID}`,
-          metadata: { booking_id: bookingId },
+        const paymentIntent = await stripe.paymentIntents.create({
+          amount:      Math.round(servicePrice * 100),
+          currency:    'gbp',
+          description: `${service.trim()} — ${slot.date} at ${slot.time}`,
+          metadata:    { booking_id: bookingId, booking_ref: bookingRef },
         });
-        return res.status(201).json({ checkout_url: session.url });
+        return res.status(201).json({
+          payment_required: true,
+          client_secret:    paymentIntent.client_secret,
+          booking_id:       bookingId,
+          booking_ref:      bookingRef,
+          amount:           servicePrice,
+          service:          service.trim(),
+          slot:             { date: slot.date, time: slot.time, duration: slot.duration },
+        });
       } catch (err) {
         console.error('Stripe error:', err);
         if (bookingId) await pool.query('DELETE FROM bookings WHERE id = $1', [bookingId]);
@@ -266,11 +272,12 @@ app.post('/api/bookings', async (req, res) => {
     // ── FREE SESSION: lock slot and confirm booking atomically, then send emails
     const client = await pool.connect();
     let bookingId;
+    const bookingRef = generateBookingRef();
     try {
       await client.query('BEGIN');
       const bookingResult = await client.query(`
-        INSERT INTO bookings (slot_id, service, customer_name, customer_email, customer_phone, message, cancel_token)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        INSERT INTO bookings (slot_id, service, customer_name, customer_email, customer_phone, message, cancel_token, booking_ref)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         RETURNING id
       `, [
         slot_id,
@@ -279,7 +286,8 @@ app.post('/api/bookings', async (req, res) => {
         customer_email.trim().toLowerCase(),
         (customer_phone || '').trim(),
         (message || '').trim(),
-        cancelToken
+        cancelToken,
+        bookingRef
       ]);
       bookingId = bookingResult.rows[0].id;
       await client.query('UPDATE slots SET is_booked = 1 WHERE id = $1', [slot_id]);
@@ -291,15 +299,16 @@ app.post('/api/bookings', async (req, res) => {
       client.release();
     }
 
-    sendBookingConfirmation({ customerName: customer_name, customerEmail: customer_email, service, slot, servicePrice, cancelUrl })
+    sendBookingConfirmation({ customerName: customer_name, customerEmail: customer_email, service, slot, servicePrice, cancelUrl, bookingRef })
       .catch(err => console.error('Confirmation email error:', err));
-    sendAdminAlert({ customerName: customer_name, customerEmail: customer_email, customerPhone: customer_phone, service, slot, servicePrice, message, cancelUrl })
+    sendAdminAlert({ customerName: customer_name, customerEmail: customer_email, customerPhone: customer_phone, service, slot, servicePrice, message, cancelUrl, bookingRef })
       .catch(err => console.error('Admin alert email error:', err));
 
     res.status(201).json({
-      success: true,
-      message: 'Your session has been booked! We will confirm shortly.',
+      success:    true,
+      message:    'Your session has been booked! We will confirm shortly.',
       booking_id: bookingId,
+      booking_ref: bookingRef,
       slot: {
         date:     slot.date,
         time:     slot.time,
@@ -312,6 +321,92 @@ app.post('/api/bookings', async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to create booking' });
+  }
+});
+
+// GET /api/stripe-key — returns Stripe publishable key (safe to expose)
+app.get('/api/stripe-key', (req, res) => {
+  const stripeKey = process.env.STRIPE_SECRET_KEY || '';
+  const active = stripeKey.startsWith('sk_test_') || stripeKey.startsWith('sk_live_');
+  const pubKey = active ? (process.env.STRIPE_PUBLISHABLE_KEY || '') : '';
+  res.json({ publishableKey: pubKey || null });
+});
+
+// POST /api/bookings/confirm — verify PaymentIntent, lock slot, confirm booking
+app.post('/api/bookings/confirm', async (req, res) => {
+  const { booking_id, payment_intent_id } = req.body;
+  if (!booking_id || !payment_intent_id) {
+    return res.status(400).json({ error: 'booking_id and payment_intent_id are required.' });
+  }
+  try {
+    const pi = await stripe.paymentIntents.retrieve(payment_intent_id);
+    if (pi.status !== 'succeeded') {
+      return res.status(402).json({ error: 'Payment has not been completed.' });
+    }
+    if (String(pi.metadata.booking_id) !== String(booking_id)) {
+      return res.status(400).json({ error: 'Payment does not match this booking.' });
+    }
+
+    const bookingResult = await pool.query(`
+      SELECT b.*, s.date, s.time, s.duration, s.is_booked
+      FROM bookings b JOIN slots s ON s.id = b.slot_id
+      WHERE b.id = $1
+    `, [booking_id]);
+    const booking = bookingResult.rows[0];
+    if (!booking) return res.status(404).json({ error: 'Booking not found.' });
+
+    if (booking.status === 'confirmed') {
+      return res.json({ success: true, booking_ref: booking.booking_ref, already_confirmed: true,
+        service: booking.service, slot: { date: booking.date, time: booking.time, duration: booking.duration } });
+    }
+
+    const client = await pool.connect();
+    let confirmed = false;
+    try {
+      await client.query('BEGIN');
+      const slotLock = await client.query(
+        'UPDATE slots SET is_booked = 1 WHERE id = $1 AND is_booked = 0 RETURNING id',
+        [booking.slot_id]
+      );
+      confirmed = slotLock.rowCount > 0;
+      await client.query('UPDATE bookings SET status = $1 WHERE id = $2',
+        [confirmed ? 'confirmed' : 'cancelled', booking_id]);
+      await client.query('COMMIT');
+    } catch (e) {
+      await client.query('ROLLBACK');
+      throw e;
+    } finally {
+      client.release();
+    }
+
+    if (!confirmed) {
+      return res.status(409).json({ error: 'This slot was just taken by another booking. Please contact us for assistance.' });
+    }
+
+    const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+    const cancelUrl = booking.cancel_token ? `${baseUrl}/cancel?token=${booking.cancel_token}` : null;
+    const svcResult = await pool.query('SELECT price FROM services WHERE title = $1', [booking.service]);
+    const servicePrice = svcResult.rows[0] ? parseFloat(svcResult.rows[0].price) : 0;
+
+    sendBookingConfirmation({
+      customerName: booking.customer_name, customerEmail: booking.customer_email,
+      service: booking.service, slot: booking, servicePrice, cancelUrl, bookingRef: booking.booking_ref,
+    }).catch(err => console.error('Confirmation email error:', err));
+    sendAdminAlert({
+      customerName: booking.customer_name, customerEmail: booking.customer_email,
+      customerPhone: booking.customer_phone, service: booking.service,
+      slot: booking, servicePrice, message: booking.message, cancelUrl, bookingRef: booking.booking_ref,
+    }).catch(err => console.error('Admin alert email error:', err));
+
+    res.json({
+      success:     true,
+      booking_ref: booking.booking_ref,
+      service:     booking.service,
+      slot:        { date: booking.date, time: booking.time, duration: booking.duration },
+    });
+  } catch (err) {
+    console.error('Confirm error:', err);
+    res.status(500).json({ error: 'Failed to confirm booking. Please contact us if payment was taken.' });
   }
 });
 

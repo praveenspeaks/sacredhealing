@@ -38,7 +38,7 @@ function formatTime(timeStr) {
   return `${hour % 12 || 12}:${m} ${hour < 12 ? 'AM' : 'PM'}`;
 }
 
-async function sendBookingConfirmation({ customerName, customerEmail, service, slot, servicePrice, cancelUrl }) {
+async function sendBookingConfirmation({ customerName, customerEmail, service, slot, servicePrice, cancelUrl, bookingRef }) {
   if (!transporter) return;
   const price     = servicePrice != null ? parseFloat(servicePrice) : parseFloat(slot.price || 0);
   const priceStr  = price > 0
@@ -55,6 +55,12 @@ async function sendBookingConfirmation({ customerName, customerEmail, service, s
         <h1 style="color:#DAB467;font-size:1.6rem;margin-bottom:0.5rem;">Sacred Healing</h1>
         <p style="color:#A1A1AA;font-size:0.85rem;margin-bottom:2rem;">SoulBody Healing · Croydon, London &amp; Online</p>
         <h2 style="font-size:1.2rem;margin-bottom:1.5rem;">Your session is confirmed, ${customerName} ✦</h2>
+        ${bookingRef ? `
+        <div style="text-align:center;margin-bottom:1.75rem;padding:1rem;background:rgba(218,180,103,0.1);border:1px solid rgba(218,180,103,0.35);border-radius:10px;">
+          <p style="color:#A1A1AA;font-size:0.7rem;letter-spacing:0.12em;text-transform:uppercase;margin:0 0 0.35rem">Booking Reference</p>
+          <p style="color:#DAB467;font-size:1.6rem;font-weight:700;letter-spacing:0.15em;font-family:monospace;margin:0">${bookingRef}</p>
+          <p style="color:#71717A;font-size:0.75rem;margin:0.35rem 0 0">Keep this reference for your records</p>
+        </div>` : ''}
         <table style="width:100%;border-collapse:collapse;margin-bottom:2rem;">
           <tr><td style="padding:0.6rem 0;color:#A1A1AA;width:40%">Service</td><td style="color:#FDFCF8;font-weight:600">${service}</td></tr>
           <tr><td style="padding:0.6rem 0;color:#A1A1AA">Date</td><td style="color:#FDFCF8">${formatDate(slot.date)}</td></tr>
@@ -72,7 +78,7 @@ async function sendBookingConfirmation({ customerName, customerEmail, service, s
   });
 }
 
-async function sendAdminAlert({ customerName, customerEmail, customerPhone, service, slot, servicePrice, message, cancelUrl }) {
+async function sendAdminAlert({ customerName, customerEmail, customerPhone, service, slot, servicePrice, message, cancelUrl, bookingRef }) {
   if (!transporter || !ADMIN_EMAIL) return;
   const price    = servicePrice != null ? parseFloat(servicePrice) : parseFloat(slot.price || 0);
   const priceStr = price > 0
@@ -95,6 +101,7 @@ async function sendAdminAlert({ customerName, customerEmail, customerPhone, serv
           <tr><td style="padding:0.5rem 0;color:#555">Time</td><td>${formatTime(slot.time)}</td></tr>
           <tr><td style="padding:0.5rem 0;color:#555">Duration</td><td>${slot.duration} min</td></tr>
           <tr><td style="padding:0.5rem 0;color:#555">Price</td><td>${priceStr}</td></tr>
+          ${bookingRef ? `<tr><td style="padding:0.5rem 0;color:#555">Booking Ref</td><td><strong style="letter-spacing:0.08em">${bookingRef}</strong></td></tr>` : ''}
           ${message ? `<tr><td style="padding:0.5rem 0;color:#555;vertical-align:top">Message</td><td style="white-space:pre-wrap">${message}</td></tr>` : ''}
           ${cancelUrl ? `<tr><td style="padding:0.5rem 0;color:#555">Cancel link</td><td><a href="${cancelUrl}">${cancelUrl}</a></td></tr>` : ''}
         </table>

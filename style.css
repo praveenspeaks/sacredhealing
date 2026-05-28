@@ -1940,6 +1940,72 @@ textarea.modal-input {
   margin-bottom: 1.5rem;
 }
 
+/* ── Payment Step ── */
+.payment-summary {
+  background: var(--cream-light);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.9rem;
+  line-height: 1.7;
+  color: var(--text-body);
+}
+
+.payment-error {
+  color: #dc2626;
+  font-size: 0.85rem;
+  margin: 0.75rem 0 0;
+  padding: 0.6rem 0.9rem;
+  background: #fee2e2;
+  border-radius: 6px;
+}
+
+.payment-actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.payment-actions .btn-outline { flex-shrink: 0; }
+.payment-actions .btn-gold    { flex: 1; }
+
+/* ── Booking Reference Box ── */
+.booking-ref-box {
+  margin: 1rem auto 0.5rem;
+  max-width: 280px;
+  background: rgba(92, 91, 71, 0.08);
+  border: 1px solid rgba(92, 91, 71, 0.28);
+  border-radius: 10px;
+  padding: 0.9rem 1.25rem;
+  text-align: center;
+}
+
+.booking-ref-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin: 0 0 0.35rem;
+}
+
+.booking-ref-code {
+  font-family: monospace;
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--olive);
+  margin: 0.2rem 0;
+}
+
+.booking-ref-hint {
+  font-size: 0.72rem;
+  color: var(--text-light);
+  margin: 0.3rem 0 0;
+  line-height: 1.4;
+}
+
 /* ── SERVICE SELECTOR (modal radio pills) ── */
 .service-selector {
   display: grid;

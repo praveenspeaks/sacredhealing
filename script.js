@@ -309,6 +309,167 @@ function filterSlots(btn, duration) {
 let _currentSlotId       = null;
 let _preselectedService  = null; // { name, price } — set by service cards
 
+// ── Stripe state ──────────────────────────────────────────────
+let _stripeInstance = null;
+let _stripeElements = null;
+let _pendingBooking = null; // { clientSecret, bookingId, bookingRef, amount, service, slot }
+
+async function initStripe() {
+  if (_stripeInstance) return;
+  try {
+    const res  = await fetch('/api/stripe-key');
+    const data = await res.json();
+    if (data.publishableKey && typeof Stripe !== 'undefined') {
+      _stripeInstance = Stripe(data.publishableKey);
+    }
+  } catch (err) {
+    console.error('Failed to load Stripe key:', err);
+  }
+}
+
+function _fmtAmount(amount) {
+  const n = parseFloat(amount);
+  return `£${n % 1 === 0 ? parseInt(n) : n.toFixed(2)}`;
+}
+
+function _fmtDateLong(dateStr) {
+  return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' });
+}
+
+async function showPaymentStep() {
+  document.getElementById('modal-step-form').style.display    = 'none';
+  document.getElementById('modal-step-payment').style.display = 'block';
+  document.getElementById('modal-success').style.display      = 'none';
+
+  const { amount, service, slot } = _pendingBooking;
+  document.getElementById('payment-summary').innerHTML = `
+    <strong style="color:var(--olive);font-family:var(--font-heading);font-size:1.05rem">${service}</strong><br/>
+    ${_fmtDateLong(slot.date)} at ${formatTime12h(slot.time)} · ${slot.duration} min<br/>
+    <strong style="font-size:1.05rem">Total: ${_fmtAmount(amount)}</strong>`;
+
+  const payBtn = document.getElementById('payment-submit-btn');
+  payBtn.textContent = 'Pay Now →';
+  payBtn.disabled    = false;
+  document.getElementById('payment-error').style.display = 'none';
+
+  if (!_stripeInstance) {
+    document.getElementById('payment-error').textContent = 'Payment system unavailable. Please refresh and try again.';
+    document.getElementById('payment-error').style.display = 'block';
+    return;
+  }
+
+  _stripeElements = _stripeInstance.elements({
+    clientSecret: _pendingBooking.clientSecret,
+    appearance: {
+      theme: 'flat',
+      variables: {
+        colorPrimary:    '#5c5b47',
+        colorBackground: '#f9f8f4',
+        colorText:       '#1a1a18',
+        fontFamily:      'Georgia, serif',
+        borderRadius:    '6px',
+      },
+    },
+  });
+  document.getElementById('stripe-payment-element').innerHTML = '';
+  _stripeElements.create('payment').mount('#stripe-payment-element');
+}
+
+function backToDetailsStep() {
+  document.getElementById('modal-step-form').style.display    = 'block';
+  document.getElementById('modal-step-payment').style.display = 'none';
+}
+
+async function submitPayment() {
+  const payBtn = document.getElementById('payment-submit-btn');
+  payBtn.textContent = 'Processing…';
+  payBtn.disabled    = true;
+  document.getElementById('payment-error').style.display = 'none';
+
+  try {
+    const { error, paymentIntent } = await _stripeInstance.confirmPayment({
+      elements:  _stripeElements,
+      redirect:  'if_required',
+    });
+
+    if (error) {
+      document.getElementById('payment-error').textContent    = error.message;
+      document.getElementById('payment-error').style.display  = 'block';
+      payBtn.textContent = 'Pay Now →';
+      payBtn.disabled    = false;
+      return;
+    }
+
+    if (paymentIntent && paymentIntent.status === 'succeeded') {
+      await _finishBookingConfirm(paymentIntent.id);
+    } else {
+      document.getElementById('payment-error').textContent   = 'Payment could not be completed. Please try again.';
+      document.getElementById('payment-error').style.display = 'block';
+      payBtn.textContent = 'Pay Now →';
+      payBtn.disabled    = false;
+    }
+  } catch (err) {
+    document.getElementById('payment-error').textContent   = 'An unexpected error occurred. Please try again.';
+    document.getElementById('payment-error').style.display = 'block';
+    payBtn.textContent = 'Pay Now →';
+    payBtn.disabled    = false;
+  }
+}
+
+async function _finishBookingConfirm(paymentIntentId) {
+  try {
+    const res  = await fetch('/api/bookings/confirm', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ booking_id: _pendingBooking.bookingId, payment_intent_id: paymentIntentId }),
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      showConfirmationStep({
+        bookingRef: data.booking_ref,
+        service:    data.service || _pendingBooking.service,
+        slot:       data.slot    || _pendingBooking.slot,
+        paid:       true,
+      });
+      fetch('/api/slots').then(r => r.json()).then(d => renderSlotsPublic(d.slots || []));
+    } else {
+      document.getElementById('payment-error').textContent   = data.error || 'Booking confirmation failed. Please contact us.';
+      document.getElementById('payment-error').style.display = 'block';
+      document.getElementById('payment-submit-btn').textContent = 'Pay Now →';
+      document.getElementById('payment-submit-btn').disabled    = false;
+    }
+  } catch (err) {
+    document.getElementById('payment-error').textContent   = 'Could not confirm booking. Your payment may have been taken — please contact us.';
+    document.getElementById('payment-error').style.display = 'block';
+    document.getElementById('payment-submit-btn').textContent = 'Pay Now →';
+    document.getElementById('payment-submit-btn').disabled    = false;
+  }
+}
+
+function showConfirmationStep({ bookingRef, service, slot, paid }) {
+  document.getElementById('modal-step-form').style.display    = 'none';
+  document.getElementById('modal-step-payment').style.display = 'none';
+
+  const refDisplay = document.getElementById('booking-ref-display');
+  const refCode    = document.getElementById('modal-booking-ref');
+  if (bookingRef && refDisplay && refCode) {
+    refCode.textContent      = bookingRef;
+    refDisplay.style.display = 'block';
+  } else if (refDisplay) {
+    refDisplay.style.display = 'none';
+  }
+
+  const msgEl = document.getElementById('modal-success-msg');
+  if (msgEl && slot) {
+    msgEl.innerHTML = `Your <strong>${service}</strong> session is confirmed for
+      <strong>${_fmtDateLong(slot.date)}</strong> at <strong>${formatTime12h(slot.time)}</strong>
+      (${slot.duration} min).<br/><br/>${paid ? 'Payment received. ' : ''}We'll be in touch shortly. ✦`;
+  }
+
+  document.getElementById('modal-success').style.display = 'block';
+}
+
 // Called from service card "Reserve" buttons
 function openBookingForService(serviceName, servicePrice) {
   _preselectedService = { name: serviceName, price: parseFloat(servicePrice) || 0 };
@@ -383,6 +544,19 @@ function closeBookingModal() {
   modal.classList.remove('open');
   document.body.style.overflow = '';
   _currentSlotId = null;
+  _pendingBooking = null;
+  // Reset steps back to form
+  const stepForm    = document.getElementById('modal-step-form');
+  const stepPayment = document.getElementById('modal-step-payment');
+  const stepSuccess = document.getElementById('modal-success');
+  if (stepForm)    stepForm.style.display    = 'block';
+  if (stepPayment) stepPayment.style.display = 'none';
+  if (stepSuccess) stepSuccess.style.display = 'none';
+  // Tear down Stripe elements
+  if (_stripeElements) {
+    try { _stripeElements.getElement('payment')?.unmount(); } catch(e) {}
+    _stripeElements = null;
+  }
 }
 
 function closeModalOnOverlay(e) {
@@ -402,7 +576,6 @@ function formatTime12h(timeStr) {
 async function submitBooking(e) {
   e.preventDefault();
   const slotId  = document.getElementById('booking-slot-id').value;
-  // Service comes from pre-selection (hidden input) or from the radio picker
   const service = document.getElementById('booking-service-hidden').value ||
                   document.querySelector('input[name="modal-service"]:checked')?.value;
   const name    = document.getElementById('booking-name').value.trim();
@@ -418,26 +591,33 @@ async function submitBooking(e) {
   submitBtn.disabled = true;
 
   try {
-    const res = await fetch('/api/bookings', {
-      method: 'POST',
+    const res  = await fetch('/api/bookings', {
+      method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ slot_id: parseInt(slotId), service, customer_name: name, customer_email: email, customer_phone: phone, message: msg })
+      body:    JSON.stringify({ slot_id: parseInt(slotId), service, customer_name: name, customer_email: email, customer_phone: phone, message: msg }),
     });
     const data = await res.json();
 
-    if (data.checkout_url) {
-      window.location.href = data.checkout_url;
+    if (data.payment_required) {
+      _pendingBooking = {
+        clientSecret: data.client_secret,
+        bookingId:    data.booking_id,
+        bookingRef:   data.booking_ref,
+        amount:       data.amount,
+        service:      data.service,
+        slot:         data.slot,
+      };
+      await showPaymentStep();
       return;
     }
 
     if (data.success) {
-      document.getElementById('booking-form').style.display = 'none';
-      const s = data.slot;
-      document.getElementById('modal-success-msg').innerHTML =
-        `Your <strong>${data.service}</strong> session is reserved for
-         <strong>${new Date(s.date + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</strong>
-         at <strong>${formatTime12h(s.time)}</strong> (${s.duration} min).<br/><br/>We'll be in touch shortly to confirm. ✦`;
-      document.getElementById('modal-success').style.display = 'block';
+      showConfirmationStep({
+        bookingRef: data.booking_ref,
+        service:    data.service,
+        slot:       data.slot,
+        paid:       false,
+      });
       fetch('/api/slots').then(r => r.json()).then(d => renderSlotsPublic(d.slots || []));
     } else {
       alert(data.error || 'Something went wrong. Please try again.');
@@ -468,13 +648,18 @@ function showInfoBanner(msg, autoDismissMs = 8000) {
   }
 }
 
-// Check for Stripe success/cancel params
+// Initialise Stripe key on page load + handle redirect params
 window.addEventListener('DOMContentLoaded', () => {
+  // Pre-fetch Stripe publishable key so it's ready when needed
+  initStripe();
+
   const params = new URLSearchParams(window.location.search);
+  // Legacy: handle redirect back from old Stripe Checkout Session flow
   if (params.get('booking') === 'success') {
     const modal = document.getElementById('booking-modal');
-    document.getElementById('booking-form').style.display = 'none';
-    document.getElementById('modal-success-msg').innerHTML = 
+    document.getElementById('modal-step-form').style.display    = 'none';
+    document.getElementById('modal-step-payment').style.display = 'none';
+    document.getElementById('modal-success-msg').innerHTML =
       `Your payment was successful and your session is fully confirmed!<br/><br/>We'll be in touch shortly with details. ✦`;
     document.getElementById('modal-success').style.display = 'block';
     modal.classList.add('open');

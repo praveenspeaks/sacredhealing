@@ -211,6 +211,7 @@ describe('Booking', () => {
     expect(res.status).toBe(201);
     expect(res.body.success).toBe(true);
     expect(res.body.booking_id).toBeDefined();
+    expect(res.body.booking_ref).toMatch(/^SH-[A-Z0-9]{8}$/);
     testBookingId = res.body.booking_id;
   });
 
@@ -503,5 +504,40 @@ describe('GET /api/admin/config', () => {
     expect(res.body.stripe).toHaveProperty('configured');
     expect(res.body.stripe).toHaveProperty('mode');
     expect(res.body.email).toHaveProperty('configured');
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// 15. STRIPE PUBLIC KEY ENDPOINT
+// ════════════════════════════════════════════════════════════════════════════
+
+describe('GET /api/stripe-key', () => {
+  it('returns publishableKey field (null when Stripe not configured in test env)', async () => {
+    const res = await request(app).get('/api/stripe-key');
+    expect(res.status).toBe(200);
+    expect(res.body).toHaveProperty('publishableKey');
+    // In test env STRIPE_SECRET_KEY is empty, so publishableKey should be null
+    expect(res.body.publishableKey).toBeNull();
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// 16. PAYMENT CONFIRM ENDPOINT — validation only (no real Stripe in tests)
+// ════════════════════════════════════════════════════════════════════════════
+
+describe('POST /api/bookings/confirm', () => {
+  it('returns 400 when booking_id or payment_intent_id missing', async () => {
+    const res = await request(app).post('/api/bookings/confirm')
+      .set('Content-Type', 'application/json')
+      .send({ booking_id: 1 }); // missing payment_intent_id
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBeDefined();
+  });
+
+  it('returns 400 when both fields missing', async () => {
+    const res = await request(app).post('/api/bookings/confirm')
+      .set('Content-Type', 'application/json')
+      .send({});
+    expect(res.status).toBe(400);
   });
 });
