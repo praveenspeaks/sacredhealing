@@ -116,7 +116,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                   <div class="service-price" style="color:var(--olive); font-size:1.2rem; margin-bottom:1.5rem; font-family:var(--font-heading);">
                     <span>£${s.price}</span> <span style="font-size:0.9rem; color:var(--text-muted)">/ ${s.duration} mins</span>
                   </div>
-                  <a href="/services/${s.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}" class="service-link">Reserve This Path →</a>
+                  <a href="/services/${s.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}" class="service-link-detail" style="font-size:0.8rem;color:var(--text-muted);text-decoration:none;display:block;margin-bottom:0.5rem;">View Details →</a>
+                  <button onclick="openBookingForService('${s.title.replace(/'/g,"\\'")}', ${s.price})" class="service-link">Reserve This Path →</button>
                 </div>
                 `;
             });

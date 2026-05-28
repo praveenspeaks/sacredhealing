@@ -267,25 +267,14 @@ function durTag(min) {
   return `<span class="slot-dur-tag ${cls}">${labels[min] || min + ' min'}</span>`;
 }
 
-// ── Price tag helper ──────────────────
-function priceTag(price, currency) {
-  const sym = CURR_SYMBOLS[currency] || '£';
-  if (!price || parseFloat(price) === 0) return '<span class="slot-price is-free">FREE</span>';
-  const val = parseFloat(price) % 1 === 0 ? parseInt(price) : parseFloat(price).toFixed(2);
-  return `<span class="slot-price">${sym}${val}</span>`;
-}
-
-// ── Build Slot Card ───────────────────
+// ── Build Slot Card (no price — price comes from service) ─────
 function buildSlotCard(slot) {
   const dateStr = new Date(slot.date + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   const timeStr = formatTime12h(slot.time);
-  const priceArg = slot.price || 0;
-  const currArg  = slot.currency || 'GBP';
   return `
-    <div class="slot-card" onclick="openBookingModal(${slot.id}, '${slot.date}', '${slot.time}', ${slot.duration}, ${priceArg}, '${currArg}')">
+    <div class="slot-card" onclick="openBookingModal(${slot.id}, '${slot.date}', '${slot.time}', ${slot.duration})">
       <div class="slot-card-top">
         ${durTag(slot.duration)}
-        ${priceTag(priceArg, currArg)}
       </div>
       <div class="slot-date">${dateStr}</div>
       <div class="slot-time">${timeStr}</div>
@@ -314,10 +303,33 @@ function filterSlots(btn, duration) {
     .then(data => renderSlotsPublic(data.slots || []));
 }
 
-// ── BOOKING MODAL FUNCTIONS (global) ──
-let _currentSlotId = null;
+// ── Render Slots (global duplicate removed) ───────────────────
 
-function openBookingModal(slotId, date, time, duration, price, currency) {
+// ── BOOKING MODAL FUNCTIONS (global) ──
+let _currentSlotId       = null;
+let _preselectedService  = null; // { name, price } — set by service cards
+
+// Called from service card "Reserve" buttons
+function openBookingForService(serviceName, servicePrice) {
+  _preselectedService = { name: serviceName, price: parseFloat(servicePrice) || 0 };
+  // Scroll to the slots/booking section
+  const section = document.getElementById('contact');
+  if (section) section.scrollIntoView({ behavior: 'smooth' });
+  // Show a subtle banner above the slots grid
+  const existing = document.getElementById('service-preselect-banner');
+  if (existing) existing.remove();
+  const grid = document.getElementById('public-slots-grid');
+  if (grid) {
+    const priceStr = _preselectedService.price > 0 ? ` · £${_preselectedService.price}` : '';
+    grid.insertAdjacentHTML('beforebegin', `
+      <div id="service-preselect-banner" style="margin-bottom:1rem;padding:0.75rem 1.25rem;background:rgba(92,91,71,0.12);border:1px solid rgba(92,91,71,0.3);border-radius:8px;display:flex;align-items:center;justify-content:space-between;font-size:0.9rem;color:var(--text-body);">
+        <span>✦ <strong style="color:var(--olive)">${serviceName}</strong>${priceStr} — choose your time slot below</span>
+        <button onclick="_preselectedService=null;document.getElementById('service-preselect-banner').remove();" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:1.1rem;padding:0 0.25rem;">✕</button>
+      </div>`);
+  }
+}
+
+function openBookingModal(slotId, date, time, duration) {
   // Called without a slot (e.g. from navbar CTA) — just scroll to the booking section
   if (!slotId) {
     document.getElementById('contact').scrollIntoView({ behavior: 'smooth' });
@@ -335,13 +347,33 @@ function openBookingModal(slotId, date, time, duration, price, currency) {
 
   _currentSlotId = slotId;
   document.getElementById('booking-slot-id').value = slotId;
-  const sym = CURR_SYMBOLS[currency] || '£';
-  const priceStr = (!price || parseFloat(price) === 0) ? 'Free' : `${sym}${parseFloat(price) % 1 === 0 ? parseInt(price) : parseFloat(price).toFixed(2)}`;
-  slotInfo.innerHTML = `
-    <span>${new Date(date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
-    <span>·</span><span>${formatTime12h(time)}</span>
-    <span>·</span><span>${duration} min</span>
-    <span>·</span><span>${priceStr}</span>`;
+
+  const dateStr = new Date(date + 'T00:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+
+  if (_preselectedService) {
+    // Hide service picker, show badge with service name + price
+    const priceStr = _preselectedService.price > 0 ? `£${_preselectedService.price}` : 'Free';
+    document.getElementById('service-badge-display').innerHTML = `
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:0.75rem 1rem;background:rgba(92,91,71,0.1);border:1px solid rgba(92,91,71,0.28);border-radius:8px;">
+        <span style="font-family:var(--font-heading);font-size:1.1rem;color:var(--olive)">${_preselectedService.name}</span>
+        <span style="font-weight:600;color:var(--olive)">${priceStr}</span>
+      </div>`;
+    document.getElementById('service-badge-group').style.display = 'block';
+    document.getElementById('service-selector-group').style.display = 'none';
+    document.getElementById('booking-service-hidden').value = _preselectedService.name;
+    slotInfo.innerHTML = `
+      <span>${dateStr}</span><span>·</span><span>${formatTime12h(time)}</span>
+      <span>·</span><span>${duration} min</span><span>·</span><strong>${priceStr}</strong>`;
+  } else {
+    // Show service picker for generic slot booking
+    document.getElementById('service-badge-group').style.display = 'none';
+    document.getElementById('service-selector-group').style.display = 'block';
+    document.getElementById('booking-service-hidden').value = '';
+    slotInfo.innerHTML = `
+      <span>${dateStr}</span><span>·</span><span>${formatTime12h(time)}</span>
+      <span>·</span><span>${duration} min</span>`;
+  }
+
   modal.classList.add('open');
   document.body.style.overflow = 'hidden';
 }
@@ -370,7 +402,9 @@ function formatTime12h(timeStr) {
 async function submitBooking(e) {
   e.preventDefault();
   const slotId  = document.getElementById('booking-slot-id').value;
-  const service = document.querySelector('input[name="modal-service"]:checked')?.value;
+  // Service comes from pre-selection (hidden input) or from the radio picker
+  const service = document.getElementById('booking-service-hidden').value ||
+                  document.querySelector('input[name="modal-service"]:checked')?.value;
   const name    = document.getElementById('booking-name').value.trim();
   const email   = document.getElementById('booking-email').value.trim();
   const phone   = document.getElementById('booking-phone').value.trim();
@@ -399,12 +433,10 @@ async function submitBooking(e) {
     if (data.success) {
       document.getElementById('booking-form').style.display = 'none';
       const s = data.slot;
-      const sym = CURR_SYMBOLS[s.currency] || '£';
-      const priceStr = (!s.price || parseFloat(s.price) === 0) ? 'Free consultation' : `${sym}${parseFloat(s.price) % 1 === 0 ? parseInt(s.price) : parseFloat(s.price).toFixed(2)}`;
       document.getElementById('modal-success-msg').innerHTML =
         `Your <strong>${data.service}</strong> session is reserved for
          <strong>${new Date(s.date + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</strong>
-         at <strong>${formatTime12h(s.time)}</strong> (${s.duration} min · ${priceStr}).<br/><br/>We'll be in touch shortly to confirm. ✦`;
+         at <strong>${formatTime12h(s.time)}</strong> (${s.duration} min).<br/><br/>We'll be in touch shortly to confirm. ✦`;
       document.getElementById('modal-success').style.display = 'block';
       fetch('/api/slots').then(r => r.json()).then(d => renderSlotsPublic(d.slots || []));
     } else {

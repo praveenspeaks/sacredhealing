@@ -67,6 +67,8 @@ async function initDatabase() {
 
   // Migration-safe: add cancel_token for existing databases
   await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS cancel_token TEXT DEFAULT NULL`);
+  // Unique constraint so ON CONFLICT (date,time) works in bulk insert
+  await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS slots_date_time_idx ON slots(date, time)`);
 }
 
 // ════════════════════════════════════════════════════════════
@@ -235,18 +237,22 @@ app.post('/api/bookings', async (req, res) => {
     const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
     const cancelUrl = `${baseUrl}/cancel?token=${cancelToken}`;
 
-    if (slot.price > 0 && process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY.startsWith('sk_')) {
+    // Look up service price — payment is driven by service type, not slot
+    const svcResult = await pool.query('SELECT price FROM services WHERE title = $1', [service.trim()]);
+    const servicePrice = svcResult.rows[0] ? parseFloat(svcResult.rows[0].price) : 0;
+
+    if (servicePrice > 0 && process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY.startsWith('sk_')) {
       try {
         const session = await stripe.checkout.sessions.create({
           payment_method_types: ['card'],
           line_items: [{
             price_data: {
-              currency: slot.currency.toLowerCase(),
+              currency: 'gbp',
               product_data: {
                 name: service + ' Session',
                 description: `Date: ${slot.date} at ${slot.time} (${slot.duration} min)`,
               },
-              unit_amount: Math.round(slot.price * 100),
+              unit_amount: Math.round(servicePrice * 100),
             },
             quantity: 1,
           }],
@@ -354,18 +360,17 @@ app.get('/api/admin/slots', requireAdmin, async (req, res) => {
 // POST /api/admin/slots  — Add single slot
 app.post('/api/admin/slots', requireAdmin, async (req, res) => {
   try {
-    const { date, time, duration, price, currency, note } = req.body;
+    const { date, time, duration, note } = req.body;
     if (!date || !time) return res.status(400).json({ error: 'date and time are required.' });
 
-    const existing = await pool.query('SELECT id FROM slots WHERE date = $1 AND time = $2', [date, time]);
-    if (existing.rows.length) return res.status(409).json({ error: 'A slot already exists for this date and time.' });
-
     const result = await pool.query(`
-      INSERT INTO slots (date, time, duration, price, currency, note)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO slots (date, time, duration, note)
+      VALUES ($1, $2, $3, $4)
+      ON CONFLICT (date, time) DO NOTHING
       RETURNING id
-    `, [date, time, duration || 60, price || 0, currency || 'GBP', note || '']);
+    `, [date, time, duration || 60, note || '']);
 
+    if (!result.rows.length) return res.status(409).json({ error: 'A slot already exists for this date and time.' });
     res.status(201).json({ success: true, id: result.rows[0].id });
   } catch (err) {
     console.error(err);
@@ -386,10 +391,10 @@ app.post('/api/admin/slots/bulk', requireAdmin, async (req, res) => {
       for (const s of slots) {
         if (s.date && s.time) {
           await client.query(`
-            INSERT INTO slots (date, time, duration, price, currency, note)
-            VALUES ($1, $2, $3, $4, $5, $6)
+            INSERT INTO slots (date, time, duration, note)
+            VALUES ($1, $2, $3, $4)
             ON CONFLICT (date, time) DO NOTHING
-          `, [s.date, s.time, s.duration || 60, s.price || 0, s.currency || 'GBP', s.note || '']);
+          `, [s.date, s.time, s.duration || 60, s.note || '']);
           count++;
         }
       }
@@ -408,11 +413,11 @@ app.post('/api/admin/slots/bulk', requireAdmin, async (req, res) => {
   }
 });
 
-// PATCH /api/admin/slots/:id  — Update price/duration/note of available slot
+// PATCH /api/admin/slots/:id  — Update duration/note of available slot
 app.patch('/api/admin/slots/:id', requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
-    const { price, duration, note, currency } = req.body;
+    const { duration, note } = req.body;
     const slotResult = await pool.query('SELECT * FROM slots WHERE id = $1', [id]);
     const slot = slotResult.rows[0];
     if (!slot) return res.status(404).json({ error: 'Slot not found' });
@@ -420,16 +425,12 @@ app.patch('/api/admin/slots/:id', requireAdmin, async (req, res) => {
 
     await pool.query(`
       UPDATE slots SET
-        price    = COALESCE($1, price),
-        duration = COALESCE($2, duration),
-        note     = COALESCE($3, note),
-        currency = COALESCE($4, currency)
-      WHERE id = $5
+        duration = COALESCE($1, duration),
+        note     = COALESCE($2, note)
+      WHERE id = $3
     `, [
-      price    !== undefined ? price    : null,
       duration !== undefined ? duration : null,
       note     !== undefined ? note     : null,
-      currency !== undefined ? currency : null,
       id
     ]);
     res.json({ success: true });

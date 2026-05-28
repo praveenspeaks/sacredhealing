@@ -683,8 +683,16 @@
       <!-- Form -->
       <form id="booking-form" onsubmit="submitBooking(event)">
         <input type="hidden" id="booking-slot-id" />
-        <!-- Service Selection -->
-        <div class="modal-form-group">
+        <input type="hidden" id="booking-service-hidden" />
+
+        <!-- Service Badge: shown when arriving from a service card -->
+        <div class="modal-form-group" id="service-badge-group" style="display:none;">
+          <label>Your Session</label>
+          <div id="service-badge-display"></div>
+        </div>
+
+        <!-- Service Picker: shown when no service pre-selected -->
+        <div class="modal-form-group" id="service-selector-group">
           <label>Healing Service *</label>
           <div class="service-selector" id="service-selector">
             <label class="service-opt">

@@ -379,30 +379,16 @@
           <div class="form-group" style="margin-bottom:1rem;">
             <label>Session Duration</label>
             <div class="duration-pills" id="slot-duration-pills">
-              <label class="duration-pill"><input type="radio" name="slot-dur" value="15" /> 15 min (Free)</label>
+              <label class="duration-pill"><input type="radio" name="slot-dur" value="15" /> 15 min</label>
               <label class="duration-pill"><input type="radio" name="slot-dur" value="30" /> 30 min</label>
               <label class="duration-pill selected"><input type="radio" name="slot-dur" value="60" checked /> 60 min</label>
               <label class="duration-pill"><input type="radio" name="slot-dur" value="90" /> 90 min</label>
               <label class="duration-pill"><input type="radio" name="slot-dur" value="120" /> 120 min</label>
             </div>
           </div>
-          <div class="form-row">
-            <div class="form-group">
-              <label>Price</label>
-              <div class="price-group">
-                <select class="form-control" id="slot-currency">
-                  <option value="GBP">£ GBP</option>
-                  <option value="USD">$ USD</option>
-                  <option value="EUR">€ EUR</option>
-                  <option value="INR">₹ INR</option>
-                </select>
-                <input type="number" class="form-control" id="slot-price" min="0" step="0.01" value="0" placeholder="0 = Free" />
-              </div>
-            </div>
-            <div class="form-group">
-              <label>Internal Note</label>
-              <input type="text" class="form-control" id="slot-note" placeholder="Zoom link, prep note..." />
-            </div>
+          <div class="form-group">
+            <label>Internal Note</label>
+            <input type="text" class="form-control" id="slot-note" placeholder="Zoom link, prep note..." />
           </div>
           <button class="btn-primary" onclick="addSlot()" style="margin-top:0.5rem;">+ Add Slot</button>
         </div>
@@ -438,18 +424,6 @@
                 <label class="duration-pill"><input type="radio" name="bulk-dur" value="30" /> 30m</label>
                 <label class="duration-pill selected"><input type="radio" name="bulk-dur" value="60" checked /> 60m</label>
                 <label class="duration-pill"><input type="radio" name="bulk-dur" value="90" /> 90m</label>
-              </div>
-            </div>
-            <div class="form-group">
-              <label>Price per Slot</label>
-              <div class="price-group">
-                <select class="form-control" id="bulk-currency">
-                  <option value="GBP">£ GBP</option>
-                  <option value="USD">$ USD</option>
-                  <option value="EUR">€ EUR</option>
-                  <option value="INR">₹ INR</option>
-                </select>
-                <input type="number" class="form-control" id="bulk-price" min="0" step="0.01" value="75" placeholder="Price" />
               </div>
             </div>
           </div>
@@ -930,14 +904,12 @@
     const date     = document.getElementById('slot-date').value;
     const time     = document.getElementById('slot-time').value;
     const duration = getSelectedDuration('slot-dur');
-    const price    = duration === 15 ? 0 : parseFloat(document.getElementById('slot-price').value) || 0;
-    const currency = document.getElementById('slot-currency').value;
     const note     = document.getElementById('slot-note').value;
 
     if (!date || !time) { toast('Please select a date and time', 'error'); return; }
 
     try {
-      const res = await api('POST', '/api/admin/slots', { date, time, duration, price, currency, note });
+      const res = await api('POST', '/api/admin/slots', { date, time, duration, note });
       if (res.success) {
         toast(`✦ Slot added: ${fmtDate(date)} at ${fmtTime(time)} (${duration} min)`, 'success');
         loadSlots();
@@ -950,8 +922,6 @@
     const end   = document.getElementById('bulk-end').value;
     const times = document.getElementById('bulk-times').value.split(',').map(t => t.trim()).filter(Boolean);
     const dur   = getSelectedDuration('bulk-dur');
-    const price = dur === 15 ? 0 : parseFloat(document.getElementById('bulk-price').value) || 0;
-    const curr  = document.getElementById('bulk-currency').value;
 
     if (!start || !end || !times.length) return [];
 
@@ -961,12 +931,16 @@
     });
 
     const slots = [];
-    const cursor = new Date(start + 'T00:00:00');
-    const endDate = new Date(end + 'T00:00:00');
+    const cursor  = new Date(start + 'T00:00:00');
+    const endDate = new Date(end   + 'T00:00:00');
     while (cursor <= endDate) {
       if (selectedDays.includes(cursor.getDay())) {
+        // Use local date parts to avoid UTC timezone shift
+        const y  = cursor.getFullYear();
+        const mo = String(cursor.getMonth() + 1).padStart(2, '0');
+        const d  = String(cursor.getDate()).padStart(2, '0');
         for (const t of times) {
-          slots.push({ date: cursor.toISOString().split('T')[0], time: t, duration: dur, price, currency: curr });
+          slots.push({ date: `${y}-${mo}-${d}`, time: t, duration: dur });
         }
       }
       cursor.setDate(cursor.getDate() + 1);
@@ -978,10 +952,9 @@
     const slots = generateBulkSlots();
     const preview = document.getElementById('bulk-preview');
     if (!slots.length) { preview.style.display = 'none'; toast('No slots – check your date range and day selections', 'error'); return; }
-    const sym = SYMBOLS[slots[0]?.currency] || '£';
     preview.style.display = 'block';
     preview.innerHTML = `<strong style="color:var(--gold);">${slots.length} slots will be created:</strong><br/>` +
-      slots.map(s => `<p>📅 ${fmtDate(s.date)} · ${fmtTime(s.time)} · ${s.duration} min · ${s.price > 0 ? sym + s.price : 'FREE'}</p>`).join('');
+      slots.map(s => `<p>📅 ${fmtDate(s.date)} · ${fmtTime(s.time)} · ${s.duration} min</p>`).join('');
   }
 
   async function addBulkSlots() {
@@ -1026,13 +999,12 @@
 
       document.getElementById('slots-table').innerHTML = `
         <table>
-          <thead><tr><th>Date</th><th>Time</th><th>Duration</th><th>Price</th><th>Status</th><th>Booked By</th><th>Service</th><th>Actions</th></tr></thead>
+          <thead><tr><th>Date</th><th>Time</th><th>Duration</th><th>Status</th><th>Booked By</th><th>Service</th><th>Actions</th></tr></thead>
           <tbody>${slots.map(s => `
             <tr>
               <td>${fmtDate(s.date)}</td>
               <td>${fmtTime(s.time)}</td>
               <td>${durBadge(s.duration)}</td>
-              <td>${fmtPrice(s.price, s.currency)}</td>
               <td>${statusBadge(s.is_booked ? 'booked' : 'available')}</td>
               <td>${s.customer_name ? `${s.customer_name}<br/><small style="color:var(--muted)">${s.customer_email}</small>` : '<span style="color:var(--muted)">—</span>'}</td>
               <td>${s.service ? `<small>${s.service}</small>` : '<span style="color:var(--muted)">—</span>'}</td>
@@ -1048,7 +1020,7 @@
     return `
       <table>
         <thead><tr>
-          <th>Date & Time</th><th>Duration</th><th>Price</th><th>Service</th><th>Customer</th>
+          <th>Date & Time</th><th>Duration</th><th>Service</th><th>Customer</th>
           ${!compact ? '<th>Message</th>' : ''}
           <th>Status</th><th>Booked On</th><th>Actions</th>
         </tr></thead>
@@ -1057,7 +1029,6 @@
             <tr>
               <td>${fmtDate(b.date)}<br/><small>${fmtTime(b.time)}</small></td>
               <td>${durBadge(b.duration)}</td>
-              <td>${fmtPrice(b.price, b.currency)}</td>
               <td><small>${b.service || '—'}</small></td>
               <td><strong>${b.customer_name}</strong><br/><small style="color:var(--muted)">${b.customer_email}</small></td>
               ${!compact ? `<td style="max-width:160px;word-break:break-word;font-size:0.8rem;">${b.message || '—'}</td>` : ''}
