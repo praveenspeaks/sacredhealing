@@ -21,8 +21,9 @@ if (!enabled) {
   console.warn('⚠️  SMTP not configured — email notifications are disabled. Set SMTP_HOST, SMTP_USER, SMTP_PASS in .env to enable.');
 }
 
-const FROM        = process.env.SMTP_FROM || '"Sacred Healing" <noreply@soulbody.healing.com>';
+const FROM        = process.env.SMTP_FROM || '"Sacred Healing" <noreply@healwithreena.com>';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || process.env.SMTP_USER;
+const REPLY_TO    = process.env.SMTP_REPLY_TO || ADMIN_EMAIL;
 
 function formatDate(dateStr) {
   return new Date(dateStr + 'T00:00:00').toLocaleDateString('en-GB', {
@@ -46,6 +47,7 @@ async function sendBookingConfirmation({ customerName, customerEmail, service, s
 
   await transporter.sendMail({
     from:    FROM,
+    replyTo: REPLY_TO,
     to:      customerEmail,
     subject: `Your ${service} session is booked ✦ Sacred Healing`,
     html: `
