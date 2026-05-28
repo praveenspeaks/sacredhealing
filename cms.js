@@ -4,55 +4,54 @@ const path = require('path');
 const fs = require('fs');
 
 module.exports = {
-  init: function(db, app, requireAdmin) {
+  init: async function(pool, app, requireAdmin) {
     // ── CMS DB Setup ──────────────────────────────────────────
-    db.exec(`
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS site_content (
         key   TEXT PRIMARY KEY,
         value TEXT NOT NULL
-      );
+      )
+    `);
 
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS services (
-        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        id          SERIAL PRIMARY KEY,
         title       TEXT NOT NULL,
         description TEXT NOT NULL,
         features    TEXT NOT NULL,
         duration    INTEGER DEFAULT 60,
-        price       REAL DEFAULT 0,
+        price       NUMERIC(10,2) DEFAULT 0,
         order_num   INTEGER DEFAULT 0
-      );
+      )
+    `);
 
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS reviews (
-        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        id          SERIAL PRIMARY KEY,
         author      TEXT NOT NULL,
         comment     TEXT NOT NULL,
         status      TEXT DEFAULT 'pending',
-        created_at  TEXT DEFAULT (datetime('now'))
-      );
+        created_at  TIMESTAMPTZ DEFAULT NOW()
+      )
+    `);
 
+    await pool.query(`
       CREATE TABLE IF NOT EXISTS faqs (
-        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        id          SERIAL PRIMARY KEY,
         question    TEXT NOT NULL,
         answer      TEXT NOT NULL,
         order_num   INTEGER DEFAULT 0
-      );
+      )
     `);
 
-    try {
-      db.exec('ALTER TABLE services ADD COLUMN extra_details TEXT DEFAULT "{}"');
-    } catch(e) {
-      // Ignore if column already exists
-    }
+    await pool.query(`ALTER TABLE services ADD COLUMN IF NOT EXISTS extra_details TEXT DEFAULT '{}'`);
 
-    // Migration: fix logo path if it still points to the old non-existent file
-    db.prepare(
+    // Migration: fix logo path if still pointing to old file
+    await pool.query(
       "UPDATE site_content SET value = 'assets/logo-sbh.png' WHERE key = 'logo_img' AND value = 'assets/logo.png'"
-    ).run();
+    );
 
     // ── Upsert site_content with real content ────────────────
-    const upsertContent = db.prepare(
-      'INSERT INTO site_content (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value'
-    );
     const realContent = {
       'hero_title':         'Welcome to<br /><em class="gold-text">SoulBody Healing</em>',
       'hero_subtitle':      "Your healing sanctuary. We're dedicated to guiding you on a journey of self-discovery, self-love, healing and well-being. Discover how our unique services can help you find yourself and unlock your true potential.",
@@ -69,32 +68,22 @@ module.exports = {
       'chakra_img':         'assets/mandala.png',
       'healer_img':         'assets/healer.jpg'
     };
-    const upsertManyContent = db.transaction((obj) => {
-      for (const [key, val] of Object.entries(obj)) upsertContent.run(key, val);
-    });
-    upsertManyContent(realContent);
+    for (const [key, val] of Object.entries(realContent)) {
+      await pool.query(
+        'INSERT INTO site_content (key, value) VALUES ($1, $2) ON CONFLICT(key) DO UPDATE SET value = EXCLUDED.value',
+        [key, val]
+      );
+    }
 
     // ── Remove placeholder seed services ─────────────────────
-    db.prepare(
+    await pool.query(
       "DELETE FROM services WHERE title IN ('Quantum Energy Reset','The Deep Awakening','Celestial Harmony Session')"
-    ).run();
+    );
 
-    // ── Unique index on title must exist BEFORE prepare() uses ON CONFLICT(title)
-    db.exec('CREATE UNIQUE INDEX IF NOT EXISTS services_title_unique ON services(title)');
+    // ── Unique index on title (needed for ON CONFLICT(title)) ─
+    await pool.query('CREATE UNIQUE INDEX IF NOT EXISTS services_title_unique ON services(title)');
 
     // ── Upsert real services ──────────────────────────────────
-    const upsertService = db.prepare(`
-      INSERT INTO services (title, description, features, duration, price, order_num, extra_details)
-      VALUES (?, ?, ?, ?, ?, ?, ?)
-      ON CONFLICT(title) DO UPDATE SET
-        description   = excluded.description,
-        features      = excluded.features,
-        duration      = excluded.duration,
-        price         = excluded.price,
-        order_num     = excluded.order_num,
-        extra_details = excluded.extra_details
-    `);
-
     const realServices = [
       {
         title: 'Spiritual Healing',
@@ -224,22 +213,23 @@ module.exports = {
       }
     ];
 
-    const upsertManyServices = db.transaction((services) => {
-      for (const s of services) {
-        upsertService.run(
-          s.title, s.description,
-          JSON.stringify(s.features),
-          s.duration, s.price, s.order,
-          JSON.stringify(s.extra)
-        );
-      }
-    });
-    upsertManyServices(realServices);
+    for (const s of realServices) {
+      await pool.query(`
+        INSERT INTO services (title, description, features, duration, price, order_num, extra_details)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        ON CONFLICT(title) DO UPDATE SET
+          description   = EXCLUDED.description,
+          features      = EXCLUDED.features,
+          duration      = EXCLUDED.duration,
+          price         = EXCLUDED.price,
+          order_num     = EXCLUDED.order_num,
+          extra_details = EXCLUDED.extra_details
+      `, [s.title, s.description, JSON.stringify(s.features), s.duration, s.price, s.order, JSON.stringify(s.extra)]);
+    }
 
     // ── Upsert FAQs ───────────────────────────────────────────
-    const faqCount = db.prepare('SELECT COUNT(*) as c FROM faqs').get().c;
-    if (faqCount === 0) {
-      const insertFaq = db.prepare('INSERT INTO faqs (question, answer, order_num) VALUES (?, ?, ?)');
+    const faqCountResult = await pool.query('SELECT COUNT(*) as c FROM faqs');
+    if (parseInt(faqCountResult.rows[0].c) === 0) {
       const realFaqs = [
         {
           q: 'What can I expect during my first healing session?',
@@ -272,18 +262,28 @@ module.exports = {
           order: 6
         }
       ];
-      const insertFaqs = db.transaction((faqs) => {
-        for (const f of faqs) insertFaq.run(f.q, f.a, f.order);
-      });
-      insertFaqs(realFaqs);
+      for (const f of realFaqs) {
+        await pool.query(
+          'INSERT INTO faqs (question, answer, order_num) VALUES ($1, $2, $3)',
+          [f.q, f.a, f.order]
+        );
+      }
     }
 
     // ── Seed reviews if empty ─────────────────────────────────
-    const reviewCount = db.prepare('SELECT COUNT(*) as c FROM reviews').get().c;
-    if (reviewCount === 0) {
-      db.prepare("INSERT INTO reviews (author, comment, status) VALUES ('Anonymous', 'I was hesitant at first, but the 10-minute courtesy call eased my worries. I immediately felt comfortable and trusted the process. Thank you, SoulBody Healing.', 'approved')").run();
-      db.prepare("INSERT INTO reviews (author, comment, status) VALUES ('Anonymous', 'After just one session, I felt lighter and more at peace. I truly believe I have been healed. I highly recommend SoulBody Healing to anyone seeking clarity and healing.', 'approved')").run();
-      db.prepare("INSERT INTO reviews (author, comment, status) VALUES ('Anonymous', 'I felt truly empowered after my session. The tips I received are helping me navigate my journey with confidence. I now feel in tune with self.', 'approved')").run();
+    const reviewCountResult = await pool.query('SELECT COUNT(*) as c FROM reviews');
+    if (parseInt(reviewCountResult.rows[0].c) === 0) {
+      const seedReviews = [
+        ['Anonymous', 'I was hesitant at first, but the 10-minute courtesy call eased my worries. I immediately felt comfortable and trusted the process. Thank you, SoulBody Healing.', 'approved'],
+        ['Anonymous', 'After just one session, I felt lighter and more at peace. I truly believe I have been healed. I highly recommend SoulBody Healing to anyone seeking clarity and healing.', 'approved'],
+        ['Anonymous', 'I felt truly empowered after my session. The tips I received are helping me navigate my journey with confidence. I now feel in tune with self.', 'approved']
+      ];
+      for (const [author, comment, status] of seedReviews) {
+        await pool.query(
+          'INSERT INTO reviews (author, comment, status) VALUES ($1, $2, $3)',
+          [author, comment, status]
+        );
+      }
     }
 
     // ── Multer Image Uploader ────────────────────────────────
@@ -293,56 +293,54 @@ module.exports = {
     }
     const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
     const storage = multer.diskStorage({
-      destination: function (req, file, cb) {
-        cb(null, uploadDir)
-      },
-      filename: function (req, file, cb) {
+      destination: function (req, file, cb) { cb(null, uploadDir); },
+      filename:    function (req, file, cb) {
         const ext = path.extname(file.originalname);
-        cb(null, file.fieldname + '-' + Date.now() + ext)
+        cb(null, file.fieldname + '-' + Date.now() + ext);
       }
     });
     const upload = multer({
-      storage: storage,
-      limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
+      storage,
+      limits: { fileSize: 5 * 1024 * 1024 },
       fileFilter: function (req, file, cb) {
-        if (ALLOWED_MIME.includes(file.mimetype)) {
-          cb(null, true);
-        } else {
-          cb(new Error('Only image files are allowed (JPEG, PNG, WebP, GIF, SVG)'));
-        }
+        if (ALLOWED_MIME.includes(file.mimetype)) cb(null, true);
+        else cb(new Error('Only image files are allowed (JPEG, PNG, WebP, GIF, SVG)'));
       }
     });
     app.use('/assets', express.static(uploadDir));
 
     // ── PUBLIC CMS ENDPOINTS ──────────────────────────────────
-    app.get('/api/content', (req, res) => {
+    app.get('/api/content', async (req, res) => {
       try {
-        const contentRows = db.prepare('SELECT * FROM site_content').all();
+        const [contentResult, servicesResult, reviewsResult, faqsResult] = await Promise.all([
+          pool.query('SELECT * FROM site_content'),
+          pool.query('SELECT * FROM services ORDER BY order_num ASC, id ASC'),
+          pool.query("SELECT author, comment, created_at FROM reviews WHERE status = 'approved' ORDER BY id DESC LIMIT 10"),
+          pool.query('SELECT * FROM faqs ORDER BY order_num ASC, id ASC')
+        ]);
+
         const content = {};
-        contentRows.forEach(r => content[r.key] = r.value);
-        
-        const services = db.prepare('SELECT * FROM services ORDER BY order_num ASC, id ASC').all();
-        // Parse features from JSON
+        contentResult.rows.forEach(r => content[r.key] = r.value);
+
+        const services = servicesResult.rows;
         services.forEach(s => {
           try { s.features = JSON.parse(s.features); } catch(e) { s.features = [s.features]; }
         });
-        
-        const reviews = db.prepare("SELECT author, comment, created_at FROM reviews WHERE status = 'approved' ORDER BY id DESC LIMIT 10").all();
-        
-        const faqs = db.prepare('SELECT * FROM faqs ORDER BY order_num ASC, id ASC').all();
 
-        res.json({ content, services, reviews, faqs });
+        res.json({ content, services, reviews: reviewsResult.rows, faqs: faqsResult.rows });
       } catch (err) {
         res.status(500).json({ error: 'Failed to fetch content' });
       }
     });
 
-    app.post('/api/reviews', express.json(), (req, res) => {
+    app.post('/api/reviews', express.json(), async (req, res) => {
       try {
         const { author, comment } = req.body;
         if (!author || !comment) return res.status(400).json({ error: 'Missing fields' });
-        db.prepare('INSERT INTO reviews (author, comment, status) VALUES (?, ?, ?)')
-          .run(author, comment, 'pending');
+        await pool.query(
+          'INSERT INTO reviews (author, comment, status) VALUES ($1, $2, $3)',
+          [author, comment, 'pending']
+        );
         res.json({ success: true });
       } catch (err) {
         res.status(500).json({ error: 'Failed to submit review' });
@@ -350,133 +348,146 @@ module.exports = {
     });
 
     // ── ADMIN CMS ENDPOINTS ───────────────────────────────────
-    
-    // Content Texts Update
-    app.put('/api/admin/content', requireAdmin, express.json(), (req, res) => {
+
+    app.put('/api/admin/content', requireAdmin, express.json(), async (req, res) => {
       try {
-        const { content } = req.body; // Map of key-values
+        const { content } = req.body;
         if (!content) return res.status(400).json({ error: 'Missing content object' });
-        
-        const updateStmt = db.prepare('INSERT INTO site_content (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value');
-        const updateMany = db.transaction((entries) => {
-          for (const [key, val] of Object.entries(entries)) {
-            updateStmt.run(key, val);
+
+        const client = await pool.connect();
+        try {
+          await client.query('BEGIN');
+          for (const [key, val] of Object.entries(content)) {
+            await client.query(
+              'INSERT INTO site_content (key, value) VALUES ($1, $2) ON CONFLICT(key) DO UPDATE SET value = EXCLUDED.value',
+              [key, val]
+            );
           }
-        });
-        updateMany(content);
+          await client.query('COMMIT');
+        } catch (e) {
+          await client.query('ROLLBACK');
+          throw e;
+        } finally {
+          client.release();
+        }
         res.json({ success: true });
       } catch (err) {
         res.status(500).json({ error: 'Failed to update content' });
       }
     });
 
-    // Image Upload Endpoint (Saves to server, updates site_content natively)
-    app.post('/api/admin/upload', requireAdmin, upload.single('image_file'), (req, res) => {
+    app.post('/api/admin/upload', requireAdmin, upload.single('image_file'), async (req, res) => {
       try {
         if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-        const key = req.body.key; // e.g., 'logo_img'
+        const key = req.body.key;
         if (!key) return res.status(400).json({ error: 'Missing content key' });
-        
+
         const fileUrl = 'assets/' + req.file.filename;
-        db.prepare('INSERT INTO site_content (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value')
-          .run(key, fileUrl);
-          
+        await pool.query(
+          'INSERT INTO site_content (key, value) VALUES ($1, $2) ON CONFLICT(key) DO UPDATE SET value = EXCLUDED.value',
+          [key, fileUrl]
+        );
         res.json({ success: true, url: fileUrl });
       } catch (err) {
         console.error(err);
         res.status(500).json({ error: 'Upload failed' });
       }
     });
-    
+
     // Services Management
-    app.post('/api/admin/services', requireAdmin, express.json(), (req, res) => {
-        try {
-            const { title, description, features, duration, price, order_num, extra_details } = req.body;
-            const featureStr = JSON.stringify(Array.isArray(features) ? features : features.split('\\n'));
-            const extraStr = extra_details ? JSON.stringify(extra_details) : "{}";
-            db.prepare('INSERT INTO services (title, description, features, duration, price, order_num, extra_details) VALUES (?, ?, ?, ?, ?, ?, ?)')
-              .run(title, description, featureStr, duration, price, order_num || 0, extraStr);
-            res.json({ success: true });
-        } catch (err) {
-            res.status(500).json({ error: 'Failed to add service' });
-        }
+    app.post('/api/admin/services', requireAdmin, express.json(), async (req, res) => {
+      try {
+        const { title, description, features, duration, price, order_num, extra_details } = req.body;
+        const featureStr = JSON.stringify(Array.isArray(features) ? features : features.split('\\n'));
+        const extraStr = extra_details ? JSON.stringify(extra_details) : '{}';
+        await pool.query(
+          'INSERT INTO services (title, description, features, duration, price, order_num, extra_details) VALUES ($1, $2, $3, $4, $5, $6, $7)',
+          [title, description, featureStr, duration, price, order_num || 0, extraStr]
+        );
+        res.json({ success: true });
+      } catch (err) {
+        res.status(500).json({ error: 'Failed to add service' });
+      }
     });
-    
-    app.put('/api/admin/services/:id', requireAdmin, express.json(), (req, res) => {
-        try {
-            const id = req.params.id;
-            const { title, description, features, duration, price, order_num, extra_details } = req.body;
-            const featureStr = JSON.stringify(Array.isArray(features) ? features : features.split('\\n'));
-            const extraStr = extra_details ? JSON.stringify(extra_details) : "{}";
-            db.prepare('UPDATE services SET title=?, description=?, features=?, duration=?, price=?, order_num=?, extra_details=? WHERE id=?')
-              .run(title, description, featureStr, duration, price, order_num || 0, extraStr, id);
-            res.json({ success: true });
-        } catch (err) {
-            res.status(500).json({ error: 'Failed to update service' });
-        }
+
+    app.put('/api/admin/services/:id', requireAdmin, express.json(), async (req, res) => {
+      try {
+        const { title, description, features, duration, price, order_num, extra_details } = req.body;
+        const featureStr = JSON.stringify(Array.isArray(features) ? features : features.split('\\n'));
+        const extraStr = extra_details ? JSON.stringify(extra_details) : '{}';
+        await pool.query(
+          'UPDATE services SET title=$1, description=$2, features=$3, duration=$4, price=$5, order_num=$6, extra_details=$7 WHERE id=$8',
+          [title, description, featureStr, duration, price, order_num || 0, extraStr, req.params.id]
+        );
+        res.json({ success: true });
+      } catch (err) {
+        res.status(500).json({ error: 'Failed to update service' });
+      }
     });
-    
-    app.delete('/api/admin/services/:id', requireAdmin, (req, res) => {
-        try {
-            db.prepare('DELETE FROM services WHERE id=?').run(req.params.id);
-            res.json({ success: true });
-        } catch (err) {
-            res.status(500).json({ error: 'Failed to delete service' });
-        }
+
+    app.delete('/api/admin/services/:id', requireAdmin, async (req, res) => {
+      try {
+        await pool.query('DELETE FROM services WHERE id=$1', [req.params.id]);
+        res.json({ success: true });
+      } catch (err) {
+        res.status(500).json({ error: 'Failed to delete service' });
+      }
     });
-    
+
     // FAQ Management
-    app.post('/api/admin/faqs', requireAdmin, express.json(), (req, res) => {
-        try {
-            const { question, answer, order_num } = req.body;
-            db.prepare('INSERT INTO faqs (question, answer, order_num) VALUES (?, ?, ?)')
-              .run(question, answer, order_num || 0);
-            res.json({ success: true });
-        } catch (err) {
-            res.status(500).json({ error: 'Failed to add faq' });
-        }
+    app.post('/api/admin/faqs', requireAdmin, express.json(), async (req, res) => {
+      try {
+        const { question, answer, order_num } = req.body;
+        await pool.query(
+          'INSERT INTO faqs (question, answer, order_num) VALUES ($1, $2, $3)',
+          [question, answer, order_num || 0]
+        );
+        res.json({ success: true });
+      } catch (err) {
+        res.status(500).json({ error: 'Failed to add faq' });
+      }
     });
 
-    app.put('/api/admin/faqs/:id', requireAdmin, express.json(), (req, res) => {
-        try {
-            const { question, answer, order_num } = req.body;
-            db.prepare('UPDATE faqs SET question=?, answer=?, order_num=? WHERE id=?')
-              .run(question, answer, order_num || 0, req.params.id);
-            res.json({ success: true });
-        } catch (err) {
-            res.status(500).json({ error: 'Failed to update faq' });
-        }
+    app.put('/api/admin/faqs/:id', requireAdmin, express.json(), async (req, res) => {
+      try {
+        const { question, answer, order_num } = req.body;
+        await pool.query(
+          'UPDATE faqs SET question=$1, answer=$2, order_num=$3 WHERE id=$4',
+          [question, answer, order_num || 0, req.params.id]
+        );
+        res.json({ success: true });
+      } catch (err) {
+        res.status(500).json({ error: 'Failed to update faq' });
+      }
     });
 
-    app.delete('/api/admin/faqs/:id', requireAdmin, (req, res) => {
-        try {
-            db.prepare('DELETE FROM faqs WHERE id=?').run(req.params.id);
-            res.json({ success: true });
-        } catch (err) {
-            res.status(500).json({ error: 'Failed to delete faq' });
-        }
+    app.delete('/api/admin/faqs/:id', requireAdmin, async (req, res) => {
+      try {
+        await pool.query('DELETE FROM faqs WHERE id=$1', [req.params.id]);
+        res.json({ success: true });
+      } catch (err) {
+        res.status(500).json({ error: 'Failed to delete faq' });
+      }
     });
-    
+
     // Reviews Management
-    app.get('/api/admin/reviews', requireAdmin, (req, res) => {
-        try {
-            const reviews = db.prepare("SELECT * FROM reviews ORDER BY id DESC").all();
-            res.json({ reviews });
-        } catch (err) {
-            res.status(500).json({ error: 'Failed to get reviews' });
-        }
-    });
-    
-    app.put('/api/admin/reviews/:id', requireAdmin, express.json(), (req, res) => {
-        try {
-            const id = req.params.id;
-            const { status } = req.body;
-            db.prepare('UPDATE reviews SET status=? WHERE id=?').run(status, id);
-            res.json({ success: true });
-        } catch (err) {
-            res.status(500).json({ error: 'Failed to update review' });
-        }
+    app.get('/api/admin/reviews', requireAdmin, async (req, res) => {
+      try {
+        const result = await pool.query('SELECT * FROM reviews ORDER BY id DESC');
+        res.json({ reviews: result.rows });
+      } catch (err) {
+        res.status(500).json({ error: 'Failed to get reviews' });
+      }
     });
 
+    app.put('/api/admin/reviews/:id', requireAdmin, express.json(), async (req, res) => {
+      try {
+        const { status } = req.body;
+        await pool.query('UPDATE reviews SET status=$1 WHERE id=$2', [status, req.params.id]);
+        res.json({ success: true });
+      } catch (err) {
+        res.status(500).json({ error: 'Failed to update review' });
+      }
+    });
   }
 };
