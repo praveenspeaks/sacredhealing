@@ -240,6 +240,7 @@
     .badge-pending { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
     .badge-confirmed { background: rgba(59, 130, 246, 0.15); color: var(--info); }
     .badge-cancelled { background: rgba(239, 68, 68, 0.15); color: var(--danger); }
+    .badge-pending_payment { background: rgba(99, 102, 241, 0.15); color: #818CF8; }
     .badge-free { background: var(--gold-glow); color: var(--gold); border: 1px solid rgba(218,180,103, 0.3); }
     
     /* ── PRICE DISPLAY ── */
@@ -841,6 +842,7 @@
   }
 
   function statusBadge(status) {
+    if (status === 'pending_payment') return `<span class="badge badge-pending_payment">⏳ awaiting payment</span>`;
     const map = { available: 'available', booked: 'booked', pending: 'pending', confirmed: 'confirmed', cancelled: 'cancelled' };
     return `<span class="badge badge-${map[status] || 'pending'}">${status}</span>`;
   }

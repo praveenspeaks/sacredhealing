@@ -206,7 +206,64 @@ app.post('/api/bookings', async (req, res) => {
     }
 
     const cancelToken = crypto.randomBytes(32).toString('hex');
+    const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+    const cancelUrl = `${baseUrl}/cancel?token=${cancelToken}`;
 
+    // Look up service price — payment is driven by service type, not slot
+    const svcResult = await pool.query('SELECT price FROM services WHERE title = $1', [service.trim()]);
+    const servicePrice = svcResult.rows[0] ? parseFloat(svcResult.rows[0].price) : 0;
+
+    const stripeKey = process.env.STRIPE_SECRET_KEY || '';
+    const stripeActive = stripeKey.startsWith('sk_test_') || stripeKey.startsWith('sk_live_');
+
+    // ── PAID SESSION: create pending booking, redirect to Stripe. Slot stays
+    //    unlocked — it's locked only after payment succeeds to avoid permanently
+    //    holding a slot if the customer abandons checkout.
+    if (servicePrice > 0 && stripeActive) {
+      let bookingId;
+      try {
+        const bookingResult = await pool.query(`
+          INSERT INTO bookings (slot_id, service, customer_name, customer_email, customer_phone, message, status, cancel_token)
+          VALUES ($1, $2, $3, $4, $5, $6, 'pending_payment', $7)
+          RETURNING id
+        `, [
+          slot_id,
+          service.trim(),
+          customer_name.trim(),
+          customer_email.trim().toLowerCase(),
+          (customer_phone || '').trim(),
+          (message || '').trim(),
+          cancelToken
+        ]);
+        bookingId = bookingResult.rows[0].id;
+
+        const session = await stripe.checkout.sessions.create({
+          payment_method_types: ['card'],
+          line_items: [{
+            price_data: {
+              currency: 'gbp',
+              product_data: {
+                name: service + ' Session',
+                description: `Date: ${slot.date} at ${slot.time} (${slot.duration} min)`,
+              },
+              unit_amount: Math.round(servicePrice * 100),
+            },
+            quantity: 1,
+          }],
+          mode: 'payment',
+          success_url: `${baseUrl}/api/bookings/success?session_id={CHECKOUT_SESSION_ID}`,
+          cancel_url:  `${baseUrl}/api/bookings/cancel?session_id={CHECKOUT_SESSION_ID}`,
+          metadata: { booking_id: bookingId },
+        });
+        return res.status(201).json({ checkout_url: session.url });
+      } catch (err) {
+        console.error('Stripe error:', err);
+        if (bookingId) await pool.query('DELETE FROM bookings WHERE id = $1', [bookingId]);
+        return res.status(500).json({ error: 'Failed to initialize payment. Please try again or contact support.' });
+      }
+    }
+
+    // ── FREE SESSION: lock slot and confirm booking atomically, then send emails
     const client = await pool.connect();
     let bookingId;
     try {
@@ -232,43 +289,6 @@ app.post('/api/bookings', async (req, res) => {
       throw e;
     } finally {
       client.release();
-    }
-
-    const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
-    const cancelUrl = `${baseUrl}/cancel?token=${cancelToken}`;
-
-    // Look up service price — payment is driven by service type, not slot
-    const svcResult = await pool.query('SELECT price FROM services WHERE title = $1', [service.trim()]);
-    const servicePrice = svcResult.rows[0] ? parseFloat(svcResult.rows[0].price) : 0;
-
-    const stripeKey = process.env.STRIPE_SECRET_KEY || '';
-    if (servicePrice > 0 && (stripeKey.startsWith('sk_test_') || stripeKey.startsWith('sk_live_'))) {
-      try {
-        const session = await stripe.checkout.sessions.create({
-          payment_method_types: ['card'],
-          line_items: [{
-            price_data: {
-              currency: 'gbp',
-              product_data: {
-                name: service + ' Session',
-                description: `Date: ${slot.date} at ${slot.time} (${slot.duration} min)`,
-              },
-              unit_amount: Math.round(servicePrice * 100),
-            },
-            quantity: 1,
-          }],
-          mode: 'payment',
-          success_url: `${process.env.BASE_URL || `${req.protocol}://${req.get('host')}`}/api/bookings/success?session_id={CHECKOUT_SESSION_ID}`,
-          cancel_url:  `${process.env.BASE_URL || `${req.protocol}://${req.get('host')}`}/api/bookings/cancel?session_id={CHECKOUT_SESSION_ID}`,
-          metadata: { booking_id: bookingId },
-        });
-        return res.status(201).json({ checkout_url: session.url });
-      } catch (err) {
-        console.error('Stripe error:', err);
-        await pool.query('UPDATE slots SET is_booked = 0 WHERE id = $1', [slot_id]);
-        await pool.query('DELETE FROM bookings WHERE id = $1', [bookingId]);
-        return res.status(500).json({ error: 'Failed to initialize payment gateway. Please ensure Stripe is configured or contact support.' });
-      }
     }
 
     sendBookingConfirmation({ customerName: customer_name, customerEmail: customer_email, service, slot, servicePrice, cancelUrl })
@@ -302,12 +322,58 @@ app.get('/api/bookings/success', async (req, res) => {
   try {
     const session = await stripe.checkout.sessions.retrieve(session_id);
     const bookingId = session.metadata.booking_id;
+    if (!bookingId) return res.redirect('/');
+
+    const bookingResult = await pool.query(`
+      SELECT b.*, s.date, s.time, s.duration, s.price, s.currency
+      FROM bookings b JOIN slots s ON s.id = b.slot_id
+      WHERE b.id = $1
+    `, [bookingId]);
+    const booking = bookingResult.rows[0];
+    if (!booking) return res.redirect('/');
+
+    let confirmed = false;
     if (session.payment_status === 'paid') {
-      await pool.query('UPDATE bookings SET status = $1 WHERE id = $2', ['confirmed', bookingId]);
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+        // Lock the slot atomically — prevents race if two people paid for same slot
+        const slotLock = await client.query(
+          'UPDATE slots SET is_booked = 1 WHERE id = $1 AND is_booked = 0 RETURNING id',
+          [booking.slot_id]
+        );
+        confirmed = slotLock.rowCount > 0;
+        await client.query('UPDATE bookings SET status = $1 WHERE id = $2',
+          [confirmed ? 'confirmed' : 'cancelled', bookingId]);
+        await client.query('COMMIT');
+      } catch (e) {
+        await client.query('ROLLBACK');
+        throw e;
+      } finally {
+        client.release();
+      }
     }
+
+    if (confirmed) {
+      const svcResult = await pool.query('SELECT price FROM services WHERE title = $1', [booking.service]);
+      const servicePrice = svcResult.rows[0] ? parseFloat(svcResult.rows[0].price) : 0;
+      const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+      const cancelUrl = booking.cancel_token ? `${baseUrl}/cancel?token=${booking.cancel_token}` : null;
+
+      sendBookingConfirmation({
+        customerName: booking.customer_name, customerEmail: booking.customer_email,
+        service: booking.service, slot: booking, servicePrice, cancelUrl
+      }).catch(err => console.error('Confirmation email error:', err));
+      sendAdminAlert({
+        customerName: booking.customer_name, customerEmail: booking.customer_email,
+        customerPhone: booking.customer_phone, service: booking.service,
+        slot: booking, servicePrice, message: booking.message, cancelUrl
+      }).catch(err => console.error('Admin alert email error:', err));
+    }
+
     res.redirect(`/?booking=success&booking_id=${bookingId}`);
   } catch (err) {
-    console.error('Stripe retrieve error:', err);
+    console.error('Stripe success error:', err);
     res.redirect('/');
   }
 });
@@ -319,15 +385,16 @@ app.get('/api/bookings/cancel', async (req, res) => {
   try {
     const session = await stripe.checkout.sessions.retrieve(session_id);
     const bookingId = session.metadata.booking_id;
-    const bookingResult = await pool.query('SELECT slot_id FROM bookings WHERE id = $1', [bookingId]);
-    const booking = bookingResult.rows[0];
-    if (booking) {
-      await pool.query('UPDATE bookings SET status = $1 WHERE id = $2', ['cancelled', bookingId]);
-      await pool.query('UPDATE slots SET is_booked = 0 WHERE id = $1', [booking.slot_id]);
+    if (bookingId) {
+      // Slot was never locked for pending_payment bookings — just cancel the record
+      await pool.query(
+        "UPDATE bookings SET status = 'cancelled' WHERE id = $1 AND status = 'pending_payment'",
+        [bookingId]
+      );
     }
     res.redirect('/?booking=cancel');
   } catch (err) {
-    console.error('Stripe cancel retrieve error:', err);
+    console.error('Stripe cancel error:', err);
     res.redirect('/');
   }
 });
@@ -475,7 +542,7 @@ app.patch('/api/admin/bookings/:id', requireAdmin, async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
-    if (!['pending', 'confirmed', 'cancelled'].includes(status)) {
+    if (!['pending', 'pending_payment', 'confirmed', 'cancelled'].includes(status)) {
       return res.status(400).json({ error: 'Invalid status.' });
     }
     const result = await pool.query('UPDATE bookings SET status = $1 WHERE id = $2', [status, id]);
