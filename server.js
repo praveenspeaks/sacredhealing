@@ -241,7 +241,8 @@ app.post('/api/bookings', async (req, res) => {
     const svcResult = await pool.query('SELECT price FROM services WHERE title = $1', [service.trim()]);
     const servicePrice = svcResult.rows[0] ? parseFloat(svcResult.rows[0].price) : 0;
 
-    if (servicePrice > 0 && process.env.STRIPE_SECRET_KEY && process.env.STRIPE_SECRET_KEY.startsWith('sk_')) {
+    const stripeKey = process.env.STRIPE_SECRET_KEY || '';
+    if (servicePrice > 0 && (stripeKey.startsWith('sk_test_') || stripeKey.startsWith('sk_live_'))) {
       try {
         const session = await stripe.checkout.sessions.create({
           payment_method_types: ['card'],
@@ -270,9 +271,9 @@ app.post('/api/bookings', async (req, res) => {
       }
     }
 
-    sendBookingConfirmation({ customerName: customer_name, customerEmail: customer_email, service, slot, cancelUrl })
+    sendBookingConfirmation({ customerName: customer_name, customerEmail: customer_email, service, slot, servicePrice, cancelUrl })
       .catch(err => console.error('Confirmation email error:', err));
-    sendAdminAlert({ customerName: customer_name, customerEmail: customer_email, customerPhone: customer_phone, service, slot, message, cancelUrl })
+    sendAdminAlert({ customerName: customer_name, customerEmail: customer_email, customerPhone: customer_phone, service, slot, servicePrice, message, cancelUrl })
       .catch(err => console.error('Admin alert email error:', err));
 
     res.status(201).json({
@@ -553,13 +554,49 @@ app.get('/api/admin/bookings/export', requireAdmin, async (req, res) => {
 });
 
 // ════════════════════════════════════════════════════════════
+// ADMIN UTILITY ENDPOINTS
+// ════════════════════════════════════════════════════════════
+
+// GET /api/admin/config — returns Stripe + email config status
+app.get('/api/admin/config', requireAdmin, (req, res) => {
+  const stripeKey = process.env.STRIPE_SECRET_KEY || '';
+  const stripeConfigured = stripeKey.startsWith('sk_test_') || stripeKey.startsWith('sk_live_');
+  const stripeMode = stripeKey.startsWith('sk_live_') ? 'live' : stripeKey.startsWith('sk_test_') ? 'test' : 'not_configured';
+  const emailConfigured = !!(process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS);
+
+  res.json({
+    stripe: { configured: stripeConfigured, mode: stripeMode },
+    email:  { configured: emailConfigured, host: process.env.SMTP_HOST || null, from: process.env.SMTP_FROM || null, adminEmail: process.env.ADMIN_EMAIL || null },
+  });
+});
+
+// POST /api/admin/test-email — sends a test email
+app.post('/api/admin/test-email', requireAdmin, async (req, res) => {
+  const { to } = req.body;
+  const { sendTestEmail } = require('./mailer');
+  const recipient = to || process.env.ADMIN_EMAIL || process.env.SMTP_USER;
+  if (!recipient) return res.status(400).json({ error: 'No recipient address. Set ADMIN_EMAIL in .env or pass "to" in body.' });
+  try {
+    await sendTestEmail(recipient);
+    res.json({ success: true, message: `Test email sent to ${recipient}` });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ════════════════════════════════════════════════════════════
 // STARTUP
 // ════════════════════════════════════════════════════════════
 const cms = require('./cms');
 
-async function start() {
+async function init() {
   await initDatabase();
   await cms.init(pool, app, requireAdmin);
+  return app;
+}
+
+async function start() {
+  await init();
   app.listen(PORT, () => {
     console.log(`\n✦ Sacred Healing Server running at http://localhost:${PORT}`);
     console.log(`✦ Admin Panel: http://localhost:${PORT}/admin`);
@@ -567,7 +604,11 @@ async function start() {
   });
 }
 
-start().catch(err => {
-  console.error('Failed to start server:', err);
-  process.exit(1);
-});
+if (require.main === module) {
+  start().catch(err => {
+    console.error('Failed to start server:', err);
+    process.exit(1);
+  });
+}
+
+module.exports = { init, pool };

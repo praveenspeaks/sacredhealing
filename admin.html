@@ -323,6 +323,7 @@
       <div class="nav-item" onclick="showPage('services')" id="nav-services"><span class="nav-icon">✨</span><span>Services</span></div>
       <div class="nav-item" onclick="showPage('reviews')" id="nav-reviews"><span class="nav-icon">⭐</span><span>Reviews</span></div>
       <div class="nav-item" onclick="showPage('theme')" id="nav-theme"><span class="nav-icon">🎨</span><span>Theme &amp; Fonts</span></div>
+      <div class="nav-item" onclick="showPage('settings')" id="nav-settings"><span class="nav-icon">⚙</span><span>Settings</span></div>
     </nav>
     <div class="sidebar-footer">
       <button class="logout-btn" onclick="toggleTheme()" style="margin-bottom:1rem;color:var(--gold);">
@@ -740,6 +741,56 @@
       </div>
     </div>
 
+    <!-- ── SETTINGS ── -->
+    <div class="page" id="page-settings">
+      <div class="page-header">
+        <h1 class="page-title">System <em>Settings</em></h1>
+        <button class="btn-add" onclick="loadSettings()">↻ Refresh</button>
+      </div>
+
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;align-items:start;">
+
+        <!-- Stripe Config Card -->
+        <div class="card">
+          <div class="card-title">Stripe Payments</div>
+          <div id="stripe-status-block" style="margin-bottom:1.5rem;">
+            <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;">
+              <span id="stripe-indicator" style="width:12px;height:12px;border-radius:50%;background:var(--muted);display:inline-block;flex-shrink:0;"></span>
+              <span id="stripe-status-text" style="font-weight:600;color:var(--cream);">Loading…</span>
+            </div>
+            <p id="stripe-mode-text" style="font-size:0.82rem;color:var(--muted);line-height:1.6;margin-bottom:0;"></p>
+          </div>
+          <div style="background:var(--indigo);border:1px solid var(--border);border-radius:8px;padding:1rem;font-size:0.8rem;color:var(--muted);line-height:1.7;">
+            <strong style="color:var(--cream-dim);">To configure Stripe:</strong><br/>
+            1. Get your keys from <a href="https://dashboard.stripe.com/apikeys" target="_blank" style="color:var(--gold);">dashboard.stripe.com/apikeys</a><br/>
+            2. Set <code style="color:var(--gold);">STRIPE_SECRET_KEY=sk_test_...</code> in your <code>.env</code> file<br/>
+            3. Use <code>sk_test_</code> for testing, <code>sk_live_</code> for live payments<br/>
+            4. Restart the server after changing .env
+          </div>
+        </div>
+
+        <!-- Email Config Card -->
+        <div class="card">
+          <div class="card-title">Email Notifications</div>
+          <div id="email-status-block" style="margin-bottom:1.5rem;">
+            <div style="display:flex;align-items:center;gap:0.75rem;margin-bottom:0.75rem;">
+              <span id="email-indicator" style="width:12px;height:12px;border-radius:50%;background:var(--muted);display:inline-block;flex-shrink:0;"></span>
+              <span id="email-status-text" style="font-weight:600;color:var(--cream);">Loading…</span>
+            </div>
+            <div id="email-detail-text" style="font-size:0.82rem;color:var(--muted);line-height:1.8;"></div>
+          </div>
+
+          <div class="form-group" style="margin-bottom:1rem;">
+            <label>Send Test Email To</label>
+            <input type="email" id="test-email-to" class="form-control" placeholder="your@email.com" />
+          </div>
+          <button class="btn-primary" onclick="sendTestEmail()" id="send-test-email-btn">✉ Send Test Email</button>
+          <div id="test-email-result" style="margin-top:1rem;font-size:0.85rem;display:none;"></div>
+        </div>
+
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -865,6 +916,7 @@
     if (name === 'bookings') loadBookings();
     if (name === 'dashboard') refreshDashboard();
     if (name === 'theme') loadTheme();
+    if (name === 'settings') loadSettings();
   }
 
   // ── DASHBOARD ──
@@ -1080,6 +1132,76 @@
     document.documentElement.setAttribute('data-theme', 'light');
     const iconEl = document.getElementById('theme-icon');
     if (iconEl) iconEl.textContent = '🌙';
+  }
+
+  // ── SETTINGS PAGE ──
+  async function loadSettings() {
+    try {
+      const cfg = await api('GET', '/api/admin/config');
+
+      // Stripe
+      const stripeOk = cfg.stripe && cfg.stripe.configured;
+      document.getElementById('stripe-indicator').style.background =
+        stripeOk ? 'var(--success)' : 'var(--warning)';
+      document.getElementById('stripe-status-text').textContent =
+        stripeOk ? (cfg.stripe.mode === 'live' ? 'Live payments enabled' : 'Test mode active') : 'Not configured';
+      document.getElementById('stripe-mode-text').textContent =
+        stripeOk
+          ? (cfg.stripe.mode === 'live'
+              ? 'Payments are live. Real charges will be made.'
+              : 'Test mode — no real charges. Switch to sk_live_ key for production.')
+          : 'Add a Stripe secret key to your .env file to enable payment collection.';
+
+      // Email
+      const emailOk = cfg.email && cfg.email.configured;
+      document.getElementById('email-indicator').style.background =
+        emailOk ? 'var(--success)' : 'var(--warning)';
+      document.getElementById('email-status-text').textContent =
+        emailOk ? 'Email notifications enabled' : 'Email not configured';
+      document.getElementById('email-detail-text').innerHTML = emailOk
+        ? `SMTP Host: <strong style="color:var(--cream)">${cfg.email.host}</strong><br/>
+           From: <strong style="color:var(--cream)">${cfg.email.from || '—'}</strong><br/>
+           Admin alerts to: <strong style="color:var(--cream)">${cfg.email.adminEmail || '—'}</strong>`
+        : 'Set SMTP_HOST, SMTP_USER, and SMTP_PASS in your .env file to enable booking confirmations.';
+
+      // Pre-fill test email
+      if (cfg.email.adminEmail) {
+        document.getElementById('test-email-to').placeholder = cfg.email.adminEmail;
+      }
+    } catch(e) {
+      toast('Failed to load settings', 'error');
+    }
+  }
+
+  async function sendTestEmail() {
+    const to = document.getElementById('test-email-to').value.trim();
+    const btn = document.getElementById('send-test-email-btn');
+    const resultEl = document.getElementById('test-email-result');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="loading-spinner"></span> Sending…';
+    resultEl.style.display = 'none';
+    try {
+      const res = await api('POST', '/api/admin/test-email', to ? { to } : {});
+      if (res.success) {
+        resultEl.style.display = 'block';
+        resultEl.style.color = 'var(--success)';
+        resultEl.textContent = '✓ ' + res.message;
+        toast('Test email sent!', 'success');
+      } else {
+        resultEl.style.display = 'block';
+        resultEl.style.color = 'var(--danger)';
+        resultEl.textContent = '✗ ' + (res.error || 'Failed to send email');
+        toast(res.error || 'Failed to send email', 'error');
+      }
+    } catch(e) {
+      resultEl.style.display = 'block';
+      resultEl.style.color = 'var(--danger)';
+      resultEl.textContent = '✗ Could not reach the server';
+      toast('Server error', 'error');
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '✉ Send Test Email';
+    }
   }
 </script>
 <script src="cms_admin.js"></script>

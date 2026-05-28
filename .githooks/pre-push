@@ -1,0 +1,13 @@
+#!/bin/sh
+# Sacred Healing pre-push hook — runs test suite before any git push
+set -e
+
+echo ""
+echo "✦ Sacred Healing — Running test suite before push..."
+echo ""
+
+npm test
+
+echo ""
+echo "✦ All tests passed. Push proceeding."
+echo ""
