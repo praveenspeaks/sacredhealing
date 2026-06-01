@@ -77,9 +77,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (navBackdrop) navBackdrop.addEventListener('click', closeMobileNav);
 
-  // Close nav when a link is clicked
-  navLinks.querySelectorAll('.nav-link').forEach(link => {
-    link.addEventListener('click', closeMobileNav);
+  // Close nav when a link is clicked (event delegation — nav is dynamically populated)
+  navLinks.addEventListener('click', (e) => {
+    if (e.target.classList.contains('nav-link')) closeMobileNav();
   });
 
 
@@ -225,13 +225,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ── Fetch Slots ─────────────────────
   async function loadPublicSlots() {
+    const grid = document.getElementById('public-slots-grid');
+    if (!grid) return;
     try {
       const res = await fetch('/api/slots');
       const data = await res.json();
       allSlots = data.slots || [];
       renderSlots(allSlots);
     } catch (err) {
-      document.getElementById('public-slots-grid').innerHTML = `
+      grid.innerHTML = `
         <div class="slots-empty">
           <div class="empty-icon">⚡</div>
           <p>Could not load sessions at the moment.<br/>Please contact us directly to book.</p>
@@ -241,6 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderSlots(slots) {
     const grid = document.getElementById('public-slots-grid');
+    if (!grid) return;
     if (!slots.length) {
       grid.innerHTML = `
         <div class="slots-empty">
@@ -286,6 +289,7 @@ function buildSlotCard(slot) {
 // ── Render Slots (global) ─────────────
 function renderSlotsPublic(slots) {
   const grid = document.getElementById('public-slots-grid');
+  if (!grid) return;
   if (!slots || !slots.length) {
     grid.innerHTML = '<div class="slots-empty"><div class="empty-icon">🌙</div><p>No sessions match this filter.<br/>Try a different duration or check back soon.</p></div>';
     return;

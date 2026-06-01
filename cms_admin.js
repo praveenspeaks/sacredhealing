@@ -11,6 +11,7 @@ showPage = function(pageId) {
     if (pageId === 'services') loadServices();
     if (pageId === 'reviews') loadReviews();
     if (pageId === 'faqs') loadFaqs();
+    if (pageId === 'navigation') loadNavConfig();
 };
 
 async function loadContent() {
@@ -565,5 +566,97 @@ async function saveTheme() {
         else        toast('Failed to save theme', 'error');
     } catch(e) {
         toast('Error saving theme', 'error');
+    }
+}
+
+// ── NAVIGATION CONFIG ─────────────────────────────────────────
+
+const NAV_SECTION_LABELS = {
+    about:        'About (Meet Reena)',
+    services:     'Services (Healing Services)',
+    testimonials: 'Testimonials (Client Stories)',
+    faq:          'FAQ (Frequently Asked Questions)',
+    contact:      'Contact / Book Session',
+};
+
+let navConfigState = {};
+
+async function loadNavConfig() {
+    try {
+        const res = await fetch('/api/content');
+        const data = await res.json();
+        const raw = data.content.nav_config;
+        navConfigState = raw ? (typeof raw === 'string' ? JSON.parse(raw) : raw) : {};
+        renderNavConfigRows();
+    } catch(e) {
+        toast('Failed to load navigation config', 'error');
+    }
+}
+
+function renderNavConfigRows() {
+    const tbody = document.getElementById('nav-config-rows');
+    if (!tbody) return;
+
+    const keys = ['about', 'services', 'testimonials', 'faq', 'contact'];
+    tbody.innerHTML = keys.map(key => {
+        const c = navConfigState[key] || { location: 'home', label: key, header: true, footer: true, order: 0 };
+        const isHome = c.location === 'home';
+        return `
+        <tr style="border-bottom:1px solid var(--border);">
+          <td style="padding:0.85rem 1rem;font-weight:500;color:var(--cream);">${NAV_SECTION_LABELS[key] || key}</td>
+          <td style="padding:0.85rem 1rem;">
+            <input type="text" value="${c.label || ''}"
+              id="nav-label-${key}"
+              style="width:130px;padding:0.4rem 0.6rem;border-radius:4px;border:1px solid var(--border);background:var(--indigo);color:var(--cream);font-size:0.85rem;" />
+          </td>
+          <td style="padding:0.85rem 1rem;text-align:center;">
+            <select id="nav-location-${key}"
+              style="padding:0.4rem 0.6rem;border-radius:4px;border:1px solid var(--border);background:var(--indigo);color:var(--cream);font-size:0.85rem;cursor:pointer;">
+              <option value="home" ${isHome ? 'selected' : ''}>Home</option>
+              <option value="page" ${!isHome ? 'selected' : ''}>Own Page</option>
+            </select>
+          </td>
+          <td style="padding:0.85rem 1rem;text-align:center;">
+            <input type="checkbox" id="nav-header-${key}" ${c.header ? 'checked' : ''}
+              style="width:18px;height:18px;cursor:pointer;accent-color:var(--gold);" />
+          </td>
+          <td style="padding:0.85rem 1rem;text-align:center;">
+            <input type="checkbox" id="nav-footer-${key}" ${c.footer ? 'checked' : ''}
+              style="width:18px;height:18px;cursor:pointer;accent-color:var(--gold);" />
+          </td>
+          <td style="padding:0.85rem 1rem;text-align:center;">
+            <input type="number" value="${c.order || 0}" id="nav-order-${key}" min="0" max="99"
+              style="width:60px;padding:0.4rem 0.6rem;border-radius:4px;border:1px solid var(--border);background:var(--indigo);color:var(--cream);font-size:0.85rem;text-align:center;" />
+          </td>
+        </tr>`;
+    }).join('');
+}
+
+async function saveNavConfig() {
+    const keys = ['about', 'services', 'testimonials', 'faq', 'contact'];
+    const updated = {};
+    for (const key of keys) {
+        updated[key] = {
+            label:    document.getElementById(`nav-label-${key}`).value.trim() || key,
+            location: document.getElementById(`nav-location-${key}`).value,
+            header:   document.getElementById(`nav-header-${key}`).checked,
+            footer:   document.getElementById(`nav-footer-${key}`).checked,
+            order:    parseInt(document.getElementById(`nav-order-${key}`).value) || 0,
+        };
+    }
+    try {
+        const res = await fetch('/api/admin/content', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'x-admin-password': adminToken },
+            body: JSON.stringify({ content: { nav_config: JSON.stringify(updated) } })
+        });
+        if (res.ok) {
+            navConfigState = updated;
+            toast('Navigation saved — changes are live on the website!', 'success');
+        } else {
+            toast('Failed to save navigation', 'error');
+        }
+    } catch(e) {
+        toast('Error saving navigation', 'error');
     }
 }

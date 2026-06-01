@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Services — Sacred Healing</title>
+  <meta name="description" content="Explore our healing services: Spiritual Healing, Psychic Reading, Past Life Regression, Ancestral Healing, and Guided Meditation." />
+  <link rel="icon" type="image/png" href="/assets/logo-sbh.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,600&family=Raleway:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+
+  <!-- Mobile nav backdrop -->
+  <div id="nav-backdrop" style="display:none;position:fixed;inset:0;z-index:998;background:rgba(0,0,0,0.5);backdrop-filter:blur(2px);"></div>
+
+  <!-- ============ NAVIGATION ============ -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="/" class="nav-logo">
+        <div class="logo-circle">
+          <img src="/assets/logo-sbh.png" alt="Sacred Healing Logo" class="logo-img" id="logo_img" />
+        </div>
+        <div class="logo-text">
+          <div class="logo-main">Sacred Healing</div>
+          <div class="logo-slogan">सफलं जन्म प्रवासः</div>
+        </div>
+      </a>
+      <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="nav-links">
+        <!-- populated by cms_frontend.js buildNav() -->
+      </ul>
+      <button class="btn btn-gold nav-cta" onclick="window.location.href='/contact'">Book Session</button>
+    </div>
+  </nav>
+
+  <!-- ============ PAGE HEADER ============ -->
+  <section class="hero" style="min-height:35vh;padding-top:80px;display:flex;align-items:center;background:var(--cream-light);">
+    <div class="hero-content" style="display:block;text-align:center;padding:5rem 2rem 4rem;">
+      <div class="section-tag" style="justify-content:center;">✦ Sacred Offerings</div>
+      <h1 class="hero-title" style="margin:0;font-size:clamp(2.5rem,5vw,4rem);">Our Healing <em>Services</em></h1>
+    </div>
+  </section>
+
+  <!-- ============ SERVICES ============ -->
+  <section class="services" id="services">
+    <div class="container">
+      <div class="section-header">
+        <p class="section-subtitle">Each session is a personal convergence of ancient philosophy and intuitive insight. Our practice is an invitation to pause and reconnect with your true potential.</p>
+      </div>
+      <div class="services-list">
+
+        <div class="service-row" id="service-spiritual">
+          <div class="service-row-text">
+            <div class="service-row-number">01</div>
+            <h3 class="service-row-title">Spiritual Healing</h3>
+            <p class="service-row-desc">Realign your energy centres and restore harmony between body, mind, and spirit through powerful energy work and chakra balancing.</p>
+            <ul class="service-features">
+              <li>Chakra alignment &amp; clearing</li>
+              <li>Aura cleansing &amp; protection</li>
+              <li>Energy cord cutting</li>
+            </ul>
+            <button class="service-link" onclick="window.location.href='/contact'">Book a Session →</button>
+          </div>
+          <div class="service-row-img">
+            <img src="/assets/service-spiritual.jpg" alt="Spiritual Healing session"
+              onerror="this.parentElement.style.background='linear-gradient(135deg,#e8e0d0,#d4c8b0)'; this.style.display='none';" />
+          </div>
+        </div>
+
+        <div class="service-row reverse" id="service-psychic">
+          <div class="service-row-text">
+            <div class="service-card-badge">Most Popular</div>
+            <div class="service-row-number">02</div>
+            <h3 class="service-row-title">Psychic Reading</h3>
+            <p class="service-row-desc">Receive clear, compassionate intuitive guidance to illuminate your path, understand your relationships, and navigate life's crossroads.</p>
+            <ul class="service-features">
+              <li>Soul purpose clarity</li>
+              <li>Relationship insights</li>
+              <li>Future path guidance</li>
+            </ul>
+            <button class="service-link" onclick="window.location.href='/contact'">Book a Session →</button>
+          </div>
+          <div class="service-row-img">
+            <img src="/assets/service-psychic.jpg" alt="Psychic Reading session"
+              onerror="this.parentElement.style.background='linear-gradient(135deg,#e0d8c8,#ccc0a8)'; this.style.display='none';" />
+          </div>
+        </div>
+
+        <div class="service-row" id="service-past-life">
+          <div class="service-row-text">
+            <div class="service-row-number">03</div>
+            <h3 class="service-row-title">Past Life Healing</h3>
+            <p class="service-row-desc">Explore the stories written in your soul's memory across lifetimes and release the patterns, fears, and wounds carried through time.</p>
+            <ul class="service-features">
+              <li>Past life regression</li>
+              <li>Soul wound healing</li>
+              <li>Karmic pattern release</li>
+            </ul>
+            <button class="service-link" onclick="window.location.href='/contact'">Book a Session →</button>
+          </div>
+          <div class="service-row-img">
+            <img src="/assets/service-pastlife.jpg" alt="Past Life Healing session"
+              onerror="this.parentElement.style.background='linear-gradient(135deg,#ddd5c5,#c8bca5)'; this.style.display='none';" />
+          </div>
+        </div>
+
+        <div class="service-row reverse" id="service-ancestral">
+          <div class="service-row-text">
+            <div class="service-row-number">04</div>
+            <h3 class="service-row-title">Ancestral Healing</h3>
+            <p class="service-row-desc">Break free from inherited trauma and unconscious family patterns that have shaped your life, and reclaim your true heritage of wholeness.</p>
+            <ul class="service-features">
+              <li>Generational trauma release</li>
+              <li>Family constellation work</li>
+              <li>Ancestral blessings</li>
+            </ul>
+            <button class="service-link" onclick="window.location.href='/contact'">Book a Session →</button>
+          </div>
+          <div class="service-row-img">
+            <img src="/assets/service-ancestral.jpg" alt="Ancestral Healing session"
+              onerror="this.parentElement.style.background='linear-gradient(135deg,#d8d0c0,#c4b8a0)'; this.style.display='none';" />
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ PROCESS ============ -->
+  <section class="process">
+    <div class="container">
+      <div class="section-header">
+        <div class="section-tag">✦ The Journey</div>
+        <h2 class="section-title">How It <em>Works</em></h2>
+      </div>
+      <div class="process-steps">
+        <div class="process-step">
+          <div class="step-number">I</div>
+          <h3>Connect</h3>
+          <p>Reach out and share your intention. We'll find the perfect healing path for your unique journey.</p>
+        </div>
+        <div class="process-connector">
+          <div class="connector-line"></div>
+          <span>✦</span>
+          <div class="connector-line"></div>
+        </div>
+        <div class="process-step">
+          <div class="step-number">II</div>
+          <h3>Discover</h3>
+          <p>In your session, we explore the deeper layers of your being with compassion and sacred intention.</p>
+        </div>
+        <div class="process-connector">
+          <div class="connector-line"></div>
+          <span>✦</span>
+          <div class="connector-line"></div>
+        </div>
+        <div class="process-step">
+          <div class="step-number">III</div>
+          <h3>Transform</h3>
+          <p>Experience profound shifts as energy moves, patterns dissolve, and your true self emerges.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ NOT SURE CTA ============ -->
+  <section class="guidance-cta-section">
+    <div class="container">
+      <div class="guidance-cta-inner">
+        <div class="guidance-cta-text">
+          <div class="section-tag">✦ Need Guidance?</div>
+          <h2 class="section-title" style="margin-bottom:0.75rem;">Not Sure Which Service is<br /><em>Right for You?</em></h2>
+          <p style="color:var(--text-body);line-height:1.75;max-width:520px;">If you're seeking clarity, emotional release, or spiritual guidance, we're here to help. Reach out for a complimentary 15-minute consultation.</p>
+        </div>
+        <div class="guidance-cta-actions">
+          <a href="/contact" class="btn btn-gold btn-large">Schedule a Free Consultation →</a>
+          <a href="/faq.html" class="btn btn-outline">Read Our FAQs</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/" class="footer-logo">
+            <span class="logo-icon">✦</span>
+            Sacred Healing
+          </a>
+          <p class="footer-tagline" id="footer_tagline">Ancient Wisdom · Infinite Healing<br />Croydon, London &amp; Online Sessions Available</p>
+        </div>
+        <div class="footer-nav">
+          <h4>Explore</h4>
+          <ul id="footer-nav-explore">
+            <!-- populated by cms_frontend.js buildNav() -->
+          </ul>
+        </div>
+        <div class="footer-contact">
+          <h4>Connect</h4>
+          <ul>
+            <li>📧 <span id="contact_email">hello@soulbody.healing.com</span></li>
+            <li>📍 <span id="contact_location">Croydon, London</span></li>
+            <li>⏰ <span id="contact_phone">+44 7700 900000</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p id="footer_copyright">© 2026 SoulBody Healing · Reena. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/script.js"></script>
+  <script src="/cms_frontend.js"></script>
+</body>
+</html>

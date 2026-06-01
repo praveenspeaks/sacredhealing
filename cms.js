@@ -79,6 +79,18 @@ module.exports = {
       );
     }
 
+    // ── Nav config (DO NOTHING — user settings must survive restarts) ──
+    await pool.query(
+      `INSERT INTO site_content (key, value) VALUES ($1, $2) ON CONFLICT(key) DO NOTHING`,
+      ['nav_config', JSON.stringify({
+        about:        { location: 'home', label: 'About',        header: true,  footer: true,  order: 2 },
+        services:     { location: 'home', label: 'Services',     header: true,  footer: true,  order: 3 },
+        testimonials: { location: 'home', label: 'Testimonials', header: false, footer: true,  order: 0 },
+        faq:          { location: 'page', label: 'FAQ',          header: true,  footer: true,  order: 4 },
+        contact:      { location: 'home', label: 'Book Session', header: true,  footer: true,  order: 5 },
+      })]
+    );
+
     // ── Remove placeholder seed services ─────────────────────
     await pool.query(
       "DELETE FROM services WHERE title IN ('Quantum Energy Reset','The Deep Awakening','Celestial Harmony Session')"

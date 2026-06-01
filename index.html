@@ -101,12 +101,7 @@
         <span></span><span></span><span></span>
       </button>
       <ul class="nav-links" id="nav-links">
-        <li><a href="#home" class="nav-link active">Home</a></li>
-        <li><a href="#about" class="nav-link">About</a></li>
-        <li><a href="#services" class="nav-link">Services</a></li>
-        <li><a href="#testimonials" class="nav-link">Testimonials</a></li>
-        <li><a href="#contact" class="nav-link">Contact</a></li>
-        <li><a href="/faq.html" class="nav-link">FAQ</a></li>
+        <!-- populated by cms_frontend.js buildNav() -->
       </ul>
       <button class="btn btn-gold nav-cta" onclick="openBookingModal()">Book Session</button>
     </div>
@@ -178,6 +173,9 @@
       </div>
     </div>
   </section>
+
+  <!-- ============ ABOUT (group) ============ -->
+  <div data-page-section="about">
 
   <!-- ============ ABOUT ============ -->
   <section class="about" id="about">
@@ -303,6 +301,11 @@
       </div>
     </div>
   </section>
+
+  </div><!-- /data-page-section="about" -->
+
+  <!-- ============ SERVICES (group) ============ -->
+  <div data-page-section="services">
 
   <!-- ============ SERVICES ============ -->
   <section class="services" id="services">
@@ -450,6 +453,11 @@
     </div>
   </section>
 
+  </div><!-- /data-page-section="services" -->
+
+  <!-- ============ TESTIMONIALS (group) ============ -->
+  <div data-page-section="testimonials">
+
 <!-- ============ TESTIMONIALS ============ -->
   <section class="testimonials" id="testimonials">
     <div class="container">
@@ -504,6 +512,11 @@
   </section>
 
 
+
+  </div><!-- /data-page-section="testimonials" -->
+
+  <!-- ============ CONTACT (group) ============ -->
+  <div data-page-section="contact">
 
   <!-- ============ DISCLAIMER ============ -->
   <section class="disclaimer-section">
@@ -606,6 +619,8 @@
     </div>
   </section>
 
+  </div><!-- /data-page-section="contact" -->
+
   <!-- ============ FOOTER ============ -->
   <footer class="footer">
     <div class="container">
@@ -627,13 +642,8 @@
         </div>
         <div class="footer-nav">
           <h4>Explore</h4>
-          <ul>
-            <li><a href="#home">Home</a></li>
-            <li><a href="#about">About Us</a></li>
-            <li><a href="#services">Services</a></li>
-            <li><a href="#testimonials">Testimonials</a></li>
-            <li><a href="#contact">Book Session</a></li>
-            <li><a href="/faq.html">FAQ</a></li>
+          <ul id="footer-nav-explore">
+            <!-- populated by cms_frontend.js buildNav() -->
           </ul>
         </div>
         <div class="footer-nav">

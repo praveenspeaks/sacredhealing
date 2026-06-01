@@ -69,6 +69,80 @@ function applyTheme(content) {
   }
 }
 
+// ── Nav helpers ──────────────────────────────────────────────
+
+function escHtml(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function navHref(key, cfg, onHome) {
+  if (cfg.location === 'page') {
+    if (key === 'faq') return '/faq.html';
+    return '/' + key;
+  }
+  return onHome ? '#' + key : '/#' + key;
+}
+
+function isActivePage(key, cfg) {
+  const p = location.pathname;
+  if (cfg.location === 'page') {
+    if (key === 'faq') return p === '/faq.html' || p === '/faq';
+    return p === '/' + key;
+  }
+  return false;
+}
+
+function buildNav(content) {
+  const cfg = content.nav_config ? (typeof content.nav_config === 'string' ? JSON.parse(content.nav_config) : content.nav_config) : {};
+  const onHome = location.pathname === '/' || location.pathname === '/index.html';
+
+  // Header nav
+  const headerUl = document.getElementById('nav-links');
+  if (headerUl) {
+    const headerItems = Object.entries(cfg)
+      .filter(([, c]) => c.header)
+      .sort(([, a], [, b]) => a.order - b.order);
+
+    headerUl.innerHTML = '<li><a href="' + (onHome ? '#home' : '/') + '" class="nav-link' + (onHome && location.hash === '' ? ' active' : '') + '">Home</a></li>';
+    headerItems.forEach(([key, c]) => {
+      const href = navHref(key, c, onHome);
+      const active = isActivePage(key, c) ? ' active' : '';
+      headerUl.innerHTML += `<li><a href="${escHtml(href)}" class="nav-link${active}">${escHtml(c.label)}</a></li>`;
+    });
+  }
+
+  // Footer explore nav
+  const footerUl = document.getElementById('footer-nav-explore');
+  if (footerUl) {
+    const onAnyPage = !onHome;
+    footerUl.innerHTML = '<li><a href="' + (onHome ? '#home' : '/') + '">Home</a></li>';
+    const allItems = Object.entries(cfg).sort(([, a], [, b]) => a.order - b.order);
+    allItems.forEach(([key, c]) => {
+      if (!c.footer) return;
+      const href = navHref(key, c, onHome);
+      footerUl.innerHTML += `<li><a href="${escHtml(href)}">${escHtml(c.label)}</a></li>`;
+    });
+  }
+}
+
+function applySectionVisibility(content) {
+  const cfg = content.nav_config ? (typeof content.nav_config === 'string' ? JSON.parse(content.nav_config) : content.nav_config) : {};
+  const onHome = location.pathname === '/' || location.pathname === '/index.html';
+  if (!onHome) return;
+
+  document.querySelectorAll('[data-page-section]').forEach(el => {
+    const key = el.dataset.pageSection;
+    const c = cfg[key];
+    if (c && c.location === 'page') {
+      el.style.display = 'none';
+    } else {
+      el.style.display = '';
+    }
+  });
+}
+
+// ── DOMContentLoaded ─────────────────────────────────────────
+
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const res = await fetch('/api/content');
@@ -78,6 +152,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Apply fonts + accent colour before rendering
         applyTheme(content);
+
+        // Build dynamic navigation from nav_config
+        buildNav(content);
+
+        // Show/hide home page sections based on nav_config
+        applySectionVisibility(content);
 
         // Populate text fields — querySelectorAll handles duplicate ids gracefully
         for (const [key, val] of Object.entries(content)) {

@@ -323,6 +323,7 @@
       <div class="nav-item" onclick="showPage('faqs')" id="nav-faqs"><span class="nav-icon">❓</span><span>FAQ</span></div>
       <div class="nav-item" onclick="showPage('services')" id="nav-services"><span class="nav-icon">✨</span><span>Services</span></div>
       <div class="nav-item" onclick="showPage('reviews')" id="nav-reviews"><span class="nav-icon">⭐</span><span>Reviews</span></div>
+      <div class="nav-item" onclick="showPage('navigation')" id="nav-navigation"><span class="nav-icon">🧭</span><span>Navigation</span></div>
       <div class="nav-item" onclick="showPage('theme')" id="nav-theme"><span class="nav-icon">🎨</span><span>Theme &amp; Fonts</span></div>
       <div class="nav-item" onclick="showPage('settings')" id="nav-settings"><span class="nav-icon">⚙</span><span>Settings</span></div>
     </nav>
@@ -703,6 +704,37 @@
           <div class="table-wrap" id="faqs-table"></div>
         </div>
       </div>
+    </div>
+
+    <!-- ── NAVIGATION ── -->
+    <div class="page" id="page-navigation">
+      <div class="page-header">
+        <h1 class="page-title">Navigation <em>Manager</em></h1>
+        <button class="btn-add" onclick="saveNavConfig()">💾 Save Changes</button>
+      </div>
+      <p style="color:var(--text-muted);margin-bottom:1.5rem;font-size:0.9rem;">Control where each section appears — on the home page or as its own page — and which menus show the link.</p>
+      <div class="card" style="overflow:auto;">
+        <table style="width:100%;border-collapse:collapse;font-size:0.9rem;">
+          <thead>
+            <tr style="border-bottom:1px solid var(--border);">
+              <th style="text-align:left;padding:0.75rem 1rem;color:var(--text-muted);font-weight:500;">Section</th>
+              <th style="text-align:left;padding:0.75rem 1rem;color:var(--text-muted);font-weight:500;">Menu Label</th>
+              <th style="text-align:center;padding:0.75rem 1rem;color:var(--text-muted);font-weight:500;">Location</th>
+              <th style="text-align:center;padding:0.75rem 1rem;color:var(--text-muted);font-weight:500;">Header Nav</th>
+              <th style="text-align:center;padding:0.75rem 1rem;color:var(--text-muted);font-weight:500;">Footer Nav</th>
+              <th style="text-align:center;padding:0.75rem 1rem;color:var(--text-muted);font-weight:500;">Order</th>
+            </tr>
+          </thead>
+          <tbody id="nav-config-rows">
+            <tr><td colspan="6" style="text-align:center;padding:2rem;color:var(--text-muted);">Loading…</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="margin-top:1rem;font-size:0.8rem;color:var(--text-muted);">
+        <strong>Home</strong> — section stays on the home page (scrolls to anchor).<br />
+        <strong>Own Page</strong> — section gets its own URL (e.g. <code>/about</code>, <code>/services</code>).<br />
+        Order controls position in nav menus (lower number = further left/up). Set 0 to exclude from ordered position.
+      </p>
     </div>
 
     <!-- ── THEME & FONTS ── -->

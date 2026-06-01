@@ -88,6 +88,13 @@ function slugify(title) {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
+// Multi-page section routes (must be before /services/:slug)
+app.get('/about',        (req, res) => res.sendFile(path.join(__dirname, 'about.html')));
+app.get('/services',     (req, res) => res.sendFile(path.join(__dirname, 'services.html')));
+app.get('/testimonials', (req, res) => res.sendFile(path.join(__dirname, 'testimonials.html')));
+app.get('/contact',      (req, res) => res.sendFile(path.join(__dirname, 'contact.html')));
+app.get('/faq',          (req, res) => res.sendFile(path.join(__dirname, 'faq.html')));
+
 // Route: /services/spiritual-healing  →  serves service.html
 app.get('/services/:slug', (req, res) => {
   res.sendFile(path.join(__dirname, 'service.html'));

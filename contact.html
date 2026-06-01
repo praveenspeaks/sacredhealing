@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Book a Session — Sacred Healing</title>
+  <meta name="description" content="Book your healing session with Reena. Choose from available slots for spiritual healing, psychic readings, past life regression, and more." />
+  <link rel="icon" type="image/png" href="/assets/logo-sbh.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,600&family=Raleway:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+
+  <!-- Mobile nav backdrop -->
+  <div id="nav-backdrop" style="display:none;position:fixed;inset:0;z-index:998;background:rgba(0,0,0,0.5);backdrop-filter:blur(2px);"></div>
+
+  <!-- ============ NAVIGATION ============ -->
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="/" class="nav-logo">
+        <div class="logo-circle">
+          <img src="/assets/logo-sbh.png" alt="Sacred Healing Logo" class="logo-img" id="logo_img" />
+        </div>
+        <div class="logo-text">
+          <div class="logo-main">Sacred Healing</div>
+          <div class="logo-slogan">सफलं जन्म प्रवासः</div>
+        </div>
+      </a>
+      <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="nav-links">
+        <!-- populated by cms_frontend.js buildNav() -->
+      </ul>
+      <button class="btn btn-gold nav-cta" onclick="openBookingModal()">Book Session</button>
+    </div>
+  </nav>
+
+  <!-- ============ PAGE HEADER ============ -->
+  <section class="hero" style="min-height:35vh;padding-top:80px;display:flex;align-items:center;background:var(--cream-light);">
+    <div class="hero-content" style="display:block;text-align:center;padding:5rem 2rem 4rem;">
+      <div class="section-tag" style="justify-content:center;">✦ Begin Today</div>
+      <h1 class="hero-title" style="margin:0;font-size:clamp(2.5rem,5vw,4rem);">Book Your <em>Session</em></h1>
+    </div>
+  </section>
+
+  <!-- ============ BOOKING SECTION ============ -->
+  <section class="booking-section" id="contact">
+    <div class="container">
+      <div class="section-header">
+        <p class="section-subtitle">Choose from our available healing sessions and begin your sacred journey.</p>
+      </div>
+
+      <!-- Duration Filter -->
+      <div class="booking-filter">
+        <button class="filter-btn active" data-dur="" onclick="filterSlots(this, '')">All Available</button>
+        <button class="filter-btn" data-dur="15" onclick="filterSlots(this, '15')">✨ 15 min <span class="filter-free-badge">Free</span></button>
+        <button class="filter-btn" data-dur="30" onclick="filterSlots(this, '30')">🌙 30 min</button>
+        <button class="filter-btn" data-dur="60" onclick="filterSlots(this, '60')">⭐ 60 min</button>
+        <button class="filter-btn" data-dur="90+" onclick="filterSlots(this, '90+')">🌟 90+ min</button>
+      </div>
+
+      <!-- Slots Grid -->
+      <div class="slots-grid" id="public-slots-grid">
+        <div class="slots-loading">
+          <div class="slots-spinner"></div>
+          <p>Loading available sessions…</p>
+        </div>
+      </div>
+
+      <!-- Bottom CTA -->
+      <div class="booking-cta-row">
+        <div class="contact-item"><span>📧</span><a href="mailto:hello@soulbody.healing.com" id="contact_email">hello@soulbody.healing.com</a></div>
+        <div class="contact-divider">|</div>
+        <div class="contact-item"><span>📍</span><span id="contact_location">Croydon, London</span></div>
+        <div class="contact-divider">|</div>
+        <div class="contact-item"><span>⏰</span><span>Mon–Sat: 9am – 7pm</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DISCLAIMER ============ -->
+  <section class="disclaimer-section">
+    <div class="container">
+      <div class="disclaimer-inner">
+        <div class="disclaimer-header">
+          <span class="section-tag">✦ Legal Information</span>
+          <h3 class="disclaimer-title">Legal Disclaimer &amp; Important Notice</h3>
+          <p style="margin-top:0.85rem;font-size:0.9rem;color:var(--text-body);line-height:1.75;max-width:780px;font-style:italic;">These sessions are intended for personal insight, healing, and spiritual exploration and are not a substitute for medical, psychiatric, legal, or financial advice.</p>
+        </div>
+        <div class="disclaimer-body">
+          <div class="disclaimer-block">
+            <p>We are required by UK Law to state that all readings and insights given are for entertainment purposes only, and no guarantee can be given as to the accuracy of a reading. Due to the metaphysical and interpretive nature of these sessions, insights are subject to interpretation and should not be taken as absolute. Intuitive reading is never 100% accurate.</p>
+            <p>A spiritual healing session or reading does not replace professional Medical, Legal, or Business opinion and advice. It will not force you to follow a particular course of action, or attempt to exert any form of control over your free will and common sense. The contents of any insights from such sessions are not legally binding.</p>
+            <p>Any decisions made, or actions taken by you as a result of your session with Reena are your sole responsibility. We assume no legal liability for any damages, losses, or other consequences of any client decisions, subsequent to, or based on, her sessions or insights.</p>
+            <p>Reena can choose to stop the reading at any time, and so can the client.</p>
+          </div>
+          <div class="disclaimer-block">
+            <p class="disclaimer-notice-title">Our Services are NOT a Substitute for Professional Advice</p>
+            <p>Our services are not a replacement for professional advice or treatment. Reena is not a qualified medical practitioner, counsellor, or financial or legal advisor. She will not make any medical claims or diagnosis within her practice.</p>
+            <ul class="disclaimer-list">
+              <li>Any health or medical guidance must be confirmed with a licensed medical professional before taking action.</li>
+              <li>If you are experiencing mental or physical distress, please seek immediate guidance from a qualified professional.</li>
+              <li>We do not offer sessions to anyone under 18 years of age, under the influence of alcohol or drugs, or undergoing mental health treatments.</li>
+              <li>These sessions are not suitable for people who suffer from clinical depression or are undergoing psychiatric therapy.</li>
+            </ul>
+          </div>
+        </div>
+        <p class="disclaimer-consent">By booking a session with Reena, you confirm you are 18 years of age or over and that you have read and agree with the full legal disclaimer stated above.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CANCELLATION POLICY ============ -->
+  <section style="padding:4rem 0;background:var(--cream-alt);border-top:1px solid var(--border);">
+    <div class="container">
+      <div style="max-width:820px;margin:0 auto;">
+        <div class="section-tag">✦ Cancellation Policy</div>
+        <h3 style="font-family:var(--font-heading);font-size:1.5rem;color:var(--charcoal);margin:0.6rem 0 1.25rem;font-weight:400;">Rescheduling &amp; <em>Cancellations</em></h3>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;">
+          <div>
+            <p style="font-size:0.9rem;color:var(--text-body);line-height:1.8;margin-bottom:1rem;">We understand that life is unpredictable. If you need to cancel or reschedule your session, we ask for at least <strong>24 hours' notice</strong> so that the time can be offered to someone else who needs it.</p>
+            <p style="font-size:0.9rem;color:var(--text-body);line-height:1.8;">Sessions cancelled with <strong>48 or more hours' notice</strong> will receive a full refund or session credit. Cancellations made with less than 24 hours' notice, or missed sessions without prior contact, may not be eligible for a refund or rescheduling.</p>
+          </div>
+          <div>
+            <p style="font-size:0.9rem;color:var(--text-body);line-height:1.8;margin-bottom:1rem;">To reschedule, please reach out as early as possible. We will always do our best to find an alternative time that works for you.</p>
+            <p style="font-size:0.9rem;color:var(--text-body);line-height:1.8;">We appreciate your understanding — thoughtful cancellations help us serve all clients with the care and dedication they deserve.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ REDUCED-RATE ACCESS ============ -->
+  <section style="padding:4rem 0;background:var(--cream-light);border-top:1px solid var(--border);border-bottom:1px solid var(--border);">
+    <div class="container">
+      <div style="max-width:720px;margin:0 auto;text-align:center;">
+        <div class="section-tag" style="justify-content:center;">✦ Accessibility</div>
+        <h3 style="font-family:var(--font-heading);font-size:1.65rem;color:var(--charcoal);margin:0.6rem 0 1.25rem;font-weight:400;">Healing Should Be <em>Accessible</em></h3>
+        <p style="font-size:0.97rem;color:var(--text-body);line-height:1.9;margin-bottom:1.75rem;">I believe healing should be accessible to those who truly need support. If finances are a genuine barrier, please reach out. I offer a limited number of reduced-rate sessions based on need and availability. I kindly ask that this option be requested with honesty and consideration.</p>
+        <a href="mailto:hello@soulbody.healing.com" class="btn btn-outline" data-mailto="contact_email">Reach Out in Confidence →</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ FOOTER ============ -->
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/" class="footer-logo">
+            <span class="logo-icon">✦</span>
+            Sacred Healing
+          </a>
+          <p class="footer-tagline" id="footer_tagline">Ancient Wisdom · Infinite Healing<br />Croydon, London &amp; Online Sessions Available</p>
+        </div>
+        <div class="footer-nav">
+          <h4>Explore</h4>
+          <ul id="footer-nav-explore">
+            <!-- populated by cms_frontend.js buildNav() -->
+          </ul>
+        </div>
+        <div class="footer-contact">
+          <h4>Connect</h4>
+          <ul>
+            <li>📧 <span id="contact_email">hello@soulbody.healing.com</span></li>
+            <li>📍 <span id="contact_location">Croydon, London</span></li>
+            <li>⏰ <span id="contact_phone">+44 7700 900000</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p id="footer_copyright">© 2026 SoulBody Healing · Reena. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ============ BOOKING MODAL ============ -->
+  <div class="modal-overlay" id="booking-modal" onclick="closeModalOnOverlay(event)">
+    <div class="modal-box">
+      <button class="modal-close" onclick="closeBookingModal()">✕</button>
+
+      <div class="modal-header">
+        <div class="modal-icon">✦</div>
+        <h2 class="modal-title">Reserve Your <em>Sacred Session</em></h2>
+        <div class="modal-slot-info" id="modal-slot-info"></div>
+      </div>
+
+      <div id="modal-step-form">
+        <form id="booking-form" onsubmit="submitBooking(event)">
+          <input type="hidden" id="booking-slot-id" />
+          <input type="hidden" id="booking-service-hidden" />
+
+          <div class="modal-form-group" id="service-badge-group" style="display:none;">
+            <label>Your Session</label>
+            <div id="service-badge-display"></div>
+          </div>
+
+          <div class="modal-form-group" id="service-selector-group">
+            <label>Healing Service *</label>
+            <div class="service-selector" id="service-selector">
+              <label class="service-opt">
+                <input type="radio" name="modal-service" value="Spiritual Healing" required />
+                <span class="service-opt-inner"><span class="service-opt-icon">🌀</span><span>Spiritual Healing</span></span>
+              </label>
+              <label class="service-opt">
+                <input type="radio" name="modal-service" value="Psychic Reading" />
+                <span class="service-opt-inner"><span class="service-opt-icon">🔮</span><span>Psychic Reading</span></span>
+              </label>
+              <label class="service-opt">
+                <input type="radio" name="modal-service" value="Past Life Healing" />
+                <span class="service-opt-inner"><span class="service-opt-icon">⏳</span><span>Past Life Healing</span></span>
+              </label>
+              <label class="service-opt">
+                <input type="radio" name="modal-service" value="Ancestral Healing" />
+                <span class="service-opt-inner"><span class="service-opt-icon">🌿</span><span>Ancestral Healing</span></span>
+              </label>
+            </div>
+          </div>
+          <div class="modal-form-row">
+            <div class="modal-form-group">
+              <label>Your Full Name *</label>
+              <input type="text" id="booking-name" class="modal-input" placeholder="e.g. Sarah Johnson" required />
+            </div>
+            <div class="modal-form-group">
+              <label>Email Address *</label>
+              <input type="email" id="booking-email" class="modal-input" placeholder="your@email.com" required />
+            </div>
+          </div>
+          <div class="modal-form-group">
+            <label>Phone Number (optional)</label>
+            <input type="tel" id="booking-phone" class="modal-input" placeholder="+44 7700 000000" />
+          </div>
+          <div class="modal-form-group">
+            <label>Intention for your session (optional)</label>
+            <textarea id="booking-message" class="modal-input" rows="2" placeholder="Share anything you'd like us to know before your session…"></textarea>
+          </div>
+          <button type="submit" class="btn btn-gold btn-large modal-submit" id="booking-submit-btn">Confirm Booking →</button>
+        </form>
+      </div>
+
+      <div id="modal-step-payment" style="display:none;">
+        <div class="payment-summary" id="payment-summary"></div>
+        <div id="stripe-payment-element"></div>
+        <div id="payment-error" class="payment-error" style="display:none;"></div>
+        <div class="payment-actions">
+          <button class="btn btn-outline" onclick="backToDetailsStep()">← Back</button>
+          <button class="btn btn-gold btn-large" id="payment-submit-btn" onclick="submitPayment()">Pay Now →</button>
+        </div>
+      </div>
+
+      <div class="modal-success" id="modal-success" style="display:none;">
+        <div class="success-icon">✦</div>
+        <h3>Your Session is Booked!</h3>
+        <div class="booking-ref-box" id="booking-ref-display" style="display:none;">
+          <p class="booking-ref-label">Booking Reference</p>
+          <p class="booking-ref-code" id="modal-booking-ref"></p>
+          <p class="booking-ref-hint">Sent to your email — keep for your records.</p>
+        </div>
+        <p id="modal-success-msg"></p>
+        <button class="btn btn-outline" onclick="closeBookingModal()">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Stripe cancel / info banner -->
+  <div id="info-banner" style="display:none;position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%);z-index:9999;background:rgba(20,10,30,0.95);border:1px solid rgba(201,168,76,0.4);color:#FDFCF8;padding:0.9rem 1.5rem;border-radius:10px;font-size:0.9rem;max-width:90vw;text-align:center;box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+    <span id="info-banner-msg"></span>
+    <button onclick="document.getElementById('info-banner').style.display='none'" style="margin-left:1rem;background:none;border:none;color:#DAB467;cursor:pointer;font-size:1rem;" aria-label="Dismiss">✕</button>
+  </div>
+
+  <script src="https://js.stripe.com/v3/"></script>
+  <script src="/script.js"></script>
+  <script src="/cms_frontend.js"></script>
+</body>
+</html>

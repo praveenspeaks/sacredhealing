@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>FAQ - Sacred Healing</title>
-  <meta name="description" content="Frequently Asked Questions about our healing services." />
+  <title>Testimonials — Sacred Healing</title>
+  <meta name="description" content="Hear from those who have experienced transformative healing with Reena at SoulBody Healing." />
   <link rel="icon" type="image/png" href="/assets/logo-sbh.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -38,20 +38,33 @@
     </div>
   </nav>
 
-  <!-- ============ HEADER ============ -->
-  <section class="hero" style="min-height: 35vh; padding-top: 80px; display:flex; align-items:center; background:var(--cream-light);">
-    <div class="hero-content" style="display:block; text-align: center; padding: 5rem 2rem 4rem;">
-      <div class="section-tag" style="justify-content:center;">✦ Sacred Healing</div>
-      <h1 class="hero-title" style="margin: 0; font-size:clamp(2.5rem,5vw,4rem);">Frequently Asked <em>Questions</em></h1>
+  <!-- ============ PAGE HEADER ============ -->
+  <section class="hero" style="min-height:35vh;padding-top:80px;display:flex;align-items:center;background:var(--cream-light);">
+    <div class="hero-content" style="display:block;text-align:center;padding:5rem 2rem 4rem;">
+      <div class="section-tag" style="justify-content:center;">✦ Voices of Transformation</div>
+      <h1 class="hero-title" style="margin:0;font-size:clamp(2.5rem,5vw,4rem);">Stories of <em>Healing</em></h1>
     </div>
   </section>
 
-  <!-- ============ FAQ ============ -->
-  <section class="process" style="background: var(--cream-alt);">
+  <!-- ============ TESTIMONIALS ============ -->
+  <section class="testimonials" id="testimonials">
     <div class="container">
-      <div id="faqs-container" style="max-width: 800px; margin: 0 auto; display: flex; flex-direction: column; gap: 1.5rem;">
-        <!-- Loaded dynamically -->
+      <div class="section-header">
+        <p class="section-subtitle">Real healing. Real change. Hear from those who found clarity and peace.</p>
       </div>
+      <div class="testimonials-grid testimonial-slider">
+        <!-- Loaded dynamically by cms_frontend.js -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ CTA ============ -->
+  <section style="padding:5rem 0;background:var(--cream-alt);text-align:center;">
+    <div class="container">
+      <div class="section-tag" style="justify-content:center;">✦ Begin Your Journey</div>
+      <h2 class="section-title" style="margin:0.5rem 0 1rem;">Ready to Write Your Own<br /><em>Healing Story?</em></h2>
+      <p style="color:var(--text-body);line-height:1.75;margin-bottom:2rem;max-width:520px;margin-left:auto;margin-right:auto;">Every healing journey begins with a single step. Book your first session and discover what is possible.</p>
+      <a href="/contact" class="btn btn-gold btn-large">Book Your Session →</a>
     </div>
   </section>
 
@@ -64,12 +77,7 @@
             <span class="logo-icon">✦</span>
             Sacred Healing
           </a>
-          <p class="footer-tagline">Ancient Wisdom · Infinite Healing<br />Croydon, London &amp; Online Sessions Available</p>
-          <div class="footer-socials">
-            <a href="#" class="social-link" aria-label="Instagram">◈</a>
-            <a href="#" class="social-link" aria-label="Facebook">◉</a>
-            <a href="#" class="social-link" aria-label="YouTube">▶</a>
-          </div>
+          <p class="footer-tagline" id="footer_tagline">Ancient Wisdom · Infinite Healing<br />Croydon, London &amp; Online Sessions Available</p>
         </div>
         <div class="footer-nav">
           <h4>Explore</h4>
@@ -77,23 +85,17 @@
             <!-- populated by cms_frontend.js buildNav() -->
           </ul>
         </div>
-        <div class="footer-nav">
-          <h4>Healing Services</h4>
-          <ul>
-            <li><a href="/#services">Spiritual Healing</a></li>
-            <li><a href="/#services">Psychic Reading</a></li>
-            <li><a href="/#services">Past Life Regression</a></li>
-            <li><a href="/#services">Ancestral Healing</a></li>
-          </ul>
-        </div>
         <div class="footer-contact">
           <h4>Connect</h4>
+          <ul>
             <li>📧 <span id="contact_email">hello@soulbody.healing.com</span></li>
             <li>📍 <span id="contact_location">Croydon, London</span></li>
             <li>⏰ <span id="contact_phone">+44 7700 900000</span></li>
-            <li>🌐 Online Sessions Available</li>
           </ul>
         </div>
+      </div>
+      <div class="footer-bottom">
+        <p id="footer_copyright">© 2026 SoulBody Healing · Reena. All rights reserved.</p>
       </div>
     </div>
   </footer>
