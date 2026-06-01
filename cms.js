@@ -83,13 +83,28 @@ module.exports = {
     await pool.query(
       `INSERT INTO site_content (key, value) VALUES ($1, $2) ON CONFLICT(key) DO NOTHING`,
       ['nav_config', JSON.stringify({
-        about:        { location: 'home', label: 'About',        header: true,  footer: true,  order: 2 },
-        services:     { location: 'home', label: 'Services',     header: true,  footer: true,  order: 3 },
-        testimonials: { location: 'home', label: 'Testimonials', header: false, footer: true,  order: 0 },
-        faq:          { location: 'page', label: 'FAQ',          header: true,  footer: true,  order: 4 },
-        contact:      { location: 'home', label: 'Book Session', header: true,  footer: true,  order: 5 },
+        about:        { location: 'home', label: 'About',        header: true, footer: true, order: 2 },
+        services:     { location: 'home', label: 'Services',     header: true, footer: true, order: 3 },
+        testimonials: { location: 'home', label: 'Testimonials', header: true, footer: true, order: 4 },
+        faq:          { location: 'page', label: 'FAQ',          header: true, footer: true, order: 5 },
+        contact:      { location: 'home', label: 'Book Session', header: true, footer: true, order: 6 },
       })]
     );
+    // Migration: enable header nav for all sections (sets any still-false to true)
+    await pool.query(`
+      UPDATE site_content
+      SET value = jsonb_set(
+                  jsonb_set(
+                  jsonb_set(
+                  jsonb_set(
+                  jsonb_set(value::jsonb,
+                    '{about,header}',        'true'::jsonb),
+                    '{services,header}',     'true'::jsonb),
+                    '{testimonials,header}', 'true'::jsonb),
+                    '{faq,header}',          'true'::jsonb),
+                    '{contact,header}',      'true'::jsonb)::text
+      WHERE key = 'nav_config'
+    `);
 
     // ── Remove placeholder seed services ─────────────────────
     await pool.query(
