@@ -572,11 +572,17 @@ async function saveTheme() {
 // ── NAVIGATION CONFIG ─────────────────────────────────────────
 
 const NAV_SECTION_LABELS = {
-    about:        'About (Meet Reena)',
-    services:     'Services (Healing Services)',
-    testimonials: 'Testimonials (Client Stories)',
-    faq:          'FAQ (Frequently Asked Questions)',
-    contact:      'Contact / Book Session',
+    about:          'About (Meet Reena)',
+    philosophy:     'Our Philosophy (The Principles)',
+    story:          'Our Story (Core Values)',
+    services:       'Services (Healing Services)',
+    process:        'How It Works (The Journey)',
+    testimonials:   'Testimonials (Client Stories)',
+    faq:            'FAQ (Frequently Asked Questions)',
+    contact:        'Contact / Book Session',
+    disclaimer:     'Legal Disclaimer',
+    cancellation:   'Cancellation Policy',
+    'reduced-rate': 'Reduced-Rate Access',
 };
 
 let navConfigState = {};
@@ -597,7 +603,7 @@ function renderNavConfigRows() {
     const tbody = document.getElementById('nav-config-rows');
     if (!tbody) return;
 
-    const keys = ['about', 'services', 'testimonials', 'faq', 'contact'];
+    const keys = ['about', 'philosophy', 'story', 'services', 'process', 'testimonials', 'faq', 'contact', 'disclaimer', 'cancellation', 'reduced-rate'];
     tbody.innerHTML = keys.map(key => {
         const c = navConfigState[key] || { location: 'home', label: key, header: true, footer: true, order: 0 };
         const isHome = c.location === 'home';
@@ -633,7 +639,7 @@ function renderNavConfigRows() {
 }
 
 async function saveNavConfig() {
-    const keys = ['about', 'services', 'testimonials', 'faq', 'contact'];
+    const keys = ['about', 'philosophy', 'story', 'services', 'process', 'testimonials', 'faq', 'contact', 'disclaimer', 'cancellation', 'reduced-rate'];
     const updated = {};
     for (const key of keys) {
         updated[key] = {

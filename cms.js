@@ -79,32 +79,37 @@ module.exports = {
       );
     }
 
-    // ── Nav config (DO NOTHING — user settings must survive restarts) ──
+    // ── Nav config defaults ──────────────────────────────────────
+    const navDefaults = {
+      about:        { location: 'home', label: 'About',               header: true,  footer: true,  order: 2  },
+      philosophy:   { location: 'home', label: 'Our Philosophy',      header: false, footer: true,  order: 21 },
+      story:        { location: 'home', label: 'Our Story',           header: false, footer: true,  order: 22 },
+      services:     { location: 'home', label: 'Services',            header: true,  footer: true,  order: 3  },
+      process:      { location: 'home', label: 'How It Works',        header: false, footer: true,  order: 23 },
+      testimonials: { location: 'home', label: 'Testimonials',        header: true,  footer: true,  order: 4  },
+      faq:          { location: 'page', label: 'FAQ',                 header: true,  footer: true,  order: 5  },
+      contact:      { location: 'home', label: 'Book Session',        header: true,  footer: true,  order: 6  },
+      disclaimer:   { location: 'home', label: 'Legal Notice',        header: false, footer: true,  order: 31 },
+      cancellation: { location: 'home', label: 'Cancellation Policy', header: false, footer: true,  order: 32 },
+      'reduced-rate': { location: 'home', label: 'Reduced-Rate Access', header: false, footer: false, order: 33 },
+    };
+    // Insert defaults for fresh installs
     await pool.query(
       `INSERT INTO site_content (key, value) VALUES ($1, $2) ON CONFLICT(key) DO NOTHING`,
-      ['nav_config', JSON.stringify({
-        about:        { location: 'home', label: 'About',        header: true, footer: true, order: 2 },
-        services:     { location: 'home', label: 'Services',     header: true, footer: true, order: 3 },
-        testimonials: { location: 'home', label: 'Testimonials', header: true, footer: true, order: 4 },
-        faq:          { location: 'page', label: 'FAQ',          header: true, footer: true, order: 5 },
-        contact:      { location: 'home', label: 'Book Session', header: true, footer: true, order: 6 },
-      })]
+      ['nav_config', JSON.stringify(navDefaults)]
     );
-    // Migration: enable header nav for all sections (sets any still-false to true)
-    await pool.query(`
-      UPDATE site_content
-      SET value = jsonb_set(
-                  jsonb_set(
-                  jsonb_set(
-                  jsonb_set(
-                  jsonb_set(value::jsonb,
-                    '{about,header}',        'true'::jsonb),
-                    '{services,header}',     'true'::jsonb),
-                    '{testimonials,header}', 'true'::jsonb),
-                    '{faq,header}',          'true'::jsonb),
-                    '{contact,header}',      'true'::jsonb)::text
-      WHERE key = 'nav_config'
-    `);
+    // Merge new section keys into existing nav_config without overwriting admin changes
+    const navRow = await pool.query(`SELECT value FROM site_content WHERE key = 'nav_config'`);
+    if (navRow.rows.length) {
+      const existing = JSON.parse(navRow.rows[0].value);
+      let changed = false;
+      for (const [key, val] of Object.entries(navDefaults)) {
+        if (!existing[key]) { existing[key] = val; changed = true; }
+      }
+      if (changed) {
+        await pool.query(`UPDATE site_content SET value = $1 WHERE key = 'nav_config'`, [JSON.stringify(existing)]);
+      }
+    }
 
     // ── Remove placeholder seed services ─────────────────────
     await pool.query(

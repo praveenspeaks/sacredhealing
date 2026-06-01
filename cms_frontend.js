@@ -71,14 +71,29 @@ function applyTheme(content) {
 
 // ── Nav helpers ──────────────────────────────────────────────
 
+// Which page-group each sub-section belongs to
+const NAV_PARENTS = {
+  philosophy:      'about',
+  story:           'about',
+  process:         'services',
+  disclaimer:      'contact',
+  cancellation:    'contact',
+  'reduced-rate':  'contact',
+};
+
 function escHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-function navHref(key, cfg, onHome) {
+function navHref(key, cfg, onHome, allCfg) {
   if (cfg.location === 'page') {
     if (key === 'faq') return '/faq.html';
     return '/' + key;
+  }
+  // If parent group is on its own page, follow it
+  const parentKey = NAV_PARENTS[key];
+  if (parentKey && allCfg && allCfg[parentKey] && allCfg[parentKey].location === 'page') {
+    return '/' + parentKey + '#' + key;
   }
   return onHome ? '#' + key : '/#' + key;
 }
@@ -105,7 +120,7 @@ function buildNav(content) {
 
     headerUl.innerHTML = '<li><a href="' + (onHome ? '#home' : '/') + '" class="nav-link' + (onHome && location.hash === '' ? ' active' : '') + '">Home</a></li>';
     headerItems.forEach(([key, c]) => {
-      const href = navHref(key, c, onHome);
+      const href = navHref(key, c, onHome, cfg);
       const active = isActivePage(key, c) ? ' active' : '';
       headerUl.innerHTML += `<li><a href="${escHtml(href)}" class="nav-link${active}">${escHtml(c.label)}</a></li>`;
     });
@@ -114,12 +129,11 @@ function buildNav(content) {
   // Footer explore nav
   const footerUl = document.getElementById('footer-nav-explore');
   if (footerUl) {
-    const onAnyPage = !onHome;
     footerUl.innerHTML = '<li><a href="' + (onHome ? '#home' : '/') + '">Home</a></li>';
     const allItems = Object.entries(cfg).sort(([, a], [, b]) => a.order - b.order);
     allItems.forEach(([key, c]) => {
       if (!c.footer) return;
-      const href = navHref(key, c, onHome);
+      const href = navHref(key, c, onHome, cfg);
       footerUl.innerHTML += `<li><a href="${escHtml(href)}">${escHtml(c.label)}</a></li>`;
     });
   }
