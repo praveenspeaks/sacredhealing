@@ -75,7 +75,7 @@ module.exports = {
     };
     // Contact page content — use DO NOTHING so admin edits survive restarts
     const contactPageDefaults = {
-      'contact_page_title':    'Book Your<br /><em>Sacred Session</em>',
+      'contact_page_title':    'Have a <em>Question?</em>',
       'contact_page_subtitle': 'Every healing journey begins with a single, courageous step. Reach out and let us walk beside you.',
       'contact_page_intro':    'Whether you\'re seeking clarity, emotional release, or a deeper spiritual connection — we\'re here. Sessions are available in person in Croydon, London or online worldwide.',
     };
@@ -135,6 +135,11 @@ module.exports = {
         await pool.query(`UPDATE site_content SET value = $1 WHERE key = 'nav_config'`, [JSON.stringify(existing)]);
       }
     }
+
+    // ── Fix contact page title if it still has the old booking heading ──
+    await pool.query(
+      `UPDATE site_content SET value = 'Have a <em>Question?</em>' WHERE key = 'contact_page_title' AND value LIKE '%Sacred Session%'`
+    );
 
     // ── Remove placeholder seed services ─────────────────────
     await pool.query(
