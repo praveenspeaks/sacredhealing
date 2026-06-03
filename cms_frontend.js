@@ -86,14 +86,19 @@ function escHtml(str) {
 }
 
 function navHref(key, cfg, onHome, allCfg) {
+  // Sub-sections always link to their parent page + anchor — never get own URL
+  const parentKey = NAV_PARENTS[key];
+  if (parentKey) {
+    const parentCfg = allCfg && allCfg[parentKey];
+    if (parentCfg && parentCfg.location === 'page') {
+      return '/' + parentKey + '#' + key;
+    }
+    return onHome ? '#' + key : '/#' + key;
+  }
+  // Top-level sections
   if (cfg.location === 'page') {
     if (key === 'faq') return '/faq.html';
     return '/' + key;
-  }
-  // If parent group is on its own page, follow it
-  const parentKey = NAV_PARENTS[key];
-  if (parentKey && allCfg && allCfg[parentKey] && allCfg[parentKey].location === 'page') {
-    return '/' + parentKey + '#' + key;
   }
   return onHome ? '#' + key : '/#' + key;
 }
@@ -182,10 +187,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                     el.style.backgroundImage = `url(${val})`;
                 } else if (el.tagName === 'A') {
                     if (val) {
-                        // Preserve mailto: or other protocol prefix
                         const orig = el.getAttribute('href') || '';
-                        el.href = orig.startsWith('mailto:') ? 'mailto:' + val : val;
-                        if (orig.startsWith('mailto:')) el.innerHTML = val;
+                        const looksLikeUrl = /^(https?:|mailto:|tel:|\/|#)/.test(val);
+                        if (orig.startsWith('mailto:')) {
+                            // Email link: update both href and visible text
+                            el.href = 'mailto:' + val;
+                            el.innerHTML = val;
+                        } else if (looksLikeUrl) {
+                            el.href = val;
+                        } else {
+                            // Plain text value — update link label, leave href untouched
+                            el.innerHTML = val;
+                        }
                     }
                 } else {
                     el.innerHTML = val;
