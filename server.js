@@ -195,6 +195,46 @@ app.post('/api/contact', async (req, res) => {
   }
 });
 
+// GET /api/slots/calendar?month=YYYY-MM — per-date availability summary
+app.get('/api/slots/calendar', async (req, res) => {
+  const { month } = req.query;
+  if (!month || !/^\d{4}-\d{2}$/.test(month)) {
+    return res.status(400).json({ error: 'month parameter required (YYYY-MM)' });
+  }
+  const [y, m] = month.split('-');
+  const startDate = `${y}-${m}-01`;
+  const nextM = new Date(parseInt(y), parseInt(m), 1); // JS months 0-indexed, so parseInt(m) is already next month
+  const endDate = `${nextM.getFullYear()}-${String(nextM.getMonth() + 1).padStart(2, '0')}-01`;
+  try {
+    const result = await pool.query(
+      `SELECT date::text,
+              COUNT(*) AS total,
+              COUNT(CASE WHEN is_booked != 0 THEN 1 END) AS booked
+       FROM   slots
+       WHERE  date >= $1 AND date < $2
+       GROUP  BY date ORDER BY date`,
+      [startDate, endDate]
+    );
+    const byDate = {};
+    result.rows.forEach(r => { byDate[r.date] = { total: parseInt(r.total), booked: parseInt(r.booked) }; });
+    res.json(byDate);
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Failed to fetch calendar data' }); }
+});
+
+// GET /api/slots/date/:date — all slots for a date (available + booked) for calendar time display
+app.get('/api/slots/date/:date', async (req, res) => {
+  const { date } = req.params;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return res.status(400).json({ error: 'Invalid date format' });
+  try {
+    const result = await pool.query(
+      `SELECT id, date::text, time::text, duration, price, currency, is_booked, note
+       FROM   slots WHERE date = $1 ORDER BY time ASC`,
+      [date]
+    );
+    res.json({ slots: result.rows });
+  } catch (err) { console.error(err); res.status(500).json({ error: 'Failed to fetch slots' }); }
+});
+
 // GET /api/slots  — Available future slots (unbooked only)
 app.get('/api/slots', async (req, res) => {
   try {

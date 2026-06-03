@@ -39,7 +39,10 @@
       "Bash(where psql *)",
       "Bash(pg_config --version)",
       "PowerShell(Get-Command psql -ErrorAction SilentlyContinue)",
-      "PowerShell(Get-Command pg_config -ErrorAction SilentlyContinue)"
+      "PowerShell(Get-Command pg_config -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-Command choco -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-Command scoop -ErrorAction SilentlyContinue)",
+      "PowerShell(Get-Command winget -ErrorAction SilentlyContinue)"
     ]
   }
 }
