@@ -29,7 +29,10 @@ async function loadContent() {
         // Populate image previews
         ['logo_img', 'hero_bg_img', 'healer_img'].forEach(k => {
             const el = document.getElementById('preview-' + k);
-            if (el && siteContent[k]) el.src = siteContent[k];
+            if (el && siteContent[k]) {
+                el.src = siteContent[k];
+                el.style.display = 'block';
+            }
         });
     } catch(err) {
         toast('Failed to load content', 'error');
@@ -297,6 +300,8 @@ async function uploadServiceImage(input) {
     if (!file) return;
     const formData = new FormData();
     formData.append('image', file);
+    // If editing an existing service, send the ID so the image is saved immediately
+    if (editServiceId) formData.append('service_id', editServiceId);
     try {
         const res = await fetch('/api/admin/upload/service-image', {
             method: 'POST',
@@ -308,7 +313,8 @@ async function uploadServiceImage(input) {
             document.getElementById('srv-image-url').value = data.url;
             document.getElementById('srv-image-thumb').src = data.url;
             document.getElementById('srv-image-preview').style.display = 'block';
-            toast('Image uploaded', 'success');
+            toast(editServiceId ? 'Image uploaded and saved to service' : 'Image uploaded — save service to link it', 'success');
+            if (editServiceId) loadServices(); // refresh table thumbnail
         } else {
             toast(data.error || 'Upload failed', 'error');
         }

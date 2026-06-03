@@ -588,19 +588,32 @@
 
         <div class="card">
           <div class="card-title">Image Uploads</div>
-          <p style="color:var(--muted); font-size:0.8rem; margin-bottom:1.5rem">Upload new images carefully. The system will process and store them securely.</p>
-          <div class="form-row">
+          <p style="color:var(--muted); font-size:0.8rem; margin-bottom:1.5rem;">Upload images here — they are saved instantly and their URL is automatically applied to the correct place on the website. Uploaded images are stored in the persistent uploads volume and survive redeployments.</p>
+          <div class="form-row" style="grid-template-columns:repeat(3,1fr);gap:1.5rem;">
+
             <div class="form-group">
               <label>Site Logo</label>
-              <input type="file" id="upload-logo_img" class="form-control" accept="image/*" />
-              <button class="btn-sm btn-primary" style="margin-top:0.5rem" onclick="uploadImage('logo_img')">Upload Logo</button>
+              <img id="preview-logo_img" src="" alt="" style="display:none;width:100%;max-height:70px;object-fit:contain;border-radius:6px;border:1px solid var(--border);margin-bottom:0.5rem;background:#fff;padding:4px;" />
+              <input type="file" id="upload-logo_img" class="form-control" accept="image/*" style="margin-bottom:0.4rem;" />
+              <button class="btn-sm btn-primary" style="width:100%;" onclick="uploadImage('logo_img')">Upload Logo</button>
             </div>
+
             <div class="form-group">
               <label>Hero Background</label>
-              <input type="file" id="upload-hero_bg_img" class="form-control" accept="image/*" />
-              <button class="btn-sm btn-primary" style="margin-top:0.5rem" onclick="uploadImage('hero_bg_img')">Upload Background</button>
+              <img id="preview-hero_bg_img" src="" alt="" style="display:none;width:100%;max-height:70px;object-fit:cover;border-radius:6px;border:1px solid var(--border);margin-bottom:0.5rem;" />
+              <input type="file" id="upload-hero_bg_img" class="form-control" accept="image/*" style="margin-bottom:0.4rem;" />
+              <button class="btn-sm btn-primary" style="width:100%;" onclick="uploadImage('hero_bg_img')">Upload Background</button>
             </div>
+
+            <div class="form-group">
+              <label>Healer Photo</label>
+              <img id="preview-healer_img" src="" alt="" style="display:none;width:100%;max-height:70px;object-fit:cover;border-radius:6px;border:1px solid var(--border);margin-bottom:0.5rem;" />
+              <input type="file" id="upload-healer_img" class="form-control" accept="image/*" style="margin-bottom:0.4rem;" />
+              <button class="btn-sm btn-primary" style="width:100%;" onclick="uploadImage('healer_img')">Upload Photo</button>
+            </div>
+
           </div>
+          <p style="margin-top:0.75rem;font-size:0.72rem;color:var(--muted);">JPEG, PNG, WebP · max 5 MB · URL is auto-applied on upload</p>
         </div>
       </div>
     </div>

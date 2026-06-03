@@ -147,6 +147,7 @@ module.exports = {
     const realServices = [
       {
         title: 'Spiritual Healing',
+        image_url: '/assets/service-spiritual.jpg',
         description: 'Transformative spiritual healing sessions designed to harmonise your mind, body, and spirit. We guide you on a journey of self-discovery and rejuvenation, helping release emotional blocks and promote inner peace through chakra balancing and energy work.',
         features: ['Chakra alignment & clearing', 'Aura cleansing & protection', 'Energy cord cutting', 'Emotional release & restoration'],
         duration: 90, price: 120, order: 1,
@@ -168,6 +169,7 @@ module.exports = {
       },
       {
         title: 'Psychic Reading',
+        image_url: '/assets/service-psychic.jpg',
         description: 'Connect with divine guidance and gain profound insights into your life\'s journey. Our psychic readings provide clarity on relationships, career paths, life purpose, and spiritual development through intuitive channelling. You can also receive past life healing through psychic reading.',
         features: ['Soul purpose clarity', 'Relationship insights', 'Future path guidance', 'Past life healing through reading'],
         duration: 60, price: 95, order: 2,
@@ -189,6 +191,7 @@ module.exports = {
       },
       {
         title: 'Past Life Regression',
+        image_url: '/assets/service-pastlife.jpg',
         description: 'Transformative past life regression therapy guiding you on a journey through time to uncover and heal wounds from previous incarnations. This powerful process helps you understand recurring patterns, release karmic bonds and integrate soul wisdom.',
         features: ['Past life regression therapy', 'Karmic cord cutting', 'Soul wound healing', 'Pattern & karmic healing'],
         duration: 120, price: 180, order: 3,
@@ -210,6 +213,7 @@ module.exports = {
       },
       {
         title: 'Past Life Healing',
+        image_url: '/assets/service-pastlife.jpg',
         description: 'An intuitive journey to help you understand recurring patterns, release karmic bonds and integrate soul wisdom into your present life. Journey through time to uncover and heal wounds from previous incarnations.',
         features: ['Intuitive past life exploration', 'Karmic bond release', 'Soul wisdom integration', 'Pattern recognition & healing'],
         duration: 90, price: 150, order: 4,
@@ -231,6 +235,7 @@ module.exports = {
       },
       {
         title: 'Ancestral Healing',
+        image_url: '/assets/service-ancestral.jpg',
         description: 'Break free from inherited family patterns and generational trauma. Through deep ancestral work, we identify and release limiting beliefs, behaviours and energetic imprints passed down through your lineage, so you can reclaim your authentic path.',
         features: ['Generational trauma release', 'Family pattern clearing', 'Limiting belief release', 'Lineage clearing & blessings'],
         duration: 120, price: 200, order: 5,
@@ -252,6 +257,7 @@ module.exports = {
       },
       {
         title: 'Guided Meditation',
+        image_url: '/assets/mandala.png',
         description: 'Embark on a transformative journey of meditation and visualisation designed to promote self-healing and deep relaxation. Our expert-guided sessions foster a calm environment that encourages restoration of both mind and body.',
         features: ['Deep relaxation techniques', 'Visualisation journeys', 'Breathwork practices', 'Self-healing activation'],
         duration: 60, price: 0, order: 6,
@@ -275,16 +281,17 @@ module.exports = {
 
     for (const s of realServices) {
       await pool.query(`
-        INSERT INTO services (title, description, features, duration, price, order_num, extra_details)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
+        INSERT INTO services (title, description, features, duration, price, order_num, extra_details, image_url)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         ON CONFLICT(title) DO UPDATE SET
           description   = EXCLUDED.description,
           features      = EXCLUDED.features,
           duration      = EXCLUDED.duration,
           price         = EXCLUDED.price,
           order_num     = EXCLUDED.order_num,
-          extra_details = EXCLUDED.extra_details
-      `, [s.title, s.description, JSON.stringify(s.features), s.duration, s.price, s.order, JSON.stringify(s.extra)]);
+          extra_details = EXCLUDED.extra_details,
+          image_url     = COALESCE(services.image_url, EXCLUDED.image_url)
+      `, [s.title, s.description, JSON.stringify(s.features), s.duration, s.price, s.order, JSON.stringify(s.extra), s.image_url || null]);
     }
 
     // ── Upsert FAQs ───────────────────────────────────────────
@@ -347,19 +354,17 @@ module.exports = {
     }
 
     // ── Multer Image Uploader ────────────────────────────────
-    const uploadDir = path.join(__dirname, 'assets');
-    if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
-    }
-    const serviceImgDir = path.join(__dirname, 'assets', 'services');
-    if (!fs.existsSync(serviceImgDir)) {
-      fs.mkdirSync(serviceImgDir, { recursive: true });
-    }
+    // UPLOAD_DIR env var points to a persistent volume on EasyPanel.
+    // Default: assets/uploads/ inside the project (works locally).
+    // On EasyPanel: set UPLOAD_DIR to the mounted volume path (e.g. /data/uploads).
+    const uploadDir = process.env.UPLOAD_DIR || path.join(__dirname, 'assets', 'uploads');
+    if (!fs.existsSync(uploadDir)) fs.mkdirSync(uploadDir, { recursive: true });
+
     const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
     const storage = multer.diskStorage({
       destination: function (req, file, cb) { cb(null, uploadDir); },
       filename:    function (req, file, cb) {
-        const ext = path.extname(file.originalname);
+        const ext = path.extname(file.originalname).toLowerCase() || '.jpg';
         cb(null, file.fieldname + '-' + Date.now() + ext);
       }
     });
@@ -371,7 +376,8 @@ module.exports = {
         else cb(new Error('Only image files are allowed (JPEG, PNG, WebP, GIF, SVG)'));
       }
     });
-    app.use('/assets', express.static(uploadDir));
+    // Serve admin-uploaded images at /uploads/ (maps to persistent UPLOAD_DIR)
+    app.use('/uploads', express.static(uploadDir));
 
     // ── PUBLIC CMS ENDPOINTS ──────────────────────────────────
     app.get('/api/content', async (req, res) => {
@@ -445,8 +451,7 @@ module.exports = {
         if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
         const key = req.body.key;
         if (!key) return res.status(400).json({ error: 'Missing content key' });
-
-        const fileUrl = 'assets/' + req.file.filename;
+        const fileUrl = '/uploads/' + req.file.filename;
         await pool.query(
           'INSERT INTO site_content (key, value) VALUES ($1, $2) ON CONFLICT(key) DO UPDATE SET value = EXCLUDED.value',
           [key, fileUrl]
@@ -458,26 +463,15 @@ module.exports = {
       }
     });
 
-    // Service image upload — saves to assets/services/
-    const serviceImgStorage = multer.diskStorage({
-      destination: function (req, file, cb) { cb(null, serviceImgDir); },
-      filename:    function (req, file, cb) {
-        const ext = path.extname(file.originalname);
-        cb(null, 'service-' + Date.now() + ext);
-      }
-    });
-    const uploadServiceImg = multer({
-      storage: serviceImgStorage,
-      limits: { fileSize: 5 * 1024 * 1024 },
-      fileFilter: function (req, file, cb) {
-        if (ALLOWED_MIME.includes(file.mimetype)) cb(null, true);
-        else cb(new Error('Only image files are allowed'));
-      }
-    });
-    app.post('/api/admin/upload/service-image', requireAdmin, uploadServiceImg.single('image'), async (req, res) => {
+    // Service image upload — saves to UPLOAD_DIR, immediately links to service if service_id provided
+    app.post('/api/admin/upload/service-image', requireAdmin, upload.single('image'), async (req, res) => {
       try {
         if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
-        const fileUrl = '/assets/services/' + req.file.filename;
+        const fileUrl = '/uploads/' + req.file.filename;
+        const serviceId = req.body.service_id ? parseInt(req.body.service_id) : null;
+        if (serviceId) {
+          await pool.query('UPDATE services SET image_url = $1 WHERE id = $2', [fileUrl, serviceId]);
+        }
         res.json({ success: true, url: fileUrl });
       } catch (err) {
         console.error(err);
