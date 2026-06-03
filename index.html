@@ -644,58 +644,52 @@
           <p style="color:var(--text-body);line-height:1.8;">I'm looking forward to learning about your journey and connecting with you.</p>
         </div>
 
-        <!-- RIGHT: Calendar + Form -->
-        <div class="cc-booking-panel">
+        <!-- RIGHT: Enquiry Form -->
+        <div class="cc-booking-panel" id="cc-panel">
 
-          <!-- Calendar header -->
-          <div class="cc-cal-header">
-            <button class="cc-cal-nav" onclick="ccPrevMonth()">&#8249;</button>
-            <span class="cc-cal-title" id="cc-cal-title">Loading…</span>
-            <button class="cc-cal-nav" onclick="ccNextMonth()">&#8250;</button>
-          </div>
-          <div class="cc-cal-grid" id="cc-cal-grid"></div>
-
-          <!-- Slots for selected date -->
-          <div class="cc-slots-wrap" id="cc-slots-wrap" style="display:none;">
-            <div class="cc-slots-label" id="cc-slots-label"></div>
-            <div class="cc-slot-btns" id="cc-slot-btns"></div>
-          </div>
-
-          <!-- Booking form (shown after slot selected) -->
-          <div class="cc-form-section" id="cc-form-section" style="display:none;">
-            <div class="cc-banner" id="cc-banner"></div>
-            <div class="cc-form-row">
-              <input type="text" id="cc-fname" class="cc-input" placeholder="First Name *" autocomplete="given-name" />
-              <input type="text" id="cc-lname" class="cc-input" placeholder="Last Name *" autocomplete="family-name" />
+          <div class="cc-form-row">
+            <div>
+              <label class="cc-services-label">First Name <span style="color:#c0392b">*</span></label>
+              <input type="text" id="cc-fname" class="cc-input" autocomplete="given-name" />
             </div>
-            <input type="email" id="cc-email" class="cc-input" placeholder="Email *" autocomplete="email" style="margin-bottom:0.6rem;" />
-            <input type="tel" id="cc-phone" class="cc-input" placeholder="Phone" autocomplete="tel" style="margin-bottom:0.4rem;" />
-            <span class="cc-services-label">Which service are you interested in?</span>
-            <div class="cc-radio-list" id="cc-services-list">
-              <!-- populated by JS -->
+            <div>
+              <label class="cc-services-label">Last Name <span style="color:#c0392b">*</span></label>
+              <input type="text" id="cc-lname" class="cc-input" autocomplete="family-name" />
             </div>
-            <input type="text" id="cc-transform" class="cc-input" placeholder="Which areas of your life are you looking to transform?" style="margin-bottom:0.6rem;" />
-            <textarea id="cc-message" class="cc-input" rows="2" placeholder="Any question or information you'd like to share?" style="resize:vertical;margin-bottom:0.85rem;"></textarea>
-            <div class="cc-msg-row" id="cc-msg"></div>
-            <button id="cc-submit-btn" class="btn btn-gold" style="width:100%;" onclick="submitClarityCall()">Book Free Clarity Call ✦</button>
           </div>
 
-        </div><!-- /cc-booking-panel -->
+          <label class="cc-services-label">Email <span style="color:#c0392b">*</span></label>
+          <input type="email" id="cc-email" class="cc-input" autocomplete="email" style="margin-bottom:1rem;" />
+
+          <label class="cc-services-label">Phone</label>
+          <input type="tel" id="cc-phone" class="cc-input" autocomplete="tel" style="margin-bottom:1rem;" />
+
+          <label class="cc-services-label">Which program are you interested in? <span style="color:#c0392b">*</span></label>
+          <div class="cc-radio-list" id="cc-services-list">
+            <!-- populated from CMS -->
+          </div>
+
+          <label class="cc-services-label">Which areas of your life are you looking to transform? <span style="color:#c0392b">*</span></label>
+          <input type="text" id="cc-transform" class="cc-input" style="margin-bottom:1rem;" />
+
+          <label class="cc-services-label">Any question or information you would like to share with me? <span style="color:#c0392b">*</span></label>
+          <textarea id="cc-message" class="cc-input" rows="3" style="resize:vertical;margin-bottom:1rem;"></textarea>
+
+          <div class="cc-msg-row" id="cc-msg"></div>
+          <button id="cc-submit-btn" class="btn btn-gold" style="width:100%;" onclick="submitClarityCall()">Request a Free Clarity Call ✦</button>
+
+        </div>
       </div>
     </div>
   </section>
 
   <script>
   (function () {
-    var CC_DUR = 15;
-    var ccYear, ccMonth, ccData = {}, ccSelDate = null, ccSelSlotId = null;
+    function esc(str) {
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
 
-    function ccInit() {
-      var now = new Date();
-      ccYear = now.getFullYear();
-      ccMonth = now.getMonth();
-      ccLoadMonth();
-      // Populate service radio buttons
+    function ccPopulateServices() {
       fetch('/api/content').then(function(r){ return r.json(); }).then(function(data){
         var list = document.getElementById('cc-services-list');
         if (!list || !data.services) return;
@@ -707,163 +701,73 @@
       }).catch(function(){});
     }
 
-    function esc(str) {
-      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
-
-    function ccLoadMonth() {
-      var monthStr = ccYear + '-' + String(ccMonth + 1).padStart(2, '0');
-      document.getElementById('cc-cal-title').textContent =
-        new Date(ccYear, ccMonth, 1).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
-      fetch('/api/slots/calendar?month=' + monthStr + '&duration=' + CC_DUR)
-        .then(function(r){ return r.json(); })
-        .then(function(d){ ccData = d; ccRenderCal(); })
-        .catch(function(){ ccData = {}; ccRenderCal(); });
-    }
-
-    function ccRenderCal() {
-      var grid = document.getElementById('cc-cal-grid');
-      var dows = ['Mo','Tu','We','Th','Fr','Sa','Su'];
-      var today = new Date(); today.setHours(0,0,0,0);
-      var html = dows.map(function(d){ return '<div class="cc-cal-dow">' + d + '</div>'; }).join('');
-      var first = new Date(ccYear, ccMonth, 1);
-      var offset = (first.getDay() + 6) % 7;
-      var daysInMonth = new Date(ccYear, ccMonth + 1, 0).getDate();
-      for (var i = 0; i < offset; i++) html += '<div></div>';
-      for (var d = 1; d <= daysInMonth; d++) {
-        var dateStr = ccYear + '-' + String(ccMonth + 1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
-        var dayDate = new Date(ccYear, ccMonth, d);
-        var isPast = dayDate < today;
-        var info = ccData[dateStr];
-        var hasAvail = info && (parseInt(info.total) - parseInt(info.booked)) > 0;
-        var cls = 'cc-cal-day';
-        var onclick = '';
-        if (isPast) cls += ' cc-past';
-        else if (hasAvail) { cls += ' cc-avail'; onclick = ' onclick="ccSelectDate(\'' + dateStr + '\')"'; }
-        if (dateStr === ccSelDate) cls += ' cc-sel';
-        html += '<div class="' + cls + '"' + onclick + '>' + d + '</div>';
-      }
-      grid.innerHTML = html;
-    }
-
-    function ccSelectDate(dateStr) {
-      ccSelDate = dateStr;
-      ccSelSlotId = null;
-      ccRenderCal();
-      var wrap = document.getElementById('cc-slots-wrap');
-      var btnsDiv = document.getElementById('cc-slot-btns');
-      var label = document.getElementById('cc-slots-label');
-      var formSec = document.getElementById('cc-form-section');
-      formSec.style.display = 'none';
-      wrap.style.display = 'block';
-      var dateObj = new Date(dateStr + 'T12:00:00');
-      label.textContent = dateObj.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long' });
-      btnsDiv.innerHTML = '<span style="font-size:0.82rem;color:var(--text-muted)">Loading slots…</span>';
-      fetch('/api/slots/date/' + dateStr + '?duration=' + CC_DUR)
-        .then(function(r){ return r.json(); })
-        .then(function(data){
-          var slots = (data.slots || []).filter(function(s){ return !s.is_booked; });
-          if (!slots.length) {
-            btnsDiv.innerHTML = '<span style="font-size:0.82rem;color:var(--text-muted)">No free 15-min slots on this date.</span>';
-            return;
-          }
-          btnsDiv.innerHTML = slots.map(function(s){
-            var time = s.time.slice(0, 5);
-            return '<button class="cc-slot-btn" data-sid="' + s.id + '" onclick="ccSelectSlot(' + s.id + ',\'' + dateStr + '\',\'' + time + '\')">' + time + '<small>Free · 15 min</small></button>';
-          }).join('');
-        })
-        .catch(function(){
-          btnsDiv.innerHTML = '<span style="font-size:0.82rem;color:var(--text-muted)">Error loading slots.</span>';
-        });
-    }
-
-    function ccSelectSlot(slotId, date, time) {
-      ccSelSlotId = slotId;
-      document.querySelectorAll('.cc-slot-btn').forEach(function(btn){
-        btn.classList.toggle('cc-sel-slot', btn.dataset.sid == slotId);
-      });
-      var formSec = document.getElementById('cc-form-section');
-      formSec.style.display = 'block';
-      var dateObj = new Date(date + 'T12:00:00');
-      var dateLabel = dateObj.toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'long' });
-      document.getElementById('cc-banner').textContent = '✦  ' + dateLabel + ' at ' + time + ' — Free 15-min Clarity Call';
-      formSec.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
-
-    window.ccPrevMonth = function() {
-      ccMonth--; if (ccMonth < 0) { ccMonth = 11; ccYear--; }
-      ccData = {}; ccSelDate = null;
-      document.getElementById('cc-slots-wrap').style.display = 'none';
-      document.getElementById('cc-form-section').style.display = 'none';
-      ccLoadMonth();
-    };
-    window.ccNextMonth = function() {
-      ccMonth++; if (ccMonth > 11) { ccMonth = 0; ccYear++; }
-      ccData = {}; ccSelDate = null;
-      document.getElementById('cc-slots-wrap').style.display = 'none';
-      document.getElementById('cc-form-section').style.display = 'none';
-      ccLoadMonth();
-    };
-    window.ccSelectDate = ccSelectDate;
-    window.ccSelectSlot = ccSelectSlot;
-
     window.submitClarityCall = async function() {
-      if (!ccSelSlotId) { document.getElementById('cc-msg').textContent = 'Please select a time slot first.'; return; }
-      var fname = document.getElementById('cc-fname').value.trim();
-      var lname = document.getElementById('cc-lname').value.trim();
-      var email = document.getElementById('cc-email').value.trim();
-      var phone = document.getElementById('cc-phone').value.trim();
-      var svcEl = document.querySelector('input[name="cc-service"]:checked');
-      var service = svcEl ? svcEl.value : '';
+      var fname    = document.getElementById('cc-fname').value.trim();
+      var lname    = document.getElementById('cc-lname').value.trim();
+      var email    = document.getElementById('cc-email').value.trim();
+      var phone    = document.getElementById('cc-phone').value.trim();
+      var svcEl    = document.querySelector('input[name="cc-service"]:checked');
+      var service  = svcEl ? svcEl.value : '';
       var transform = document.getElementById('cc-transform').value.trim();
-      var msgVal = document.getElementById('cc-message').value.trim();
-      var msgEl = document.getElementById('cc-msg');
+      var msgVal   = document.getElementById('cc-message').value.trim();
+      var msgEl    = document.getElementById('cc-msg');
 
       if (!fname || !lname || !email) {
         msgEl.textContent = 'Please fill in your first name, last name, and email.';
+        msgEl.className = 'cc-msg-row';
         return;
       }
-      if (!email.includes('@')) { msgEl.textContent = 'Please enter a valid email address.'; return; }
+      if (!email.includes('@')) {
+        msgEl.textContent = 'Please enter a valid email address.';
+        msgEl.className = 'cc-msg-row';
+        return;
+      }
 
       var btn = document.getElementById('cc-submit-btn');
-      btn.disabled = true; btn.textContent = 'Booking…'; msgEl.textContent = '';
+      btn.disabled = true;
+      btn.textContent = 'Sending…';
+      msgEl.textContent = '';
 
-      var note = [service ? 'Interested in: ' + service : '', transform ? 'Transform: ' + transform : '', msgVal].filter(Boolean).join(' | ');
+      var message = [
+        'FREE CLARITY CALL REQUEST',
+        phone      ? 'Phone: ' + phone                   : '',
+        service    ? 'Interested in: ' + service         : '',
+        transform  ? 'Areas to transform: ' + transform  : '',
+        msgVal     ? 'Message: ' + msgVal                : ''
+      ].filter(Boolean).join('\n');
 
       try {
-        var res = await fetch('/api/bookings', {
+        var res = await fetch('/api/contact', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            slot_id: parseInt(ccSelSlotId),
-            service: service || 'Free Clarity Call',
-            customer_name: fname + ' ' + lname,
-            customer_email: email,
-            customer_phone: phone || '',
-            message: note
+            name:    fname + ' ' + lname,
+            email:   email,
+            phone:   phone,
+            message: message
           })
         });
         var data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Booking failed');
-        document.getElementById('cc-form-section').innerHTML =
-          '<div style="text-align:center;padding:2rem 0;">' +
-          '<div style="font-size:2.5rem;margin-bottom:0.75rem;color:#2a8c7c;">✦</div>' +
-          '<h3 style="font-family:var(--font-heading);font-weight:400;color:var(--charcoal);font-size:1.6rem;margin-bottom:0.5rem;">You\'re Booked!</h3>' +
-          '<p style="color:var(--text-body);font-size:0.9rem;line-height:1.7;">A confirmation has been sent to <strong>' + esc(email) + '</strong>.<br>Reena will connect with you soon.</p>' +
-          (data.booking_ref ? '<p style="color:var(--text-muted);font-size:0.78rem;margin-top:0.75rem;">Ref: ' + esc(data.booking_ref) + '</p>' : '') +
+        if (!res.ok) throw new Error(data.error || 'Failed to send');
+
+        document.getElementById('cc-panel').innerHTML =
+          '<div style="text-align:center;padding:3rem 1rem;">' +
+            '<div style="font-size:2.5rem;margin-bottom:0.75rem;color:#2a8c7c;">✦</div>' +
+            '<h3 style="font-family:var(--font-heading);font-weight:400;color:var(--charcoal);font-size:1.7rem;margin-bottom:0.6rem;">Thank You!</h3>' +
+            '<p style="color:var(--text-body);font-size:0.92rem;line-height:1.8;max-width:340px;margin:0 auto;">Your request has been received. Reena will be in touch with you shortly to confirm a time for your free 15-minute clarity call.</p>' +
           '</div>';
-        // hide slot strip too
-        document.getElementById('cc-slots-wrap').style.display = 'none';
       } catch(err) {
         msgEl.textContent = err.message || 'Something went wrong. Please try again.';
-        btn.disabled = false; btn.textContent = 'Book Free Clarity Call ✦';
+        msgEl.className = 'cc-msg-row';
+        btn.disabled = false;
+        btn.textContent = 'Request a Free Clarity Call ✦';
       }
     };
 
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', ccInit);
+      document.addEventListener('DOMContentLoaded', ccPopulateServices);
     } else {
-      ccInit();
+      ccPopulateServices();
     }
   })();
   </script>
