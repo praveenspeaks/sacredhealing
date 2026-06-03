@@ -90,10 +90,15 @@ function slugify(title) {
 
 // Multi-page section routes (must be before /services/:slug)
 app.get('/about',        (req, res) => res.sendFile(path.join(__dirname, 'about.html')));
+app.get('/philosophy',   (req, res) => res.sendFile(path.join(__dirname, 'philosophy.html')));
+app.get('/story',        (req, res) => res.sendFile(path.join(__dirname, 'story.html')));
 app.get('/services',     (req, res) => res.sendFile(path.join(__dirname, 'services.html')));
+app.get('/process',      (req, res) => res.sendFile(path.join(__dirname, 'process.html')));
 app.get('/testimonials', (req, res) => res.sendFile(path.join(__dirname, 'testimonials.html')));
-app.get('/contact',      (req, res) => res.sendFile(path.join(__dirname, 'contact.html')));
 app.get('/faq',          (req, res) => res.sendFile(path.join(__dirname, 'faq.html')));
+app.get('/contact',      (req, res) => res.sendFile(path.join(__dirname, 'contact.html')));
+app.get('/disclaimer',   (req, res) => res.sendFile(path.join(__dirname, 'disclaimer.html')));
+app.get('/cancellation', (req, res) => res.sendFile(path.join(__dirname, 'cancellation.html')));
 
 // Route: /services/spiritual-healing  →  serves service.html
 app.get('/services/:slug', (req, res) => {

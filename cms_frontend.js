@@ -86,19 +86,18 @@ function escHtml(str) {
 }
 
 function navHref(key, cfg, onHome, allCfg) {
-  // Sub-sections always link to their parent page + anchor — never get own URL
+  // Any section with location='page' gets its own clean URL (no hashes)
+  if (cfg.location === 'page') {
+    if (key === 'faq') return '/faq.html';
+    return '/' + key;
+  }
+  // Sub-sections on 'home': follow parent
   const parentKey = NAV_PARENTS[key];
   if (parentKey) {
     const parentCfg = allCfg && allCfg[parentKey];
     if (parentCfg && parentCfg.location === 'page') {
       return '/' + parentKey + '#' + key;
     }
-    return onHome ? '#' + key : '/#' + key;
-  }
-  // Top-level sections
-  if (cfg.location === 'page') {
-    if (key === 'faq') return '/faq.html';
-    return '/' + key;
   }
   return onHome ? '#' + key : '/#' + key;
 }
@@ -111,6 +110,7 @@ function isActivePage(key, cfg) {
   }
   return false;
 }
+
 
 function buildNav(content) {
   const cfg = content.nav_config ? (typeof content.nav_config === 'string' ? JSON.parse(content.nav_config) : content.nav_config) : {};
