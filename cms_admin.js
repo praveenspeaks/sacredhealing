@@ -99,9 +99,12 @@ async function loadServices() {
 function renderServicesTable() {
     const tbody = servicesList.map(s => {
         const fList = Array.isArray(s.features) ? s.features.join(', ') : s.features;
+        const imgHtml = s.image_url
+            ? `<img src="${s.image_url}" alt="" style="width:48px;height:36px;object-fit:cover;border-radius:4px;vertical-align:middle;margin-right:0.5rem;" />`
+            : `<span style="display:inline-block;width:48px;height:36px;background:#f3f4f6;border-radius:4px;vertical-align:middle;margin-right:0.5rem;"></span>`;
         return `
         <tr>
-            <td><strong>${s.title}</strong></td>
+            <td>${imgHtml}<strong>${s.title}</strong></td>
             <td>£${s.price}</td>
             <td>${s.duration} min</td>
             <td style="max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis" title="${fList}">${fList}</td>
@@ -114,7 +117,7 @@ function renderServicesTable() {
         </tr>
         `;
     }).join('');
-    
+
     document.getElementById('services-table').innerHTML = `
     <table>
         <thead><tr><th>Title</th><th>Price</th><th>Duration</th><th>Features</th><th>Actions</th></tr></thead>
@@ -145,7 +148,20 @@ function editService(id) {
     document.getElementById('srv-bestFor').value = details.bestFor || '';
     document.getElementById('srv-longDescription').value = details.longDescription ? details.longDescription.join('n') : '';
     document.getElementById('srv-expect').value = details.expect ? details.expect.map(e => `${e.title}|${e.text}`).join('n') : '';
-    
+
+    // Load image
+    const imageUrl = s.image_url || '';
+    document.getElementById('srv-image-url').value = imageUrl;
+    const preview = document.getElementById('srv-image-preview');
+    const thumb = document.getElementById('srv-image-thumb');
+    if (imageUrl) {
+        thumb.src = imageUrl;
+        preview.style.display = 'block';
+    } else {
+        preview.style.display = 'none';
+        thumb.src = '';
+    }
+
     const btn = document.querySelector('button[onclick="addService()"]') || document.querySelector('button[onclick="updateService()"]');
     if (btn) {
         btn.innerText = 'Update Service';
@@ -181,12 +197,13 @@ async function updateService() {
     const extra_details = {
         icon, tag, sessionType, bestFor, longDescription, expect
     };
-    
+    const image_url = document.getElementById('srv-image-url').value || null;
+
     try {
         const res = await fetch('/api/admin/services/' + editServiceId, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', 'x-admin-password': adminToken },
-            body: JSON.stringify({ title, price, duration, description: desc, features, extra_details })
+            body: JSON.stringify({ title, price, duration, description: desc, features, extra_details, image_url })
         });
         if (res.ok) {
             toast('Service updated successfully', 'success');
@@ -225,12 +242,13 @@ async function addService() {
     const extra_details = {
         icon, tag, sessionType, bestFor, longDescription, expect
     };
+    const image_url = document.getElementById('srv-image-url').value || null;
 
     try {
         const res = await fetch('/api/admin/services', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'x-admin-password': adminToken },
-            body: JSON.stringify({ title, price, duration, description: desc, features, order_num: servicesList.length + 1, extra_details })
+            body: JSON.stringify({ title, price, duration, description: desc, features, order_num: servicesList.length + 1, extra_details, image_url })
         });
         if (res.ok) {
             toast('Service added successfully', 'success');
@@ -250,18 +268,52 @@ function clearServiceForm() {
     document.getElementById('srv-price').value = '';
     document.getElementById('srv-desc').value = '';
     document.getElementById('srv-features').value = '';
-    
+
     document.getElementById('srv-icon').value = '';
     document.getElementById('srv-tag').value = '';
     document.getElementById('srv-sessionType').value = '';
     document.getElementById('srv-bestFor').value = '';
     document.getElementById('srv-longDescription').value = '';
     document.getElementById('srv-expect').value = '';
-    
+
+    clearServiceImage();
+
     const btn = document.querySelector('button[onclick="updateService()"]') || document.querySelector('button[onclick="addService()"]');
     if (btn) {
         btn.innerText = 'Add / Update Service';
         btn.setAttribute('onclick', 'addService()');
+    }
+}
+
+function clearServiceImage() {
+    document.getElementById('srv-image-url').value = '';
+    document.getElementById('srv-image-file').value = '';
+    document.getElementById('srv-image-preview').style.display = 'none';
+    document.getElementById('srv-image-thumb').src = '';
+}
+
+async function uploadServiceImage(input) {
+    const file = input.files[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('image', file);
+    try {
+        const res = await fetch('/api/admin/upload/service-image', {
+            method: 'POST',
+            headers: { 'x-admin-password': adminToken },
+            body: formData
+        });
+        const data = await res.json();
+        if (data.url) {
+            document.getElementById('srv-image-url').value = data.url;
+            document.getElementById('srv-image-thumb').src = data.url;
+            document.getElementById('srv-image-preview').style.display = 'block';
+            toast('Image uploaded', 'success');
+        } else {
+            toast(data.error || 'Upload failed', 'error');
+        }
+    } catch(e) {
+        toast('Upload error', 'error');
     }
 }
 

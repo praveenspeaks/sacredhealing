@@ -45,6 +45,7 @@ module.exports = {
     `);
 
     await pool.query(`ALTER TABLE services ADD COLUMN IF NOT EXISTS extra_details TEXT DEFAULT '{}'`);
+    await pool.query(`ALTER TABLE services ADD COLUMN IF NOT EXISTS image_url TEXT`);
 
     // Migration: fix logo path if still pointing to old file
     await pool.query(
@@ -100,7 +101,7 @@ module.exports = {
       process:      { location: 'page', label: 'How It Works',        header: false, footer: true,  order: 23 },
       testimonials: { location: 'page', label: 'Testimonials',        header: true,  footer: true,  order: 4  },
       faq:          { location: 'page', label: 'FAQ',                 header: true,  footer: true,  order: 5  },
-      contact:      { location: 'page', label: 'Book Session',        header: true,  footer: true,  order: 6  },
+      contact:      { location: 'page', label: 'Contact',             header: true,  footer: true,  order: 6  },
       disclaimer:   { location: 'page', label: 'Legal Notice',        header: false, footer: true,  order: 31 },
       cancellation: { location: 'page', label: 'Cancellation Policy', header: false, footer: true,  order: 32 },
       'reduced-rate': { location: 'page', label: 'Reduced-Rate Access', header: false, footer: false, order: 33 },
@@ -124,6 +125,11 @@ module.exports = {
           existing[key].location = 'page';
           changed = true;
         }
+      }
+      // Rename 'Book Session' → 'Contact' for the nav link (CTA button already says 'Book Session')
+      if (existing.contact && existing.contact.label === 'Book Session') {
+        existing.contact.label = 'Contact';
+        changed = true;
       }
       if (changed) {
         await pool.query(`UPDATE site_content SET value = $1 WHERE key = 'nav_config'`, [JSON.stringify(existing)]);
@@ -346,6 +352,10 @@ module.exports = {
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
+    const serviceImgDir = path.join(__dirname, 'assets', 'services');
+    if (!fs.existsSync(serviceImgDir)) {
+      fs.mkdirSync(serviceImgDir, { recursive: true });
+    }
     const ALLOWED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif', 'image/svg+xml'];
     const storage = multer.diskStorage({
       destination: function (req, file, cb) { cb(null, uploadDir); },
@@ -449,15 +459,42 @@ module.exports = {
       }
     });
 
+    // Service image upload — saves to assets/services/
+    const serviceImgStorage = multer.diskStorage({
+      destination: function (req, file, cb) { cb(null, serviceImgDir); },
+      filename:    function (req, file, cb) {
+        const ext = path.extname(file.originalname);
+        cb(null, 'service-' + Date.now() + ext);
+      }
+    });
+    const uploadServiceImg = multer({
+      storage: serviceImgStorage,
+      limits: { fileSize: 5 * 1024 * 1024 },
+      fileFilter: function (req, file, cb) {
+        if (ALLOWED_MIME.includes(file.mimetype)) cb(null, true);
+        else cb(new Error('Only image files are allowed'));
+      }
+    });
+    app.post('/api/admin/upload/service-image', requireAdmin, uploadServiceImg.single('image'), async (req, res) => {
+      try {
+        if (!req.file) return res.status(400).json({ error: 'No file uploaded' });
+        const fileUrl = '/assets/services/' + req.file.filename;
+        res.json({ success: true, url: fileUrl });
+      } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: 'Upload failed' });
+      }
+    });
+
     // Services Management
     app.post('/api/admin/services', requireAdmin, express.json(), async (req, res) => {
       try {
-        const { title, description, features, duration, price, order_num, extra_details } = req.body;
+        const { title, description, features, duration, price, order_num, extra_details, image_url } = req.body;
         const featureStr = JSON.stringify(Array.isArray(features) ? features : features.split('\\n'));
         const extraStr = extra_details ? JSON.stringify(extra_details) : '{}';
         await pool.query(
-          'INSERT INTO services (title, description, features, duration, price, order_num, extra_details) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-          [title, description, featureStr, duration, price, order_num || 0, extraStr]
+          'INSERT INTO services (title, description, features, duration, price, order_num, extra_details, image_url) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
+          [title, description, featureStr, duration, price, order_num || 0, extraStr, image_url || null]
         );
         res.json({ success: true });
       } catch (err) {
@@ -467,12 +504,12 @@ module.exports = {
 
     app.put('/api/admin/services/:id', requireAdmin, express.json(), async (req, res) => {
       try {
-        const { title, description, features, duration, price, order_num, extra_details } = req.body;
+        const { title, description, features, duration, price, order_num, extra_details, image_url } = req.body;
         const featureStr = JSON.stringify(Array.isArray(features) ? features : features.split('\\n'));
         const extraStr = extra_details ? JSON.stringify(extra_details) : '{}';
         await pool.query(
-          'UPDATE services SET title=$1, description=$2, features=$3, duration=$4, price=$5, order_num=$6, extra_details=$7 WHERE id=$8',
-          [title, description, featureStr, duration, price, order_num || 0, extraStr, req.params.id]
+          'UPDATE services SET title=$1, description=$2, features=$3, duration=$4, price=$5, order_num=$6, extra_details=$7, image_url=$8 WHERE id=$9',
+          [title, description, featureStr, duration, price, order_num || 0, extraStr, image_url || null, req.params.id]
         );
         res.json({ success: true });
       } catch (err) {

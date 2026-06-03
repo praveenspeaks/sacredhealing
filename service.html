@@ -1,9 +1,9 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Service Details — SoulBody Healing</title>
+  <title>Service Details — Sacred Healing</title>
   <meta name="description" content="Discover our transformative healing services. Book a session with Reena today." />
   <link rel="icon" type="image/png" href="/assets/logo-sbh.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -11,7 +11,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,600&family=Raleway:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/style.css" />
   <style>
-    /* ── Service Detail Page Specific Styles (warm minimal theme) ── */
+    /* ── Service Detail Page Styles ── */
     .service-hero {
       min-height: 50vh;
       display: flex;
@@ -63,7 +63,6 @@
 
     .service-hero-actions { display: flex; gap: 1rem; flex-wrap: wrap; }
 
-    /* Stats block */
     .service-stats-panel {
       background: var(--white);
       border: 1px solid var(--border);
@@ -102,7 +101,6 @@
       color: var(--charcoal);
     }
 
-    /* Price badge */
     .price-hero-badge {
       display: inline-flex;
       align-items: baseline;
@@ -123,7 +121,6 @@
 
     .price-hero-badge .price-per { font-size: 0.85rem; color: var(--text-muted); }
 
-    /* Content sections */
     .service-content { padding: 5rem 0; background: var(--cream); }
 
     .service-content-grid {
@@ -147,7 +144,6 @@
     .content-block-title em { font-style: italic; color: var(--olive); }
     .content-block p { color: var(--text-body); line-height: 1.9; font-size: 0.98rem; margin-bottom: 1rem; }
 
-    /* What to Expect list */
     .expect-list {
       list-style: none;
       display: flex;
@@ -176,7 +172,6 @@
     .expect-text { color: var(--text-body); line-height: 1.7; }
     .expect-text strong { color: var(--charcoal); display: block; margin-bottom: 0.15rem; }
 
-    /* Features grid */
     .features-grid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -199,7 +194,6 @@
     .feature-pill-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--olive); flex-shrink: 0; }
     .feature-pill span { color: var(--text-body); font-size: 0.88rem; }
 
-    /* Sidebar */
     .service-sidebar {
       position: sticky;
       top: 6rem;
@@ -273,7 +267,6 @@
 
     .sidebar-trial-btn:hover { border-color: var(--olive); background: var(--olive-glow); }
 
-    /* Guarantee badges */
     .guarantee-list {
       list-style: none;
       display: flex;
@@ -291,10 +284,6 @@
 
     .guarantee-list li span:first-child { color: var(--olive); }
 
-    /* Related services */
-    .related-services { padding: 5rem 0; border-top: 1px solid var(--border); background: var(--cream-alt); }
-
-    /* Breadcrumb */
     .breadcrumb {
       display: flex;
       align-items: center;
@@ -308,11 +297,250 @@
     .breadcrumb a:hover { color: var(--olive-dark); }
     .breadcrumb span { color: var(--border-strong); }
 
-    /* Responsive */
-    @media (max-width: 900px) {
-      .service-hero-grid,
-      .service-content-grid { grid-template-columns: 1fr; }
-      .service-sidebar { position: static; }
+    /* ── Calendar Booking Section ── */
+    #cal-booking {
+      padding: 5rem 0;
+      background: var(--cream-alt);
+      border-top: 1px solid var(--border);
+    }
+
+    .cal-wrapper {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2.5rem;
+      max-width: 860px;
+      margin: 0 auto;
+    }
+
+    .cal-panel {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.75rem;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .cal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.25rem;
+    }
+
+    .cal-nav-btn {
+      background: none;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      width: 2.1rem;
+      height: 2.1rem;
+      cursor: pointer;
+      font-size: 1.1rem;
+      color: var(--text-body);
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+
+    .cal-nav-btn:hover { background: var(--olive-glow); border-color: var(--olive); color: var(--olive); }
+
+    .cal-month-label {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.25rem;
+      font-weight: 500;
+      color: var(--charcoal);
+    }
+
+    .cal-day-labels {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+      margin-bottom: 0.35rem;
+    }
+
+    .cal-day-labels span {
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+      padding: 0.35rem 0;
+    }
+
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 0.15rem;
+    }
+
+    .cal-day {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      border-radius: 7px;
+      font-size: 0.84rem;
+      cursor: default;
+      transition: all 0.18s;
+      position: relative;
+      color: var(--charcoal);
+      border: 1px solid transparent;
+    }
+
+    .cal-day.past { color: var(--text-muted); opacity: 0.45; }
+
+    .cal-day.available {
+      cursor: pointer;
+    }
+
+    .cal-day.available:hover {
+      background: #e8f5f4;
+      border-color: #6aaca8;
+    }
+
+    .cal-day.available::after {
+      content: '';
+      position: absolute;
+      bottom: 3px;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #6aaca8;
+    }
+
+    .cal-day.selected {
+      background: #6aaca8;
+      color: white;
+      border-color: #6aaca8;
+    }
+
+    .cal-day.selected::after { background: white; }
+
+    .cal-day.fully-booked {
+      background: #fef3c7;
+      border-color: #fbbf24;
+      color: #92400e;
+      cursor: not-allowed;
+    }
+
+    .cal-day.fully-booked::after {
+      content: '';
+      position: absolute;
+      bottom: 3px;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #f59e0b;
+    }
+
+    .cal-legend {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+      padding-top: 0.85rem;
+      border-top: 1px solid var(--border);
+      flex-wrap: wrap;
+    }
+
+    .cal-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+    }
+
+    .cal-legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+
+    .cal-slots-panel {
+      background: var(--white);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.75rem;
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      flex-direction: column;
+      min-height: 320px;
+    }
+
+    .cal-slots-header {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.15rem;
+      color: var(--charcoal);
+      margin-bottom: 1.1rem;
+      padding-bottom: 0.65rem;
+      border-bottom: 1px solid var(--border);
+      min-height: 2.2rem;
+    }
+
+    .cal-slots-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.55rem;
+      flex: 1;
+    }
+
+    .cal-slot-btn {
+      padding: 0.65rem 0.5rem;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      background: var(--cream-light);
+      color: var(--charcoal);
+      font-size: 0.84rem;
+      font-family: 'Raleway', sans-serif;
+      cursor: pointer;
+      transition: all 0.18s;
+      text-align: center;
+      line-height: 1.35;
+    }
+
+    .cal-slot-btn:hover:not(:disabled) {
+      background: #6aaca8;
+      color: white;
+      border-color: #6aaca8;
+    }
+
+    .cal-slot-btn.selected {
+      background: #6aaca8;
+      color: white;
+      border-color: #6aaca8;
+    }
+
+    .cal-slot-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      background: #f5f5f5;
+      color: var(--text-muted);
+      text-decoration: line-through;
+    }
+
+    .cal-slot-btn small {
+      display: block;
+      font-size: 0.72rem;
+      opacity: 0.8;
+    }
+
+    .cal-empty-msg {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      text-align: center;
+      padding: 2rem 0;
+      grid-column: 1 / -1;
+      align-self: center;
+    }
+
+    .cal-tz-note {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 1rem;
+      padding-top: 0.85rem;
+      border-top: 1px solid var(--border);
     }
 
     /* Booking modal */
@@ -346,58 +574,75 @@
       transition: all 0.2s;
     }
     .modal-close:hover { background: #fee2e2; color: #dc2626; border-color: #fca5a5; }
-    .modal-title { font-family: 'Cormorant Garamond', serif; font-size: 1.75rem; color: var(--charcoal); margin-bottom: 1.25rem; }
+    .modal-title { font-family: 'Cormorant Garamond', serif; font-size: 1.75rem; color: var(--charcoal); margin-bottom: 0.35rem; }
     .modal-title em { font-style: italic; color: var(--olive); }
+    .modal-subtitle { font-size: 0.88rem; color: var(--text-muted); margin-bottom: 1.4rem; line-height: 1.55; }
     .modal-form-group { margin-bottom: 1.1rem; }
     .modal-form-group label { display: block; font-size: 0.72rem; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-body); margin-bottom: 0.4rem; }
     .modal-input { width: 100%; background: var(--cream-light); border: 1px solid var(--border-strong); color: var(--charcoal); padding: 0.72rem 1rem; border-radius: 7px; font-size: 0.9rem; outline: none; transition: border-color 0.2s; font-family: 'Raleway', sans-serif; resize: vertical; }
     .modal-input:focus { border-color: var(--olive); background: var(--white); }
     .modal-submit { width: 100%; padding: 0.9rem; background: var(--olive); color: var(--white); font-weight: 600; font-size: 0.9rem; border: none; border-radius: 7px; cursor: pointer; margin-top: 0.5rem; transition: all 0.2s; font-family: 'Raleway', sans-serif; }
-    .modal-submit:hover { background: var(--olive-mid); transform: translateY(-1px); }
+    .modal-submit:hover:not(:disabled) { background: var(--olive-mid); transform: translateY(-1px); }
+    .modal-submit:disabled { opacity: 0.6; cursor: not-allowed; }
     .modal-success { text-align: center; padding: 2rem 0; }
     .modal-success .success-icon { font-size: 2.5rem; color: var(--olive); margin-bottom: 1rem; }
     .modal-success h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.9rem; color: var(--charcoal); margin-bottom: 1rem; }
     .modal-success p { color: var(--text-body); margin-bottom: 1.5rem; }
+    .modal-slot-info {
+      background: var(--cream-light);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.85rem 1rem;
+      margin-bottom: 1.25rem;
+      font-size: 0.88rem;
+      color: var(--charcoal);
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+    .modal-slot-info span:first-child { color: var(--olive); font-size: 1.1rem; }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .service-hero-grid,
+      .service-content-grid { grid-template-columns: 1fr; }
+      .service-sidebar { position: static; }
+      .cal-wrapper { grid-template-columns: 1fr; }
+    }
   </style>
 </head>
 <body>
-  <!-- ── NAV ── -->
+
+  <div id="nav-backdrop" style="display:none;position:fixed;inset:0;z-index:998;background:rgba(0,0,0,0.5);backdrop-filter:blur(2px);"></div>
+
   <nav class="navbar" id="navbar">
     <div class="nav-container">
       <a href="/" class="nav-logo">
         <div class="logo-circle">
-          <img src="/assets/logo-sbh.png" alt="Sacred Healing Logo" class="logo-img" />
+          <img src="/assets/logo-sbh.png" alt="Sacred Healing Logo" class="logo-img" id="logo_img" />
         </div>
         <div class="logo-text">
           <div class="logo-main">Sacred Healing</div>
           <div class="logo-slogan">सफलम् जन्मम् प्रवासम्</div>
         </div>
       </a>
-      <div class="nav-links" id="nav-links">
-        <a href="/#about" class="nav-link">About</a>
-        <a href="/#services" class="nav-link">Services</a>
-        <a href="/#testimonials" class="nav-link">Testimonials</a>
-        <a href="/#faq" class="nav-link">FAQ</a>
-        <a href="/#contact" class="nav-link">Book</a>
-      </div>
-      <button class="btn btn-gold nav-cta" onclick="openBooking()">Book Session</button>
       <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
         <span></span><span></span><span></span>
       </button>
+      <ul class="nav-links" id="nav-links"></ul>
+      <button class="btn btn-gold nav-cta" onclick="window.location.href='/contact'">Book Session</button>
     </div>
   </nav>
 
-  <!-- ── MAIN ── -->
-  <main id="service-main" style="padding-top: 0;">
+  <main id="service-main" style="padding-top:0;">
 
-    <!-- Hero -->
+    <!-- ── Hero ── -->
     <section class="service-hero">
-      <div class="service-hero-bg"></div>
       <div class="container" style="width:100%;">
         <div class="breadcrumb">
           <a href="/">Home</a>
           <span>›</span>
-          <a href="/#services">Services</a>
+          <a href="/services">Services</a>
           <span>›</span>
           <span id="breadcrumb-title">Loading…</span>
         </div>
@@ -405,22 +650,23 @@
           <div>
             <div class="service-hero-eyebrow">
               <span id="hero-icon">✦</span>
-              <span id="hero-tag">SoulBody Healing</span>
+              <span id="hero-tag">Sacred Healing</span>
             </div>
             <h1 class="service-hero-title">
               <span id="hero-title-line1">Healing</span><br />
               <em id="hero-title-line2">Session</em>
             </h1>
-            <p class="service-hero-desc" id="hero-desc">
-              Loading service details…
-            </p>
+            <p class="service-hero-desc" id="hero-desc">Loading service details…</p>
             <div class="service-hero-actions">
-              <button class="btn btn-gold" onclick="openBooking()">Book This Session �'</button>
-              <a href="/#contact" class="btn btn-outline">View Available Slots</a>
+              <button class="btn btn-gold" onclick="scrollToCalendar()">Book This Session ✦</button>
+              <a href="#cal-booking" class="btn btn-outline">View Available Slots</a>
             </div>
           </div>
 
           <div class="service-stats-panel" id="stats-panel">
+            <div id="stat-image-wrap" style="display:none;margin:-2.25rem -2.25rem 1.5rem;overflow:hidden;border-radius:14px 14px 0 0;">
+              <img id="stat-image" src="" alt="" style="width:100%;height:200px;object-fit:cover;display:block;" />
+            </div>
             <div class="service-stat-row">
               <span class="stat-icon">⏱</span>
               <div>
@@ -451,18 +697,67 @@
       </div>
     </section>
 
-    <!-- Content + Sidebar -->
+    <!-- ── Calendar Booking ── -->
+    <section id="cal-booking">
+      <div class="container">
+        <div style="text-align:center;margin-bottom:2.75rem;">
+          <div class="section-tag" style="justify-content:center;">✦ Choose Your Time</div>
+          <h2 class="section-title">Book Your <em>Session</em></h2>
+          <p style="color:var(--text-muted);font-size:0.9rem;margin-top:0.5rem;">Select a date to see available times · All times shown in London time</p>
+        </div>
+        <div class="cal-wrapper">
+          <!-- Calendar -->
+          <div class="cal-panel">
+            <div class="cal-header">
+              <button class="cal-nav-btn" onclick="calPrevMonth()" aria-label="Previous month">&#8249;</button>
+              <span class="cal-month-label" id="cal-month-label">Loading…</span>
+              <button class="cal-nav-btn" onclick="calNextMonth()" aria-label="Next month">&#8250;</button>
+            </div>
+            <div class="cal-day-labels">
+              <span>MON</span><span>TUE</span><span>WED</span><span>THU</span><span>FRI</span><span>SAT</span><span>SUN</span>
+            </div>
+            <div class="cal-grid" id="cal-grid">
+              <div class="cal-empty-msg" style="grid-column:1/-1;padding:1.5rem 0;">Loading calendar…</div>
+            </div>
+            <div class="cal-legend">
+              <div class="cal-legend-item">
+                <div class="cal-legend-dot" style="background:#6aaca8;"></div>
+                <span>Available</span>
+              </div>
+              <div class="cal-legend-item">
+                <div class="cal-legend-dot" style="background:#f59e0b;"></div>
+                <span>Fully Booked</span>
+              </div>
+              <div class="cal-legend-item">
+                <div class="cal-legend-dot" style="background:#d1d5db;"></div>
+                <span>Unavailable</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Time Slots -->
+          <div class="cal-slots-panel">
+            <div class="cal-slots-header" id="cal-slots-header">Select a date to view available times</div>
+            <div class="cal-slots-grid" id="cal-slots-grid">
+              <div class="cal-empty-msg">
+                ← Choose a date on the calendar
+              </div>
+            </div>
+            <p class="cal-tz-note">🕐 London time (GMT/BST) · Tap a time to book</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── Content + Sidebar ── -->
     <section class="service-content">
       <div class="container">
         <div class="service-content-grid">
 
-          <!-- Main content -->
           <div>
             <div class="content-block">
               <h2 class="content-block-title">About This <em>Service</em></h2>
-              <div id="long-description">
-                <p>Loading…</p>
-              </div>
+              <div id="long-description"><p>Loading…</p></div>
             </div>
 
             <div class="content-block">
@@ -476,30 +771,29 @@
             </div>
           </div>
 
-          <!-- Sidebar -->
           <aside class="service-sidebar">
             <div class="sidebar-card">
               <div class="sidebar-card-title">Book Your Session</div>
               <div class="sidebar-book-price" id="sidebar-price">—</div>
               <div class="sidebar-book-duration" id="sidebar-duration">—</div>
-              <button class="sidebar-book-btn" onclick="openBooking()">Reserve Your Spot �'</button>
-              <a href="/#contact" class="sidebar-trial-btn">🕐 Try a Free 15-min Call</a>
+              <button class="sidebar-book-btn" onclick="scrollToCalendar()">Reserve Your Spot ✦</button>
+              <a href="/contact" class="sidebar-trial-btn">🕐 Try a Free 15-min Clarity Call</a>
             </div>
 
             <div class="sidebar-card">
               <div class="sidebar-card-title">Our Promise</div>
               <ul class="guarantee-list">
-                <li><span>�'</span><span>100% Confidential Sessions</span></li>
-                <li><span>�'�</span><span>Safe, Non-Judgmental Space</span></li>
+                <li><span>✦</span><span>100% Confidential Sessions</span></li>
+                <li><span>🌿</span><span>Safe, Non-Judgmental Space</span></li>
                 <li><span>🌐</span><span>In-Person & Remote Available</span></li>
-                <li><span>✦</span><span>Divinely Guided Practice</span></li>
+                <li><span>✨</span><span>Divinely Guided Practice</span></li>
                 <li><span>📋</span><span>UK Law Compliant</span></li>
               </ul>
             </div>
 
             <div class="sidebar-card">
               <div class="sidebar-card-title">Other Services</div>
-              <div id="related-services" style="display:flex; flex-direction:column; gap:0.75rem;"></div>
+              <div id="related-services" style="display:flex;flex-direction:column;gap:0.75rem;"></div>
             </div>
           </aside>
 
@@ -509,20 +803,17 @@
 
   </main>
 
-  <!-- ── FOOTER ── -->
+  <!-- ── Footer ── -->
   <footer class="footer">
     <div class="container">
       <div class="footer-grid">
         <div class="footer-brand">
-          <a href="/" class="footer-logo">
-            <span class="logo-icon">✦</span>
-            SoulBody Healing
-          </a>
-          <p class="footer-tagline">Ancient Wisdom · Infinite Healing<br />Croydon, London & Online</p>
+          <a href="/" class="footer-logo"><span class="logo-icon">✦</span> Sacred Healing</a>
+          <p class="footer-tagline" id="footer_tagline">Ancient Wisdom · Infinite Healing<br />Croydon, London &amp; Online Sessions Available</p>
         </div>
         <div class="footer-nav">
-          <h4>Healing Services</h4>
-          <ul id="footer-services-list"></ul>
+          <h4>Explore</h4>
+          <ul id="footer-nav-explore"></ul>
         </div>
         <div class="footer-contact">
           <h4>Connect</h4>
@@ -530,36 +821,38 @@
             <li>📧 <span id="contact_email">hello@soulbody.healing.com</span></li>
             <li>📍 <span id="contact_location">Croydon, London</span></li>
             <li>⏰ <span id="contact_phone">+44 7700 900000</span></li>
-            <li>🌐 Online Sessions Available</li>
           </ul>
         </div>
       </div>
       <div class="footer-bottom">
-        <p>© 2025 SoulBody Healing · Reena. All rights reserved. Crafted with ✦ love &amp; light.</p>
-        <div class="footer-bottom-links">
-          <a href="#">Privacy Policy</a><span>·</span><a href="#">Terms</a>
-        </div>
+        <p id="footer_copyright">© 2026 Sacred Healing · Reena. All rights reserved.</p>
       </div>
     </div>
   </footer>
 
-  <!-- ── BOOKING MODAL ── -->
+  <!-- ── Booking Modal ── -->
   <div class="modal-overlay" id="booking-modal" onclick="if(event.target===this)closeBooking()">
     <div class="modal-box">
       <button class="modal-close" onclick="closeBooking()">✕</button>
       <div id="booking-form-wrap">
         <h2 class="modal-title">Book Your <em>Session</em></h2>
+        <p class="modal-subtitle">Well Done! For taking a huge step for yourself.</p>
+        <input type="hidden" id="b-slot-id" />
+        <div class="modal-slot-info" id="modal-slot-info" style="display:none;">
+          <span>📅</span>
+          <span id="modal-slot-label"></span>
+        </div>
         <div class="modal-form-group">
           <label>Service</label>
           <input type="text" id="b-service" class="modal-input" readonly />
         </div>
         <div class="modal-form-group">
           <label>Your Full Name *</label>
-          <input type="text" id="b-name" class="modal-input" placeholder="e.g. Sarah Johnson" required />
+          <input type="text" id="b-name" class="modal-input" placeholder="e.g. Sarah Johnson" />
         </div>
         <div class="modal-form-group">
           <label>Email Address *</label>
-          <input type="email" id="b-email" class="modal-input" placeholder="your@email.com" required />
+          <input type="email" id="b-email" class="modal-input" placeholder="your@email.com" />
         </div>
         <div class="modal-form-group">
           <label>Phone (optional)</label>
@@ -569,12 +862,12 @@
           <label>Your Intention (optional)</label>
           <textarea id="b-msg" class="modal-input" rows="3" placeholder="Share anything you'd like Reena to know before your session…"></textarea>
         </div>
-        <button class="modal-submit" onclick="submitSimpleBooking()">Confirm Enquiry �'</button>
+        <button class="modal-submit" id="modal-submit-btn" onclick="submitBooking()">Confirm Booking ✦</button>
       </div>
       <div class="modal-success" id="booking-success" style="display:none;">
         <div class="success-icon">✦</div>
-        <h3>Enquiry Sent!</h3>
-        <p>Thank you. Reena will be in touch to confirm your session time.</p>
+        <h3>You're Booked!</h3>
+        <p>Thank you. Reena will be in touch to confirm your session details. Check your email for a confirmation.</p>
         <button class="btn btn-outline" onclick="closeBooking()">Close</button>
       </div>
     </div>
@@ -582,16 +875,20 @@
 
   <script src="/script.js"></script>
   <script>
-    // ── Service extended detail data ──
-    const SERVICE_DETAIL = {}; // Legacy object, no longer hardcoded
-
-    // ── Load service from clean URL path /services/:slug ──
+    // ── Service page state ──
     let currentService = null;
 
-    async function loadServicePage() {
-      // Extract slug from URL: /services/spiritual-healing �' "spiritual-healing"
-      const slug = window.location.pathname.replace(/^\/services\//, '').replace(/\/$/, '');
+    // ── Calendar state ──
+    const now = new Date();
+    let calYear = now.getFullYear();
+    let calMonth = now.getMonth(); // 0-indexed
+    let calAvailData = {};
+    let calSelectedDate = null;
+    let calSelectedSlotId = null;
 
+    // ── Load service from URL path /services/:slug ──
+    async function loadServicePage() {
+      const slug = window.location.pathname.replace(/^\/services\//, '').replace(/\/$/, '');
       try {
         const res = await fetch('/api/services/' + slug);
         if (!res.ok) { document.getElementById('hero-desc').textContent = 'Service not found.'; return; }
@@ -602,114 +899,316 @@
         currentService = service;
         let detail = {};
         if (service.extra_details) {
-          try { detail = JSON.parse(service.extra_details); } catch(e){}
+          try { detail = JSON.parse(service.extra_details); } catch(e) {}
         }
 
-        // Update page title & meta (important for SEO)
-        document.title = service.title + ' | SoulBody Healing — Croydon, London';
+        document.title = service.title + ' | Sacred Healing — Croydon, London';
         document.querySelector('meta[name="description"]').content = service.description;
 
-        // Breadcrumb
         document.getElementById('breadcrumb-title').textContent = service.title;
-
-        // Hero
         document.getElementById('hero-icon').textContent = detail.icon || '✦';
-        document.getElementById('hero-tag').textContent = detail.tag || 'SoulBody Healing';
+        document.getElementById('hero-tag').textContent = detail.tag || 'Sacred Healing';
         document.getElementById('hero-title-line1').textContent = detail.titleLine1 || service.title;
         document.getElementById('hero-title-line2').textContent = detail.titleLine2 || '';
         document.getElementById('hero-desc').textContent = service.description;
 
-        // Stats
         const durLabel = service.duration <= 30 ? service.duration + ' minutes' :
                          service.duration === 60 ? '60 minutes (1 hour)' :
                          service.duration <= 90 ? '60–90 minutes' : '90–120 minutes';
+
         document.getElementById('stat-duration').textContent = durLabel;
         document.getElementById('stat-type').textContent = detail.sessionType || 'In-person or Remote';
         document.getElementById('stat-best').textContent = detail.bestFor || (service.features || []).join(', ') || '—';
         document.getElementById('stat-price').textContent = service.price > 0 ? '£' + service.price : 'Free';
         document.getElementById('stat-price-sub').textContent = '/ ' + durLabel + ' session';
 
-        // Sidebar
+        // Hero image
+        if (service.image_url) {
+          document.getElementById('stat-image').src = service.image_url;
+          document.getElementById('stat-image').alt = service.title;
+          document.getElementById('stat-image-wrap').style.display = 'block';
+        }
+
         document.getElementById('sidebar-price').textContent = service.price > 0 ? '£' + service.price : 'FREE';
         document.getElementById('sidebar-duration').textContent = durLabel + ' session';
 
-        // Long description
         const descEl = document.getElementById('long-description');
-        const paragraphs = (detail.longDescription && detail.longDescription.length > 0) ? detail.longDescription : [service.description];
-        descEl.innerHTML = paragraphs.map(p => `<p>${p}</p>`).join('');
+        const paras = (detail.longDescription && detail.longDescription.length > 0) ? detail.longDescription : [service.description];
+        descEl.innerHTML = paras.map(p => `<p>${p}</p>`).join('');
 
-        // Expect list
         const expectEl = document.getElementById('expect-list');
-        const steps = (detail.expect && detail.expect.length > 0) ? detail.expect : service.features?.map(f => ({ title: f, text: 'This is covered in your session.' })) || [];
+        const steps = (detail.expect && detail.expect.length > 0)
+          ? detail.expect
+          : (service.features || []).map(f => ({ title: f, text: 'This is covered in your session.' }));
         expectEl.innerHTML = steps.map((s, i) => `
           <li>
             <span class="expect-num">${i + 1}</span>
             <div class="expect-text">
-              <strong>${s.title}</strong>
-              ${s.text}
+              <strong>${s.title}</strong>${s.text}
             </div>
           </li>
         `).join('');
 
-        // Features grid
         const featEl = document.getElementById('features-grid');
-        const features = service.features || [];
-        featEl.innerHTML = features.map(f => `
+        featEl.innerHTML = (service.features || []).map(f => `
           <div class="feature-pill">
             <span class="feature-pill-dot"></span>
             <span>${f}</span>
           </div>
         `).join('');
 
-        // Related services
         const relEl = document.getElementById('related-services');
         const others = allServices.filter(s => s.id !== service.id).slice(0, 4);
         relEl.innerHTML = others.map(s => `
-          <a href="/services/$\{s.slug\}" style="display:flex; align-items:center; justify-content:space-between; text-decoration:none; color:var(--text-body); font-size:0.9rem; padding:0.6rem 0; border-bottom:1px solid var(--border); transition:color 0.2s;"
+          <a href="/services/${s.slug}" style="display:flex;align-items:center;justify-content:space-between;text-decoration:none;color:var(--text-body);font-size:0.9rem;padding:0.6rem 0;border-bottom:1px solid var(--border);transition:color 0.2s;"
              onmouseover="this.style.color='var(--olive)'" onmouseout="this.style.color='var(--text-body)'">
-            <span>${s.title}</span>
-            <span style="color:var(--olive);">→</span>
+            <span>${s.title}</span><span style="color:var(--olive);">→</span>
           </a>
         `).join('');
-
-        // Footer services
-        const footerEl = document.getElementById('footer-services-list');
-        footerEl.innerHTML = allServices.map(s => `<li><a href="/services/$\{s.slug\}" style="color:rgba(255,255,255,0.6); text-decoration:none;">${s.title}</a></li>`).join('');
 
       } catch(err) {
         console.error(err);
         document.getElementById('hero-desc').textContent = 'Unable to load service details.';
       }
+
+      // Init calendar after service loads
+      initCalendar();
     }
 
-    function openBooking() {
-      if (currentService) {
-        document.getElementById('b-service').value = currentService.title;
+    // ── Calendar ──
+    function initCalendar() {
+      loadCalMonth();
+    }
+
+    async function loadCalMonth() {
+      const mm = String(calMonth + 1).padStart(2, '0');
+      const monthStr = `${calYear}-${mm}`;
+
+      document.getElementById('cal-month-label').textContent =
+        new Date(calYear, calMonth, 1).toLocaleDateString('en-GB', {
+          month: 'long', year: 'numeric'
+        });
+
+      try {
+        const res = await fetch(`/api/slots/calendar?month=${monthStr}`);
+        calAvailData = res.ok ? await res.json() : {};
+      } catch(e) { calAvailData = {}; }
+
+      renderCal();
+    }
+
+    function renderCal() {
+      const grid = document.getElementById('cal-grid');
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const firstDay = new Date(calYear, calMonth, 1);
+      const startOffset = (firstDay.getDay() + 6) % 7; // Monday-first (0=Mon, 6=Sun)
+      const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+
+      let html = '';
+      for (let i = 0; i < startOffset; i++) {
+        html += `<div class="cal-day" style="visibility:hidden;"></div>`;
       }
+
+      for (let d = 1; d <= daysInMonth; d++) {
+        const mm = String(calMonth + 1).padStart(2, '0');
+        const dd = String(d).padStart(2, '0');
+        const dateStr = `${calYear}-${mm}-${dd}`;
+        const cellDate = new Date(calYear, calMonth, d);
+
+        const isPast = cellDate < today;
+        const info = calAvailData[dateStr];
+        const isFullyBooked = info && info.total > 0 && parseInt(info.booked) >= parseInt(info.total);
+        const hasSlots = info && parseInt(info.total) > 0 && parseInt(info.booked) < parseInt(info.total);
+        const isSelected = dateStr === calSelectedDate;
+
+        let cls = 'cal-day';
+        let onclick = '';
+        let title = '';
+
+        if (isPast) {
+          cls += ' past';
+          title = 'Past date';
+        } else if (isFullyBooked) {
+          cls += ' fully-booked';
+          title = 'Fully booked';
+        } else if (hasSlots) {
+          cls += ' available';
+          if (isSelected) cls += ' selected';
+          onclick = `onclick="calSelectDate('${dateStr}')"`;
+          const free = parseInt(info.total) - parseInt(info.booked);
+          title = `${free} slot${free !== 1 ? 's' : ''} available`;
+        } else {
+          cls += ' past';
+          title = 'No sessions';
+        }
+
+        html += `<div class="${cls}" ${onclick} title="${title}">${d}</div>`;
+      }
+
+      grid.innerHTML = html;
+    }
+
+    async function calSelectDate(dateStr) {
+      calSelectedDate = dateStr;
+      calSelectedSlotId = null;
+      renderCal();
+
+      const header = document.getElementById('cal-slots-header');
+      const slotsGrid = document.getElementById('cal-slots-grid');
+
+      const dateObj = new Date(dateStr + 'T12:00:00');
+      header.textContent = dateObj.toLocaleDateString('en-GB', {
+        weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+      });
+      slotsGrid.innerHTML = '<div class="cal-empty-msg">Loading times…</div>';
+
+      try {
+        const res = await fetch(`/api/slots/date/${dateStr}`);
+        const data = await res.json();
+        const slots = data.slots || [];
+
+        if (slots.length === 0) {
+          slotsGrid.innerHTML = '<div class="cal-empty-msg">No sessions available on this date.</div>';
+          return;
+        }
+
+        slotsGrid.innerHTML = slots.map(slot => {
+          const timeStr = String(slot.time).substring(0, 5);
+          const isBooked = slot.is_booked == 1 || slot.is_booked === true;
+          const price = slot.price > 0 ? `£${slot.price}` : 'Free';
+          const durMins = slot.duration;
+          return `
+            <button class="cal-slot-btn"
+              ${isBooked ? 'disabled title="Already booked"' : `onclick="calSelectSlot(${slot.id}, '${dateStr}', '${timeStr}', '${price}', ${durMins})"`}
+              data-slot-id="${slot.id}">
+              ${timeStr}<small>${price}${isBooked ? ' · Booked' : ''}</small>
+            </button>
+          `;
+        }).join('');
+
+      } catch(e) {
+        slotsGrid.innerHTML = '<div class="cal-empty-msg">Unable to load times. Please try again.</div>';
+      }
+    }
+
+    function calSelectSlot(slotId, date, time, price, duration) {
+      calSelectedSlotId = slotId;
+      document.querySelectorAll('.cal-slot-btn').forEach(btn => {
+        btn.classList.toggle('selected', btn.dataset.slotId == slotId);
+      });
+      openCalBooking(slotId, date, time, price, duration);
+    }
+
+    function openCalBooking(slotId, date, time, price, duration) {
+      const serviceTitle = currentService ? currentService.title : 'Healing Session';
+      const dateObj = new Date(date + 'T12:00:00');
+      const dateLabel = dateObj.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long' });
+
+      document.getElementById('b-slot-id').value = slotId;
+      document.getElementById('b-service').value = serviceTitle;
+
+      const slotInfo = document.getElementById('modal-slot-info');
+      document.getElementById('modal-slot-label').textContent = `${dateLabel} at ${time} · ${price} · ${duration} min`;
+      slotInfo.style.display = 'flex';
+
+      document.getElementById('b-name').value = '';
+      document.getElementById('b-email').value = '';
+      document.getElementById('b-phone').value = '';
+      document.getElementById('b-msg').value = '';
+      document.getElementById('booking-form-wrap').style.display = 'block';
+      document.getElementById('booking-success').style.display = 'none';
+
+      const btn = document.getElementById('modal-submit-btn');
+      btn.disabled = false;
+      btn.textContent = 'Confirm Booking ✦';
+
       document.getElementById('booking-modal').classList.add('open');
+    }
+
+    function calPrevMonth() {
+      calMonth--;
+      if (calMonth < 0) { calMonth = 11; calYear--; }
+      loadCalMonth();
+    }
+
+    function calNextMonth() {
+      calMonth++;
+      if (calMonth > 11) { calMonth = 0; calYear++; }
+      loadCalMonth();
+    }
+
+    // ── Booking modal ──
+    function scrollToCalendar() {
+      document.getElementById('cal-booking').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 
     function closeBooking() {
       document.getElementById('booking-modal').classList.remove('open');
     }
 
-    async function submitSimpleBooking() {
+    async function submitBooking() {
       const name = document.getElementById('b-name').value.trim();
       const email = document.getElementById('b-email').value.trim();
-      if (!name || !email) { alert('Please enter your name and email.'); return; }
-      // Simple enquiry — just show success (in a full build this would POST to an endpoint)
-      document.getElementById('booking-form-wrap').style.display = 'none';
-      document.getElementById('booking-success').style.display = 'block';
+      const phone = document.getElementById('b-phone').value.trim();
+      const msg = document.getElementById('b-msg').value.trim();
+      const slotId = document.getElementById('b-slot-id').value;
+
+      if (!name || !email) { alert('Please enter your name and email address.'); return; }
+
+      const btn = document.getElementById('modal-submit-btn');
+      btn.disabled = true;
+      btn.textContent = 'Submitting…';
+
+      try {
+        const body = {
+          slot_id: slotId ? parseInt(slotId) : undefined,
+          service: currentService ? currentService.title : 'Healing Session',
+          customer_name: name,
+          customer_email: email,
+          customer_phone: phone,
+          message: msg
+        };
+
+        const res = await fetch('/api/bookings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) throw new Error(data.error || 'Booking failed');
+
+        if (data.checkout_url) {
+          window.location.href = data.checkout_url;
+          return;
+        }
+
+        if (data.payment_required) {
+          alert('Payment is required for this session. Please contact us directly to complete your booking.');
+          closeBooking();
+          return;
+        }
+
+        document.getElementById('booking-form-wrap').style.display = 'none';
+        document.getElementById('booking-success').style.display = 'block';
+
+        // Refresh calendar to reflect the newly booked slot
+        if (calSelectedDate) await calSelectDate(calSelectedDate);
+        await loadCalMonth();
+
+      } catch(e) {
+        alert('Something went wrong. Please try again or contact us directly.');
+        btn.disabled = false;
+        btn.textContent = 'Confirm Booking ✦';
+      }
     }
 
     // Navbar scroll effect
     window.addEventListener('scroll', () => {
       document.getElementById('navbar').classList.toggle('scrolled', window.scrollY > 50);
-    });
-
-    // Nav toggle
-    document.getElementById('nav-toggle')?.addEventListener('click', () => {
-      document.getElementById('nav-links')?.classList.toggle('open');
     });
 
     loadServicePage();
