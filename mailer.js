@@ -135,4 +135,27 @@ async function sendTestEmail(to) {
   });
 }
 
-module.exports = { sendBookingConfirmation, sendAdminAlert, sendTestEmail };
+async function sendContactEnquiry({ name, email, message }) {
+  if (!transporter) return;
+  await transporter.sendMail({
+    from:     FROM,
+    to:       ADMIN_EMAIL,
+    replyTo:  email,
+    subject:  `✦ New Enquiry from ${name} — Sacred Healing`,
+    html: `
+      <div style="font-family:Georgia,serif;max-width:540px;margin:0 auto;background:#fff;padding:2rem;border-radius:10px;border:1px solid #e8e0d0;">
+        <h2 style="color:#5C5B47;font-size:1.3rem;margin-bottom:0.25rem;">New Contact Enquiry</h2>
+        <p style="color:#8A8070;font-size:0.85rem;margin-bottom:1.5rem;">Sacred Healing Website</p>
+        <table style="width:100%;border-collapse:collapse;font-size:0.95rem;">
+          <tr><td style="padding:0.5rem 0;color:#8A8070;width:30%">Name</td><td><strong>${name}</strong></td></tr>
+          <tr><td style="padding:0.5rem 0;color:#8A8070">Email</td><td><a href="mailto:${email}" style="color:#5C5B47">${email}</a></td></tr>
+          <tr><td style="padding:0.5rem 0;color:#8A8070;vertical-align:top">Message</td><td style="white-space:pre-wrap;line-height:1.7">${message}</td></tr>
+        </table>
+        <hr style="border:none;border-top:1px solid #e8e0d0;margin:1.5rem 0;" />
+        <p style="font-size:0.8rem;color:#A89E92;">Reply directly to this email to respond to ${name}.</p>
+      </div>
+    `,
+  });
+}
+
+module.exports = { sendBookingConfirmation, sendAdminAlert, sendTestEmail, sendContactEnquiry };

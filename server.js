@@ -4,7 +4,7 @@ const path = require('path');
 require('dotenv').config();
 
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder');
-const { sendBookingConfirmation, sendAdminAlert } = require('./mailer');
+const { sendBookingConfirmation, sendAdminAlert, sendContactEnquiry } = require('./mailer');
 
 const crypto = require('crypto');
 const pool   = require('./db');
@@ -174,6 +174,21 @@ app.get('/api/services/:slug', async (req, res) => {
 // ════════════════════════════════════════════════════════════
 // PUBLIC ROUTES
 // ════════════════════════════════════════════════════════════
+
+// POST /api/contact — Contact form submission
+app.post('/api/contact', async (req, res) => {
+  const { name, email, message } = req.body;
+  if (!name || !email || !message) return res.status(400).json({ error: 'All fields are required.' });
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Invalid email address.' });
+  if (name.length > 120 || email.length > 200 || message.length > 3000) return res.status(400).json({ error: 'Input too long.' });
+  try {
+    await sendContactEnquiry({ name, email, message });
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('Contact form error:', err);
+    res.status(500).json({ error: 'Failed to send message. Please try again.' });
+  }
+});
 
 // GET /api/slots  — Available future slots (unbooked only)
 app.get('/api/slots', async (req, res) => {

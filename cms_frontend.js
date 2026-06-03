@@ -198,6 +198,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (content[key]) el.href = 'mailto:' + content[key];
         });
 
+        // Dispatch event so pages can react to loaded CMS data
+        window.dispatchEvent(new CustomEvent('cmsContentLoaded', { detail: content }));
+
         // Populate Services
         const servicesGrid = document.querySelector('.services-grid');
         if (data.services && servicesGrid) {
