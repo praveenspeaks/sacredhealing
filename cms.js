@@ -72,6 +72,18 @@ module.exports = {
       'chakra_img':         'assets/mandala.png',
       'healer_img':         'assets/healer.jpg'
     };
+    // Contact page content — use DO NOTHING so admin edits survive restarts
+    const contactPageDefaults = {
+      'contact_page_title':    'Book Your<br /><em>Sacred Session</em>',
+      'contact_page_subtitle': 'Every healing journey begins with a single, courageous step. Reach out and let us walk beside you.',
+      'contact_page_intro':    'Whether you\'re seeking clarity, emotional release, or a deeper spiritual connection — we\'re here. Sessions are available in person in Croydon, London or online worldwide.',
+    };
+    for (const [key, val] of Object.entries(contactPageDefaults)) {
+      await pool.query(
+        'INSERT INTO site_content (key, value) VALUES ($1, $2) ON CONFLICT(key) DO NOTHING',
+        [key, val]
+      );
+    }
     for (const [key, val] of Object.entries(realContent)) {
       await pool.query(
         'INSERT INTO site_content (key, value) VALUES ($1, $2) ON CONFLICT(key) DO UPDATE SET value = EXCLUDED.value',
@@ -81,30 +93,37 @@ module.exports = {
 
     // ── Nav config defaults ──────────────────────────────────────
     const navDefaults = {
-      about:        { location: 'home', label: 'About',               header: true,  footer: true,  order: 2  },
-      philosophy:   { location: 'home', label: 'Our Philosophy',      header: false, footer: true,  order: 21 },
-      story:        { location: 'home', label: 'Our Story',           header: false, footer: true,  order: 22 },
-      services:     { location: 'home', label: 'Services',            header: true,  footer: true,  order: 3  },
-      process:      { location: 'home', label: 'How It Works',        header: false, footer: true,  order: 23 },
-      testimonials: { location: 'home', label: 'Testimonials',        header: true,  footer: true,  order: 4  },
+      about:        { location: 'page', label: 'About',               header: true,  footer: true,  order: 2  },
+      philosophy:   { location: 'page', label: 'Our Philosophy',      header: false, footer: true,  order: 21 },
+      story:        { location: 'page', label: 'Our Story',           header: false, footer: true,  order: 22 },
+      services:     { location: 'page', label: 'Services',            header: true,  footer: true,  order: 3  },
+      process:      { location: 'page', label: 'How It Works',        header: false, footer: true,  order: 23 },
+      testimonials: { location: 'page', label: 'Testimonials',        header: true,  footer: true,  order: 4  },
       faq:          { location: 'page', label: 'FAQ',                 header: true,  footer: true,  order: 5  },
-      contact:      { location: 'home', label: 'Book Session',        header: true,  footer: true,  order: 6  },
-      disclaimer:   { location: 'home', label: 'Legal Notice',        header: false, footer: true,  order: 31 },
-      cancellation: { location: 'home', label: 'Cancellation Policy', header: false, footer: true,  order: 32 },
-      'reduced-rate': { location: 'home', label: 'Reduced-Rate Access', header: false, footer: false, order: 33 },
+      contact:      { location: 'page', label: 'Book Session',        header: true,  footer: true,  order: 6  },
+      disclaimer:   { location: 'page', label: 'Legal Notice',        header: false, footer: true,  order: 31 },
+      cancellation: { location: 'page', label: 'Cancellation Policy', header: false, footer: true,  order: 32 },
+      'reduced-rate': { location: 'page', label: 'Reduced-Rate Access', header: false, footer: false, order: 33 },
     };
     // Insert defaults for fresh installs
     await pool.query(
       `INSERT INTO site_content (key, value) VALUES ($1, $2) ON CONFLICT(key) DO NOTHING`,
       ['nav_config', JSON.stringify(navDefaults)]
     );
-    // Merge new section keys into existing nav_config without overwriting admin changes
+    // Merge new section keys and migrate 'home' → 'page' for main sections
     const navRow = await pool.query(`SELECT value FROM site_content WHERE key = 'nav_config'`);
     if (navRow.rows.length) {
       const existing = JSON.parse(navRow.rows[0].value);
+      const migrateToPage = ['about', 'philosophy', 'story', 'services', 'process', 'testimonials', 'contact', 'disclaimer', 'cancellation', 'reduced-rate'];
       let changed = false;
       for (const [key, val] of Object.entries(navDefaults)) {
         if (!existing[key]) { existing[key] = val; changed = true; }
+      }
+      for (const key of migrateToPage) {
+        if (existing[key] && existing[key].location === 'home') {
+          existing[key].location = 'page';
+          changed = true;
+        }
       }
       if (changed) {
         await pool.query(`UPDATE site_content SET value = $1 WHERE key = 'nav_config'`, [JSON.stringify(existing)]);

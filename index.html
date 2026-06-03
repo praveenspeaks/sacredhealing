@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -76,7 +76,7 @@
     <div class="announce-inner">
       <span class="announce-pulse"></span>
       <span class="announce-text">
-        ✨ <strong>Free 15-minute consultations</strong> now available — <a href="#contact" onclick="filterSlots(document.querySelector('[data-dur=\'15\']'), '15')" class="announce-link">See open slots →</a>
+        ✨ <strong>Free 15-minute clarity calls</strong> now available — <a href="#contact" onclick="filterSlots(document.querySelector('[data-dur=\'15\']'), '15')" class="announce-link">See open slots →</a>
       </span>
       <button class="announce-close" id="announce-close-btn" aria-label="Close">✕</button>
     </div>
@@ -94,7 +94,7 @@
         </div>
         <div class="logo-text">
           <div class="logo-main">Sacred Healing</div>
-          <div class="logo-slogan">सफलं जन्म प्रवासः</div>
+          <div class="logo-slogan">सफलम् जन्मम् प्रवासम्</div>
         </div>
       </a>
       <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
@@ -127,7 +127,7 @@
         </p>
         <div class="hero-actions">
           <button class="btn btn-gold" id="hero_button_text" onclick="openBookingModal()">Begin Your Journey →</button>
-          <a href="#services" class="btn btn-outline" id="explore_button_text">Explore Services</a>
+          <a href="/services" class="btn btn-outline" id="explore_button_text">Explore Services</a>
         </div>
       </div>
       <!-- Right: healer image -->
@@ -221,7 +221,7 @@
               </div>
             </div>
           </div>
-          <a href="#services" class="btn btn-gold">Explore Healing Paths →</a>
+          <a href="/services" class="btn btn-gold">Explore Healing Paths →</a>
         </div>
       </div>
     </div>
@@ -263,7 +263,7 @@
           <h2 class="section-title">Born from a<br /><em>Deep Calling</em></h2>
           <p class="about-text">Sacred Journey was born from a deep calling to serve those seeking spiritual awakening and healing. What began as a small practice has blossomed into a thriving community of souls committed to growth and transformation. We have walked alongside countless individuals on their paths to wholeness, witnessing profound shifts in consciousness and miraculous healings of body, mind, and spirit.</p>
           <p class="about-text">We believe that true healing comes from within, and our role is to facilitate your connection to your own inner wisdom and divine guidance.</p>
-          <a href="#services" class="btn btn-gold" style="margin-top:1rem;">Explore Our Services →</a>
+          <a href="/services" class="btn btn-gold" style="margin-top:1rem;">Explore Our Services →</a>
         </div>
         <div class="story-image-col">
           <div class="story-img-wrap">
@@ -395,6 +395,44 @@
           </div>
         </div>
 
+        <!-- 5: text left, image right -->
+        <div class="service-row" id="service-past-life-regression">
+          <div class="service-row-text">
+            <div class="service-row-number">05</div>
+            <h3 class="service-row-title">Past Life Regression</h3>
+            <p class="service-row-desc">Journey deep into your soul's history through guided hypnotic regression. Access past life memories to understand present-day fears, relationships, and life purpose.</p>
+            <ul class="service-features">
+              <li>Hypnotic regression therapy</li>
+              <li>Soul contract exploration</li>
+              <li>Between-lives insight</li>
+            </ul>
+            <button class="service-link" onclick="openBookingModal('Past Life Regression')">Book a Session →</button>
+          </div>
+          <div class="service-row-img">
+            <img src="assets/service-regression.jpg" alt="Past Life Regression session"
+              onerror="this.parentElement.style.background='linear-gradient(135deg,#d5cfc5,#bfb5a0)'; this.style.display='none';" />
+          </div>
+        </div>
+
+        <!-- 6: image left, text right -->
+        <div class="service-row reverse" id="service-meditation">
+          <div class="service-row-text">
+            <div class="service-row-number">06</div>
+            <h3 class="service-row-title">Guided Meditation</h3>
+            <p class="service-row-desc">Embark on a deeply restorative inner journey with personalised guided meditation sessions designed to calm the mind, open the heart, and reconnect you with your inner wisdom.</p>
+            <ul class="service-features">
+              <li>Personalised visualisation</li>
+              <li>Breathwork &amp; grounding</li>
+              <li>Stress &amp; anxiety release</li>
+            </ul>
+            <button class="service-link" onclick="openBookingModal('Guided Meditation')">Book a Session →</button>
+          </div>
+          <div class="service-row-img">
+            <img src="assets/service-meditation.jpg" alt="Guided Meditation session"
+              onerror="this.parentElement.style.background='linear-gradient(135deg,#cdd5c8,#b5c0ad)'; this.style.display='none';" />
+          </div>
+        </div>
+
       </div>
     </div>
   </section>
@@ -443,10 +481,10 @@
         <div class="guidance-cta-text">
           <div class="section-tag">✦ Need Guidance?</div>
           <h2 class="section-title" style="margin-bottom:0.75rem;">Not Sure Which Service is<br /><em>Right for You?</em></h2>
-          <p style="color:var(--text-body); line-height:1.75; max-width:520px;">Many people come to us feeling lost or disconnected — overwhelmed by life's challenges, struggling with recurring patterns, or simply seeking a deeper understanding of their life's purpose. If you're seeking clarity, emotional release, or spiritual guidance, we're here to help. Reach out for a complimentary 15-minute consultation.</p>
+          <p style="color:var(--text-body); line-height:1.75; max-width:520px;">Many people come to us feeling lost or disconnected — overwhelmed by life's challenges, struggling with recurring patterns, or simply seeking a deeper understanding of their life's purpose. If you're seeking clarity, emotional release, or spiritual guidance, we're here to help. Reach out for a complimentary 15-minute clarity call.</p>
         </div>
         <div class="guidance-cta-actions">
-          <a href="#contact" class="btn btn-gold btn-large">Schedule a Free Consultation →</a>
+          <a href="#contact" class="btn btn-gold btn-large">Schedule a Free Clarity Call →</a>
           <a href="/faq.html" class="btn btn-outline">Read Our FAQs</a>
         </div>
       </div>
@@ -649,12 +687,12 @@
         <div class="footer-nav">
           <h4>Healing Services</h4>
           <ul>
-            <li><a href="#service-spiritual">Spiritual Healing</a></li>
-            <li><a href="#service-psychic">Psychic Reading</a></li>
-            <li><a href="#service-past-life">Past Life Regression</a></li>
-            <li><a href="#service-past-life">Past Life Healing</a></li>
-            <li><a href="#service-ancestral">Ancestral Healing</a></li>
-            <li><a href="#services">Guided Meditations</a></li>
+            <li><a href="/services#service-spiritual">Spiritual Healing</a></li>
+            <li><a href="/services#service-psychic">Psychic Reading</a></li>
+            <li><a href="/services#service-past-life">Past Life Healing</a></li>
+            <li><a href="/services#service-past-life-regression">Past Life Regression</a></li>
+            <li><a href="/services#service-ancestral">Ancestral Healing</a></li>
+            <li><a href="/services#service-meditation">Guided Meditation</a></li>
           </ul>
         </div>
         <div class="footer-contact">

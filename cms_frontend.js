@@ -271,20 +271,25 @@ function openReviewModal() {
     let m = document.getElementById('review-modal');
     if (!m) {
         document.body.insertAdjacentHTML('beforeend', `
-            <div class="modal" id="review-modal">
-                <div class="modal-content" style="max-width: 400px; text-align:left;">
-                    <span class="close-modal" onclick="document.getElementById('review-modal').classList.remove('active')">&times;</span>
-                    <h2 class="modal-title" style="margin-bottom:1.5rem; text-align:center">Write a Review</h2>
-                    <input type="text" id="review-author" placeholder="Your Name" style="width:100%; padding:0.8rem; margin-bottom:1rem; border-radius:4px; border:1px solid var(--border); background:rgba(0,0,0,0.5); color:var(--cream); font-family:var(--font-body)" />
-                    <textarea id="review-comment" placeholder="Your Experience" style="width:100%; padding:0.8rem; margin-bottom:1.5rem; height:120px; border-radius:4px; border:1px solid var(--border); background:rgba(0,0,0,0.5); color:var(--cream); font-family:var(--font-body); resize:vertical"></textarea>
+            <div class="modal-overlay" id="review-modal" onclick="if(event.target===this)closeReviewModal()">
+                <div class="modal-box" style="max-width:480px;text-align:left;">
+                    <button class="modal-close" onclick="closeReviewModal()" aria-label="Close">&times;</button>
+                    <h2 class="modal-title" style="margin-bottom:1.5rem;text-align:center">Write a Review</h2>
+                    <input type="text" id="review-author" placeholder="Your Name" style="width:100%;padding:0.8rem;margin-bottom:1rem;border-radius:4px;border:1px solid var(--border);background:rgba(0,0,0,0.5);color:var(--cream);font-family:var(--font-body);box-sizing:border-box;" />
+                    <textarea id="review-comment" placeholder="Your Experience" style="width:100%;padding:0.8rem;margin-bottom:1.5rem;height:120px;border-radius:4px;border:1px solid var(--border);background:rgba(0,0,0,0.5);color:var(--cream);font-family:var(--font-body);resize:vertical;box-sizing:border-box;"></textarea>
                     <button class="btn btn-gold" style="width:100%" onclick="submitReview()">Submit Review</button>
-                    <div id="review-msg" style="margin-top:1rem; color:var(--olive); text-align:center; height:20px;"></div>
+                    <div id="review-msg" style="margin-top:1rem;color:var(--olive);text-align:center;height:20px;"></div>
                 </div>
             </div>
         `);
         m = document.getElementById('review-modal');
     }
-    m.classList.add('active');
+    m.classList.add('open');
+}
+
+function closeReviewModal() {
+    const m = document.getElementById('review-modal');
+    if (m) m.classList.remove('open');
 }
 
 async function submitReview() {
@@ -305,7 +310,7 @@ async function submitReview() {
         if (res.ok) {
             msgEl.innerText = 'Thank you! Your review is pending approval.';
             setTimeout(() => {
-                document.getElementById('review-modal').classList.remove('active');
+                closeReviewModal();
                 document.getElementById('review-author').value  = '';
                 document.getElementById('review-comment').value = '';
                 msgEl.innerText = '';
