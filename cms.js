@@ -94,39 +94,33 @@ module.exports = {
 
     // ── Nav config defaults ──────────────────────────────────────
     const navDefaults = {
-      about:        { location: 'page', label: 'About',               header: true,  footer: true,  order: 2  },
-      philosophy:   { location: 'page', label: 'Our Philosophy',      header: false, footer: true,  order: 21 },
-      story:        { location: 'page', label: 'Our Story',           header: false, footer: true,  order: 22 },
-      services:     { location: 'page', label: 'Services',            header: true,  footer: true,  order: 3  },
-      process:      { location: 'page', label: 'How It Works',        header: false, footer: true,  order: 23 },
-      testimonials: { location: 'page', label: 'Testimonials',        header: true,  footer: true,  order: 4  },
-      faq:          { location: 'page', label: 'FAQ',                 header: true,  footer: true,  order: 5  },
-      contact:      { location: 'page', label: 'Contact',             header: true,  footer: true,  order: 6  },
-      disclaimer:   { location: 'page', label: 'Legal Notice',        header: false, footer: true,  order: 31 },
-      cancellation: { location: 'page', label: 'Cancellation Policy', header: false, footer: true,  order: 32 },
-      'reduced-rate': { location: 'page', label: 'Reduced-Rate Access', header: false, footer: false, order: 33 },
+      about:          { location: 'page', label: 'About',               header: true,  footer: true,  order: 20 },
+      philosophy:     { location: 'page', label: 'Our Philosophy',      header: false, footer: true,  order: 21 },
+      story:          { location: 'page', label: 'Our Story',           header: false, footer: true,  order: 22 },
+      services:       { location: 'page', label: 'Services',            header: true,  footer: true,  order: 30 },
+      process:        { location: 'page', label: 'How It Works',        header: false, footer: true,  order: 31 },
+      testimonials:   { location: 'page', label: 'Testimonials',        header: true,  footer: true,  order: 40 },
+      'clarity-call': { location: 'home', label: 'Free Clarity Call',   header: false, footer: false, order: 45 },
+      faq:            { location: 'page', label: 'FAQ',                 header: true,  footer: true,  order: 50 },
+      contact:        { location: 'page', label: 'Contact',             header: true,  footer: true,  order: 60 },
+      disclaimer:     { location: 'page', label: 'Legal Notice',        header: false, footer: true,  order: 70 },
+      cancellation:   { location: 'page', label: 'Cancellation Policy', header: false, footer: true,  order: 71 },
+      'reduced-rate': { location: 'page', label: 'Reduced-Rate Access', header: false, footer: false, order: 72 },
     };
-    // Insert defaults for fresh installs
+    // Insert defaults for fresh installs only — never overwrite admin-saved settings
     await pool.query(
       `INSERT INTO site_content (key, value) VALUES ($1, $2) ON CONFLICT(key) DO NOTHING`,
       ['nav_config', JSON.stringify(navDefaults)]
     );
-    // Merge new section keys and migrate 'home' → 'page' for main sections
+    // Merge only new section keys that don't yet exist in the saved config (additive only)
     const navRow = await pool.query(`SELECT value FROM site_content WHERE key = 'nav_config'`);
     if (navRow.rows.length) {
       const existing = JSON.parse(navRow.rows[0].value);
-      const migrateToPage = ['about', 'philosophy', 'story', 'services', 'process', 'testimonials', 'contact', 'disclaimer', 'cancellation', 'reduced-rate'];
       let changed = false;
       for (const [key, val] of Object.entries(navDefaults)) {
         if (!existing[key]) { existing[key] = val; changed = true; }
       }
-      for (const key of migrateToPage) {
-        if (existing[key] && existing[key].location === 'home') {
-          existing[key].location = 'page';
-          changed = true;
-        }
-      }
-      // Rename 'Book Session' → 'Contact' for the nav link (CTA button already says 'Book Session')
+      // One-time: rename 'Book Session' → 'Contact' (guarded so it only fires once)
       if (existing.contact && existing.contact.label === 'Book Session') {
         existing.contact.label = 'Contact';
         changed = true;

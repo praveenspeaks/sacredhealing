@@ -149,15 +149,26 @@ function applySectionVisibility(content) {
   const onHome = location.pathname === '/' || location.pathname === '/index.html';
   if (!onHome) return;
 
-  document.querySelectorAll('[data-page-section]').forEach(el => {
+  const allSections = Array.from(document.querySelectorAll('[data-page-section]'));
+  allSections.forEach(el => {
     const key = el.dataset.pageSection;
     const c = cfg[key];
-    if (c && c.location === 'page') {
-      el.style.display = 'none';
-    } else {
-      el.style.display = '';
-    }
+    el.style.display = (c && c.location === 'page') ? 'none' : '';
   });
+
+  // Reorder sections on the home page based on admin-configured order
+  if (allSections.length > 1) {
+    const parent = allSections[0].parentElement;
+    // Use element after the last section as insert marker
+    const lastSection = allSections[allSections.length - 1];
+    const marker = lastSection.nextSibling;
+    allSections.sort((a, b) => {
+      const oA = cfg[a.dataset.pageSection] ? (cfg[a.dataset.pageSection].order || 999) : 999;
+      const oB = cfg[b.dataset.pageSection] ? (cfg[b.dataset.pageSection].order || 999) : 999;
+      return oA - oB;
+    });
+    allSections.forEach(el => parent.insertBefore(el, marker));
+  }
 }
 
 // ── DOMContentLoaded ─────────────────────────────────────────

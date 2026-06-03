@@ -624,20 +624,25 @@ async function saveTheme() {
 // ── NAVIGATION CONFIG ─────────────────────────────────────────
 
 const NAV_SECTION_LABELS = {
-    about:          'About (Meet Reena)',
-    philosophy:     'Our Philosophy (The Principles)',
-    story:          'Our Story (Core Values)',
-    services:       'Services (Healing Services)',
-    process:        'How It Works (The Journey)',
-    testimonials:   'Testimonials (Client Stories)',
-    faq:            'FAQ (Frequently Asked Questions)',
-    contact:        'Contact / Book Session',
-    disclaimer:     'Legal Disclaimer',
-    cancellation:   'Cancellation Policy',
-    'reduced-rate': 'Reduced-Rate Access',
+    about:            'About (Meet Reena)',
+    philosophy:       'Our Philosophy',
+    story:            'Our Story',
+    services:         'Services (Healing Services)',
+    process:          'How It Works',
+    testimonials:     'Testimonials',
+    'clarity-call':   'Free Clarity Call (Home section only)',
+    faq:              'FAQ',
+    contact:          'Contact / Book Session',
+    disclaimer:       'Legal Disclaimer',
+    cancellation:     'Cancellation Policy',
+    'reduced-rate':   'Reduced-Rate Access',
 };
 
+// Sections that can only live on the home page (no dedicated page)
+const HOME_ONLY_SECTIONS = new Set(['clarity-call']);
+
 let navConfigState = {};
+let navDragKey = null;
 
 async function loadNavConfig() {
     try {
@@ -651,57 +656,124 @@ async function loadNavConfig() {
     }
 }
 
+function navSortedKeys() {
+    const all = ['about', 'philosophy', 'story', 'services', 'process', 'testimonials', 'clarity-call', 'faq', 'contact', 'disclaimer', 'cancellation', 'reduced-rate'];
+    return all.sort((a, b) => {
+        const oA = navConfigState[a] ? (navConfigState[a].order || 99) : 99;
+        const oB = navConfigState[b] ? (navConfigState[b].order || 99) : 99;
+        return oA - oB;
+    });
+}
+
 function renderNavConfigRows() {
     const tbody = document.getElementById('nav-config-rows');
     if (!tbody) return;
 
-    const keys = ['about', 'philosophy', 'story', 'services', 'process', 'testimonials', 'faq', 'contact', 'disclaimer', 'cancellation', 'reduced-rate'];
+    const keys = navSortedKeys();
     tbody.innerHTML = keys.map(key => {
-        const c = navConfigState[key] || { location: 'home', label: key, header: true, footer: true, order: 0 };
+        const c = navConfigState[key] || { location: HOME_ONLY_SECTIONS.has(key) ? 'home' : 'page', label: key, header: false, footer: false, order: 99 };
         const isHome = c.location === 'home';
+        const homeOnly = HOME_ONLY_SECTIONS.has(key);
+        const locationCell = homeOnly
+            ? `<span style="font-size:0.78rem;color:var(--text-muted);font-style:italic;">Home only</span>`
+            : `<select id="nav-location-${key}" style="padding:0.4rem 0.6rem;border-radius:4px;border:1px solid var(--border);background:var(--indigo);color:var(--cream);font-size:0.82rem;cursor:pointer;">
+                 <option value="home" ${isHome ? 'selected' : ''}>Home Section</option>
+                 <option value="page" ${!isHome ? 'selected' : ''}>Own Page</option>
+               </select>`;
         return `
-        <tr style="border-bottom:1px solid var(--border);">
-          <td style="padding:0.85rem 1rem;font-weight:500;color:var(--cream);">${NAV_SECTION_LABELS[key] || key}</td>
-          <td style="padding:0.85rem 1rem;">
-            <input type="text" value="${c.label || ''}"
-              id="nav-label-${key}"
-              style="width:130px;padding:0.4rem 0.6rem;border-radius:4px;border:1px solid var(--border);background:var(--indigo);color:var(--cream);font-size:0.85rem;" />
+        <tr draggable="true" data-key="${key}"
+            style="border-bottom:1px solid var(--border);cursor:grab;transition:background 0.1s;"
+            ondragstart="navDragStart(event,'${key}')"
+            ondragover="navDragOver(event)"
+            ondragleave="navDragLeave(event)"
+            ondrop="navDrop(event,'${key}')"
+            ondragend="navDragEnd()">
+          <td style="padding:0.6rem 0.5rem 0.6rem 1rem;color:var(--text-muted);font-size:1.1rem;cursor:grab;" title="Drag to reorder">⠿</td>
+          <td style="padding:0.6rem 0.75rem;font-weight:500;color:var(--cream);white-space:nowrap;">${NAV_SECTION_LABELS[key] || key}</td>
+          <td style="padding:0.6rem 0.75rem;">
+            <input type="text" value="${(c.label || '').replace(/"/g,'&quot;')}" id="nav-label-${key}"
+              style="width:120px;padding:0.35rem 0.55rem;border-radius:4px;border:1px solid var(--border);background:var(--indigo);color:var(--cream);font-size:0.82rem;" />
           </td>
-          <td style="padding:0.85rem 1rem;text-align:center;">
-            <select id="nav-location-${key}"
-              style="padding:0.4rem 0.6rem;border-radius:4px;border:1px solid var(--border);background:var(--indigo);color:var(--cream);font-size:0.85rem;cursor:pointer;">
-              <option value="home" ${isHome ? 'selected' : ''}>Home</option>
-              <option value="page" ${!isHome ? 'selected' : ''}>Own Page</option>
-            </select>
-          </td>
-          <td style="padding:0.85rem 1rem;text-align:center;">
+          <td style="padding:0.6rem 0.75rem;text-align:center;">${locationCell}</td>
+          <td style="padding:0.6rem 0.75rem;text-align:center;">
             <input type="checkbox" id="nav-header-${key}" ${c.header ? 'checked' : ''}
-              style="width:18px;height:18px;cursor:pointer;accent-color:var(--gold);" />
+              style="width:17px;height:17px;cursor:pointer;accent-color:var(--gold);" />
           </td>
-          <td style="padding:0.85rem 1rem;text-align:center;">
+          <td style="padding:0.6rem 0.75rem;text-align:center;">
             <input type="checkbox" id="nav-footer-${key}" ${c.footer ? 'checked' : ''}
-              style="width:18px;height:18px;cursor:pointer;accent-color:var(--gold);" />
-          </td>
-          <td style="padding:0.85rem 1rem;text-align:center;">
-            <input type="number" value="${c.order || 0}" id="nav-order-${key}" min="0" max="99"
-              style="width:60px;padding:0.4rem 0.6rem;border-radius:4px;border:1px solid var(--border);background:var(--indigo);color:var(--cream);font-size:0.85rem;text-align:center;" />
+              style="width:17px;height:17px;cursor:pointer;accent-color:var(--gold);" />
           </td>
         </tr>`;
     }).join('');
 }
 
+function navDragStart(event, key) {
+    navDragKey = key;
+    event.dataTransfer.effectAllowed = 'move';
+    event.currentTarget.style.opacity = '0.45';
+}
+
+function navDragOver(event) {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+    event.currentTarget.style.background = 'rgba(255,255,255,0.07)';
+    event.currentTarget.style.borderTop = '2px solid var(--gold)';
+}
+
+function navDragLeave(event) {
+    event.currentTarget.style.background = '';
+    event.currentTarget.style.borderTop = '';
+}
+
+function navDrop(event, targetKey) {
+    event.preventDefault();
+    navDragLeave(event);
+    if (!navDragKey || navDragKey === targetKey) return;
+
+    const tbody = document.getElementById('nav-config-rows');
+    const rows = Array.from(tbody.querySelectorAll('tr[data-key]'));
+    const order = rows.map(r => r.dataset.key);
+
+    const fromIdx = order.indexOf(navDragKey);
+    const toIdx   = order.indexOf(targetKey);
+    order.splice(fromIdx, 1);
+    order.splice(toIdx, 0, navDragKey);
+
+    // Update order values in state
+    order.forEach((key, idx) => {
+        if (!navConfigState[key]) navConfigState[key] = {};
+        navConfigState[key] = { ...navConfigState[key], order: (idx + 1) * 10 };
+    });
+
+    renderNavConfigRows();
+    saveNavConfig();
+}
+
+function navDragEnd() {
+    navDragKey = null;
+    document.querySelectorAll('#nav-config-rows tr').forEach(tr => {
+        tr.style.opacity = '';
+        tr.style.background = '';
+        tr.style.borderTop = '';
+    });
+}
+
 async function saveNavConfig() {
-    const keys = ['about', 'philosophy', 'story', 'services', 'process', 'testimonials', 'faq', 'contact', 'disclaimer', 'cancellation', 'reduced-rate'];
+    const tbody = document.getElementById('nav-config-rows');
+    const rows = Array.from(tbody.querySelectorAll('tr[data-key]'));
     const updated = {};
-    for (const key of keys) {
+    rows.forEach((row, idx) => {
+        const key = row.dataset.key;
+        const homeOnly = HOME_ONLY_SECTIONS.has(key);
+        const locEl = document.getElementById(`nav-location-${key}`);
         updated[key] = {
-            label:    document.getElementById(`nav-label-${key}`).value.trim() || key,
-            location: document.getElementById(`nav-location-${key}`).value,
-            header:   document.getElementById(`nav-header-${key}`).checked,
-            footer:   document.getElementById(`nav-footer-${key}`).checked,
-            order:    parseInt(document.getElementById(`nav-order-${key}`).value) || 0,
+            label:    (document.getElementById(`nav-label-${key}`)?.value || '').trim() || key,
+            location: homeOnly ? 'home' : (locEl ? locEl.value : 'page'),
+            header:   document.getElementById(`nav-header-${key}`)?.checked || false,
+            footer:   document.getElementById(`nav-footer-${key}`)?.checked || false,
+            order:    (idx + 1) * 10,
         };
-    }
+    });
     try {
         const res = await fetch('/api/admin/content', {
             method: 'PUT',
