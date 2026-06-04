@@ -54,31 +54,33 @@ document.addEventListener('DOMContentLoaded', () => {
   // ============================================================
   // 3. MOBILE NAV TOGGLE
   // ============================================================
-  const navToggle = document.getElementById('nav-toggle');
-  const navLinks = document.getElementById('nav-links');
-
+  const navToggle  = document.getElementById('nav-toggle');
+  const navPanel   = document.getElementById('nav-mobile-panel');
   const navBackdrop = document.getElementById('nav-backdrop');
 
   function openMobileNav() {
-    navLinks.classList.add('open');
-    navToggle.classList.add('active');
+    if (navPanel) navPanel.classList.add('open');
+    if (navToggle) navToggle.classList.add('active');
     if (navBackdrop) navBackdrop.style.display = 'block';
   }
 
   function closeMobileNav() {
-    navLinks.classList.remove('open');
-    navToggle.classList.remove('active');
+    if (navPanel) navPanel.classList.remove('open');
+    if (navToggle) navToggle.classList.remove('active');
     if (navBackdrop) navBackdrop.style.display = 'none';
   }
 
-  navToggle.addEventListener('click', () => {
-    navLinks.classList.contains('open') ? closeMobileNav() : openMobileNav();
+  // Expose globally so inline onclick handlers can call closeMobileNav()
+  window.closeMobileNav = closeMobileNav;
+
+  if (navToggle) navToggle.addEventListener('click', () => {
+    navPanel && navPanel.classList.contains('open') ? closeMobileNav() : openMobileNav();
   });
 
   if (navBackdrop) navBackdrop.addEventListener('click', closeMobileNav);
 
   // Close nav when a link is clicked (event delegation — nav is dynamically populated)
-  navLinks.addEventListener('click', (e) => {
+  if (navPanel) navPanel.addEventListener('click', (e) => {
     if (e.target.classList.contains('nav-link')) closeMobileNav();
   });
 

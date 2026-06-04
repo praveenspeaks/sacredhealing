@@ -88,7 +88,17 @@
   <!-- ============ NAVIGATION ============ -->
   <nav class="navbar" id="navbar">
     <div class="nav-container">
-      <a href="#" class="nav-logo">
+      <!-- Left: hamburger (mobile) + left nav links (desktop) -->
+      <div class="nav-section nav-section-left">
+        <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
+          <span></span><span></span><span></span>
+        </button>
+        <ul class="nav-links-left" id="nav-links-left">
+          <!-- populated by cms_frontend.js buildNav() -->
+        </ul>
+      </div>
+      <!-- Centre: logo -->
+      <a href="/" class="nav-logo">
         <div class="logo-circle">
           <img src="assets/logo-sbh.png" alt="Sacred Healing Logo" class="logo-img" id="logo_img" />
         </div>
@@ -97,13 +107,22 @@
           <div class="logo-slogan">सफलम् जन्मम् प्रवासम्</div>
         </div>
       </a>
-      <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
-        <span></span><span></span><span></span>
-      </button>
-      <ul class="nav-links" id="nav-links">
-        <!-- populated by cms_frontend.js buildNav() -->
-      </ul>
-      <button class="btn btn-gold nav-cta" onclick="openBookingModal()">Book Session</button>
+      <!-- Right: right nav links (desktop) + Book CTA -->
+      <div class="nav-section nav-section-right">
+        <ul class="nav-links-right" id="nav-links-right">
+          <!-- populated by cms_frontend.js buildNav() -->
+        </ul>
+        <button class="btn btn-gold nav-cta" onclick="openBookingModal()">Book Session</button>
+      </div>
+    </div>
+    <!-- Mobile slide-down panel -->
+    <div class="nav-mobile-panel" id="nav-mobile-panel">
+      <div class="nav-mobile-inner">
+        <ul class="nav-mobile-links" id="nav-links-mobile">
+          <!-- populated by cms_frontend.js buildNav() -->
+        </ul>
+        <button class="btn btn-gold nav-mobile-cta" onclick="openBookingModal();closeMobileNav()">Book Session</button>
+      </div>
     </div>
   </nav>
 

@@ -116,19 +116,36 @@ function buildNav(content) {
   const cfg = content.nav_config ? (typeof content.nav_config === 'string' ? JSON.parse(content.nav_config) : content.nav_config) : {};
   const onHome = location.pathname === '/' || location.pathname === '/index.html';
 
-  // Header nav
-  const headerUl = document.getElementById('nav-links');
-  if (headerUl) {
-    const headerItems = Object.entries(cfg)
-      .filter(([, c]) => c.header)
-      .sort(([, a], [, b]) => a.order - b.order);
+  const headerItems = Object.entries(cfg)
+    .filter(([, c]) => c.header)
+    .sort(([, a], [, b]) => a.order - b.order);
 
-    headerUl.innerHTML = '<li><a href="' + (onHome ? '#home' : '/') + '" class="nav-link' + (onHome && location.hash === '' ? ' active' : '') + '">Home</a></li>';
-    headerItems.forEach(([key, c]) => {
-      const href = navHref(key, c, onHome, cfg);
-      const active = isActivePage(key, c) ? ' active' : '';
-      headerUl.innerHTML += `<li><a href="${escHtml(href)}" class="nav-link${active}">${escHtml(c.label)}</a></li>`;
-    });
+  const homeLink = '<li><a href="' + (onHome ? '#home' : '/') + '" class="nav-link' + (onHome && location.hash === '' ? ' active' : '') + '">Home</a></li>';
+
+  function makeItem(key, c) {
+    const href = navHref(key, c, onHome, cfg);
+    const active = isActivePage(key, c) ? ' active' : '';
+    return `<li><a href="${escHtml(href)}" class="nav-link${active}">${escHtml(c.label)}</a></li>`;
+  }
+
+  // Split header items: left half (with Home prepended), right half
+  const mid = Math.ceil(headerItems.length / 2);
+  const leftItems  = headerItems.slice(0, mid);
+  const rightItems = headerItems.slice(mid);
+
+  const leftUl = document.getElementById('nav-links-left');
+  if (leftUl) {
+    leftUl.innerHTML = homeLink + leftItems.map(([k, c]) => makeItem(k, c)).join('');
+  }
+
+  const rightUl = document.getElementById('nav-links-right');
+  if (rightUl) {
+    rightUl.innerHTML = rightItems.map(([k, c]) => makeItem(k, c)).join('');
+  }
+
+  const mobileUl = document.getElementById('nav-links-mobile');
+  if (mobileUl) {
+    mobileUl.innerHTML = homeLink + headerItems.map(([k, c]) => makeItem(k, c)).join('');
   }
 
   // Footer explore nav
