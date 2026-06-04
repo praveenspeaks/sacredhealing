@@ -320,7 +320,11 @@ body.has-announce .navbar {
 .nav-logo:hover { opacity: 0.82; }
 
 .logo-text {
-  display: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  margin-top: 0.3rem;
 }
 
 .logo-main {
