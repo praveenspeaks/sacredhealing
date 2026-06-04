@@ -229,7 +229,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         }
                     }
                 } else {
-                    el.innerHTML = val;
+                    if (val) el.innerHTML = val;
                 }
             });
         }

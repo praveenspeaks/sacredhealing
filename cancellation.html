@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
@@ -17,6 +17,12 @@
 
   <nav class="navbar" id="navbar">
     <div class="nav-container">
+      <div class="nav-section nav-section-left">
+        <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
+          <span></span><span></span><span></span>
+        </button>
+        <ul class="nav-links-left" id="nav-links-left"></ul>
+      </div>
       <a href="/" class="nav-logo">
         <div class="logo-circle">
           <img src="/assets/logo-sbh.png" alt="Sacred Healing Logo" class="logo-img" id="logo_img" />
@@ -26,15 +32,20 @@
           <div class="logo-slogan">सफलम् जन्मम् प्रवासम्</div>
         </div>
       </a>
-      <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
-        <span></span><span></span><span></span>
-      </button>
-      <ul class="nav-links" id="nav-links"></ul>
-      <button class="btn btn-gold nav-cta" onclick="openBookingModal()">Book Session</button>
+      <div class="nav-section nav-section-right">
+        <ul class="nav-links-right" id="nav-links-right"></ul>
+        <button class="btn btn-gold nav-cta" onclick="openBookingModal()">Book Session</button>
+      </div>
+    </div>
+    <div class="nav-mobile-panel" id="nav-mobile-panel">
+      <div class="nav-mobile-inner">
+        <ul class="nav-mobile-links" id="nav-links-mobile"></ul>
+        <button class="btn btn-gold nav-mobile-cta" onclick="openBookingModal();closeMobileNav()">Book Session</button>
+      </div>
     </div>
   </nav>
 
-  <section class="hero" style="min-height:35vh;padding-top:80px;display:flex;align-items:center;background:var(--cream-light);">
+  <section class="hero" style="min-height:35vh;padding-top:108px;display:flex;align-items:center;background:var(--cream-light);">
     <div class="hero-content" style="display:block;text-align:center;padding:5rem 2rem 4rem;">
       <div class="section-tag" style="justify-content:center;">✦ Our Policy</div>
       <h1 class="hero-title" style="margin:0;font-size:clamp(2.5rem,5vw,4rem);">Cancellation <em>Policy</em></h1>
