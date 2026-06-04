@@ -60,9 +60,19 @@ html {
 body {
   font-family: var(--font-body);
   background-color: var(--cream);
+  background-image: url('/assets/background.png');
+  background-size: cover;
+  background-position: center top;
+  background-attachment: fixed;
+  background-repeat: no-repeat;
   color: var(--charcoal);
   overflow-x: hidden;
   line-height: 1.6;
+}
+
+/* iOS Safari: fixed attachment causes blank on some versions */
+@supports (-webkit-touch-callout: none) {
+  body { background-attachment: scroll; }
 }
 
 /* ---- SCROLLBAR ---- */
@@ -410,13 +420,7 @@ body.has-announce .navbar {
   min-height: 100vh;
   display: flex;
   align-items: center;
-  background:
-    radial-gradient(ellipse at 15% 75%, rgba(240, 210, 170, 0.45) 0%, transparent 52%),
-    radial-gradient(ellipse at 85% 18%, rgba(195, 222, 248, 0.42) 0%, transparent 50%),
-    radial-gradient(ellipse at 60% 92%, rgba(215, 200, 252, 0.35) 0%, transparent 48%),
-    radial-gradient(ellipse at 42% 8%,  rgba(248, 228, 198, 0.32) 0%, transparent 40%),
-    radial-gradient(ellipse at 78% 65%, rgba(200, 238, 228, 0.3)  0%, transparent 45%),
-    var(--cream);
+  background: transparent;
   overflow: hidden;
   padding-top: 80px;
 }
@@ -578,7 +582,7 @@ body.has-announce .navbar {
 .stats-bar {
   position: relative;
   z-index: 2;
-  background: var(--cream-alt);
+  background: rgba(248, 240, 227, 0.78);
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
   padding: 3rem 0;
@@ -634,10 +638,7 @@ body.has-announce .navbar {
   position: relative;
   z-index: 2;
   padding: 7rem 0;
-  background:
-    radial-gradient(ellipse at 90% 50%, rgba(195, 222, 248, 0.3) 0%, transparent 55%),
-    radial-gradient(ellipse at 10% 30%, rgba(240, 210, 170, 0.22) 0%, transparent 50%),
-    var(--cream-light);
+  background: rgba(237, 244, 250, 0.72);
 }
 
 .about-grid {
@@ -743,7 +744,7 @@ body.has-announce .navbar {
   position: relative;
   z-index: 2;
   padding: 7rem 0;
-  background: var(--cream);
+  background: rgba(253, 250, 245, 0.75);
 }
 
 .services-grid {
@@ -1025,9 +1026,7 @@ body.has-announce .navbar {
   position: relative;
   z-index: 2;
   padding: 7rem 0;
-  background:
-    radial-gradient(ellipse at 50% 100%, rgba(215, 200, 252, 0.2) 0%, transparent 50%),
-    var(--cream-alt);
+  background: rgba(248, 240, 227, 0.76);
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
   overflow: hidden;
@@ -1097,10 +1096,7 @@ body.has-announce .navbar {
   position: relative;
   z-index: 2;
   padding: 7rem 0;
-  background:
-    radial-gradient(ellipse at 10% 80%, rgba(215, 200, 252, 0.28) 0%, transparent 55%),
-    radial-gradient(ellipse at 90% 20%, rgba(195, 222, 248, 0.25) 0%, transparent 50%),
-    var(--soft-lavender);
+  background: rgba(243, 238, 251, 0.74);
 }
 
 .testimonials .section-tag { color: var(--text-muted); }
@@ -1201,7 +1197,7 @@ body.has-announce .navbar {
    ============================================================ */
 .philosophy-section {
   padding: 6rem 0;
-  background: var(--cream-light);
+  background: rgba(237, 244, 250, 0.72);
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
 }
@@ -1250,7 +1246,7 @@ body.has-announce .navbar {
    ============================================================ */
 .story-section {
   padding: 6rem 0;
-  background: var(--cream);
+  background: rgba(253, 250, 245, 0.73);
   border-top: 1px solid var(--border);
 }
 
@@ -1310,7 +1306,7 @@ body.has-announce .navbar {
    ============================================================ */
 .guidance-cta-section {
   padding: 5rem 0;
-  background: var(--cream-alt);
+  background: rgba(248, 240, 227, 0.74);
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
 }
@@ -1337,7 +1333,7 @@ body.has-announce .navbar {
    ============================================================ */
 .clarity-section {
   padding: 6rem 0;
-  background: var(--soft-lavender);
+  background: rgba(243, 238, 251, 0.72);
   border-top: 1px solid var(--border);
 }
 
