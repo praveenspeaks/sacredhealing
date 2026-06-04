@@ -131,6 +131,55 @@ function renderServicesTable() {
 
 let editServiceId = null;
 
+function addVariantRow(label, duration, price) {
+    const row = document.createElement('div');
+    row.className = 'variant-row';
+    row.style.cssText = 'display:grid;grid-template-columns:1fr 90px 70px 28px;gap:0.35rem;align-items:center;';
+    row.innerHTML = `
+        <input type="text" class="form-control variant-label" placeholder="e.g. Remote / In-Person / 30 min" style="font-size:0.82rem;padding:0.4rem 0.6rem;" value="${label||''}" />
+        <select class="form-control variant-dur" style="font-size:0.82rem;padding:0.4rem 0.3rem;">
+            <option value="30"${duration==30?' selected':''}>30 min</option>
+            <option value="60"${duration==60?' selected':''}>60 min</option>
+            <option value="90"${duration==90?' selected':''}>90 min</option>
+            <option value="120"${duration==120?' selected':''}>120 min</option>
+            <option value="0"${duration==0?' selected':''}>Variable</option>
+        </select>
+        <input type="number" class="form-control variant-price" placeholder="£" style="font-size:0.82rem;padding:0.4rem 0.4rem;" value="${price||''}" />
+        <button type="button" onclick="this.closest('.variant-row').remove()" style="background:#dc2626;color:#fff;border:none;border-radius:4px;padding:0.3rem 0.5rem;cursor:pointer;font-size:0.75rem;">✕</button>
+    `;
+    document.getElementById('srv-variants-list').appendChild(row);
+}
+
+function getServiceFormData() {
+    const icon = document.getElementById('srv-icon').value.trim();
+    const tagSelect = document.getElementById('srv-tag');
+    const tagCustom = document.getElementById('srv-tag-custom');
+    const tag = (tagSelect && tagSelect.value && tagSelect.value !== '__custom')
+        ? tagSelect.value
+        : (tagCustom ? tagCustom.value.trim() : '');
+    const sessionType = document.getElementById('srv-sessionType').value;
+    const bestFor = document.getElementById('srv-bestFor').value.trim();
+    const durationNote = document.getElementById('srv-durationNote').value.trim();
+    const longDescRaw = document.getElementById('srv-longDescription').value.trim();
+    const expectRaw = document.getElementById('srv-expect').value.trim();
+
+    const longDescription = longDescRaw ? longDescRaw.split('\n').filter(Boolean) : [];
+    const expect = expectRaw ? expectRaw.split('\n').filter(Boolean).map(line => {
+        const parts = line.split('|');
+        return { title: parts[0] || '', text: parts[1] || '' };
+    }) : [];
+
+    const variants = [];
+    document.querySelectorAll('#srv-variants-list .variant-row').forEach(row => {
+        const lbl = row.querySelector('.variant-label').value.trim();
+        const dur = parseInt(row.querySelector('.variant-dur').value);
+        const prc = parseFloat(row.querySelector('.variant-price').value);
+        if (lbl || !isNaN(prc)) variants.push({ label: lbl, duration: dur, price: isNaN(prc) ? 0 : prc });
+    });
+
+    return { icon, tag, sessionType, bestFor, durationNote, longDescription, expect, variants };
+}
+
 function editService(id) {
     const s = servicesList.find(x => x.id === id);
     if (!s) return;
@@ -139,18 +188,44 @@ function editService(id) {
     document.getElementById('srv-price').value = s.price;
     document.getElementById('srv-duration').value = s.duration;
     document.getElementById('srv-desc').value = s.description;
-    document.getElementById('srv-features').value = Array.isArray(s.features) ? s.features.join('n') : s.features;
-    
+    document.getElementById('srv-features').value = Array.isArray(s.features) ? s.features.join('\n') : s.features;
+
     let details = {};
     if (s.extra_details) {
         try { details = JSON.parse(s.extra_details); } catch(e){}
     }
     document.getElementById('srv-icon').value = details.icon || '';
-    document.getElementById('srv-tag').value = details.tag || '';
+    document.getElementById('srv-durationNote').value = details.durationNote || '';
+
+    // Tag: try to match select options, else populate custom
+    const tagSelect = document.getElementById('srv-tag');
+    const tagCustom = document.getElementById('srv-tag-custom');
+    const savedTag = details.tag || '';
+    const tagOpt = [...tagSelect.options].find(o => o.value === savedTag && o.value !== '__custom');
+    if (tagOpt) {
+        tagSelect.value = savedTag;
+        tagCustom.style.display = 'none';
+    } else if (savedTag) {
+        tagSelect.value = '__custom';
+        tagCustom.value = savedTag;
+        tagCustom.style.display = 'block';
+        tagSelect.style.display = 'none';
+    } else {
+        tagSelect.value = '';
+        tagCustom.style.display = 'none';
+    }
+
     document.getElementById('srv-sessionType').value = details.sessionType || '';
     document.getElementById('srv-bestFor').value = details.bestFor || '';
-    document.getElementById('srv-longDescription').value = details.longDescription ? details.longDescription.join('n') : '';
-    document.getElementById('srv-expect').value = details.expect ? details.expect.map(e => `${e.title}|${e.text}`).join('n') : '';
+    document.getElementById('srv-longDescription').value = details.longDescription ? details.longDescription.join('\n') : '';
+    document.getElementById('srv-expect').value = details.expect ? details.expect.map(e => `${e.title}|${e.text}`).join('\n') : '';
+
+    // Load variants
+    const variantList = document.getElementById('srv-variants-list');
+    variantList.innerHTML = '';
+    if (details.variants && details.variants.length) {
+        details.variants.forEach(v => addVariantRow(v.label, v.duration, v.price));
+    }
 
     // Load image
     const imageUrl = s.image_url || '';
@@ -170,36 +245,22 @@ function editService(id) {
         btn.innerText = 'Update Service';
         btn.setAttribute('onclick', 'updateService()');
     }
+    btn.scrollIntoView({ behavior: 'smooth', block: 'end' });
     toast('Service loaded for editing', 'info');
 }
 
 async function updateService() {
     if (!editServiceId) return addService();
-    
+
     const title = document.getElementById('srv-title').value.trim();
     const price = document.getElementById('srv-price').value.trim();
     const duration = document.getElementById('srv-duration').value;
     const desc = document.getElementById('srv-desc').value.trim();
     const features = document.getElementById('srv-features').value.trim();
-    
-    const icon = document.getElementById('srv-icon').value.trim();
-    const tag = document.getElementById('srv-tag').value.trim();
-    const sessionType = document.getElementById('srv-sessionType').value.trim();
-    const bestFor = document.getElementById('srv-bestFor').value.trim();
-    const longDescRaw = document.getElementById('srv-longDescription').value.trim();
-    const expectRaw = document.getElementById('srv-expect').value.trim();
 
-    if (!title || !desc || !features) return toast('Fill all required fields', 'error');
+    if (!title || !desc || !features) return toast('Fill Title, Description and Features', 'error');
 
-    const longDescription = longDescRaw ? longDescRaw.split('n').filter(Boolean) : [];
-    const expect = expectRaw ? expectRaw.split('n').filter(Boolean).map(line => {
-        const parts = line.split('|');
-        return { title: parts[0] || '', text: parts[1] || '' };
-    }) : [];
-
-    const extra_details = {
-        icon, tag, sessionType, bestFor, longDescription, expect
-    };
+    const extra_details = getServiceFormData();
     const image_url = document.getElementById('srv-image-url').value || null;
 
     try {
@@ -226,25 +287,10 @@ async function addService() {
     const duration = document.getElementById('srv-duration').value;
     const desc = document.getElementById('srv-desc').value.trim();
     const features = document.getElementById('srv-features').value.trim();
-    
-    const icon = document.getElementById('srv-icon').value.trim();
-    const tag = document.getElementById('srv-tag').value.trim();
-    const sessionType = document.getElementById('srv-sessionType').value.trim();
-    const bestFor = document.getElementById('srv-bestFor').value.trim();
-    const longDescRaw = document.getElementById('srv-longDescription').value.trim();
-    const expectRaw = document.getElementById('srv-expect').value.trim();
 
-    if (!title || !desc || !features) return toast('Fill all required fields', 'error');
-    
-    const longDescription = longDescRaw ? longDescRaw.split('n').filter(Boolean) : [];
-    const expect = expectRaw ? expectRaw.split('n').filter(Boolean).map(line => {
-        const parts = line.split('|');
-        return { title: parts[0] || '', text: parts[1] || '' };
-    }) : [];
+    if (!title || !desc || !features) return toast('Fill Title, Description and Features', 'error');
 
-    const extra_details = {
-        icon, tag, sessionType, bestFor, longDescription, expect
-    };
+    const extra_details = getServiceFormData();
     const image_url = document.getElementById('srv-image-url').value || null;
 
     try {
@@ -269,21 +315,28 @@ function clearServiceForm() {
     editServiceId = null;
     document.getElementById('srv-title').value = '';
     document.getElementById('srv-price').value = '';
+    document.getElementById('srv-duration').value = '60';
+    document.getElementById('srv-durationNote').value = '';
     document.getElementById('srv-desc').value = '';
     document.getElementById('srv-features').value = '';
-
     document.getElementById('srv-icon').value = '';
-    document.getElementById('srv-tag').value = '';
+
+    const tagSelect = document.getElementById('srv-tag');
+    const tagCustom = document.getElementById('srv-tag-custom');
+    if (tagSelect) { tagSelect.value = ''; tagSelect.style.display = 'block'; }
+    if (tagCustom) { tagCustom.value = ''; tagCustom.style.display = 'none'; }
+
     document.getElementById('srv-sessionType').value = '';
     document.getElementById('srv-bestFor').value = '';
     document.getElementById('srv-longDescription').value = '';
     document.getElementById('srv-expect').value = '';
+    document.getElementById('srv-variants-list').innerHTML = '';
 
     clearServiceImage();
 
     const btn = document.querySelector('button[onclick="updateService()"]') || document.querySelector('button[onclick="addService()"]');
     if (btn) {
-        btn.innerText = 'Add / Update Service';
+        btn.innerText = '💾 Save Service';
         btn.setAttribute('onclick', 'addService()');
     }
 }

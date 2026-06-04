@@ -912,15 +912,45 @@
         document.getElementById('hero-title-line2').textContent = detail.titleLine2 || '';
         document.getElementById('hero-desc').textContent = service.description;
 
-        const durLabel = service.duration <= 30 ? service.duration + ' minutes' :
-                         service.duration === 60 ? '60 minutes (1 hour)' :
-                         service.duration <= 90 ? '60–90 minutes' : '90–120 minutes';
+        // Duration label
+        const durLabel = detail.durationNote ? detail.durationNote
+                       : service.duration === 0 ? 'Variable (duration varies)'
+                       : service.duration <= 30 ? service.duration + ' minutes'
+                       : service.duration === 60 ? '60 minutes (1 hour)'
+                       : service.duration <= 90 ? service.duration + ' minutes'
+                       : service.duration + ' minutes (' + Math.round(service.duration / 60 * 10) / 10 + ' hrs)';
 
         document.getElementById('stat-duration').textContent = durLabel;
         document.getElementById('stat-type').textContent = detail.sessionType || 'In-person or Remote';
         document.getElementById('stat-best').textContent = detail.bestFor || (service.features || []).join(', ') || '—';
-        document.getElementById('stat-price').textContent = service.price > 0 ? '£' + service.price : 'Free';
-        document.getElementById('stat-price-sub').textContent = '/ ' + durLabel + ' session';
+
+        // Pricing variants
+        const variants = (detail.variants && detail.variants.length) ? detail.variants : null;
+        const priceBadge = document.getElementById('stat-price').parentElement;
+        const sidebarPrice = document.getElementById('sidebar-price');
+        const sidebarDur = document.getElementById('sidebar-duration');
+
+        if (variants) {
+          priceBadge.innerHTML = variants.map(v => {
+            const vDur = v.duration === 0 ? 'Variable' : v.duration + ' min';
+            return `<div style="display:flex;align-items:baseline;gap:0.4rem;margin-bottom:0.3rem;">
+              <span class="price-val">£${v.price}</span>
+              <span class="price-per">${v.label ? v.label + ' · ' : ''}${vDur}</span>
+            </div>`;
+          }).join('');
+          sidebarPrice.innerHTML = variants.map(v =>
+            `<div style="display:flex;justify-content:space-between;align-items:baseline;font-size:1rem;margin-bottom:0.2rem;">
+              <span style="font-size:0.8rem;color:var(--text-muted);">${v.label || ''}</span>
+              <span style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:300;">£${v.price}</span>
+            </div>`
+          ).join('');
+          sidebarDur.textContent = durLabel;
+        } else {
+          document.getElementById('stat-price').textContent = service.price > 0 ? '£' + service.price : 'Free';
+          document.getElementById('stat-price-sub').textContent = '/ ' + durLabel + ' session';
+          sidebarPrice.textContent = service.price > 0 ? '£' + service.price : 'FREE';
+          sidebarDur.textContent = durLabel + ' session';
+        }
 
         // Hero image
         if (service.image_url) {
@@ -928,9 +958,6 @@
           document.getElementById('stat-image').alt = service.title;
           document.getElementById('stat-image-wrap').style.display = 'block';
         }
-
-        document.getElementById('sidebar-price').textContent = service.price > 0 ? '£' + service.price : 'FREE';
-        document.getElementById('sidebar-duration').textContent = durLabel + ' session';
 
         const descEl = document.getElementById('long-description');
         const paras = (detail.longDescription && detail.longDescription.length > 0) ? detail.longDescription : [service.description];

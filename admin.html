@@ -634,53 +634,98 @@
             <label>Service Title</label>
             <input type="text" id="srv-title" class="form-control" placeholder="e.g. Energy Reset" />
           </div>
+
+          <!-- Duration + Price (base / fallback when no variants) -->
           <div class="form-row">
             <div class="form-group">
-              <label>Duration</label>
+              <label>Base Duration</label>
               <select id="srv-duration" class="form-control">
                 <option value="30">30 min</option>
                 <option value="60">60 min</option>
                 <option value="90">90 min</option>
+                <option value="120">120 min</option>
+                <option value="0">Variable</option>
               </select>
             </div>
             <div class="form-group">
-              <label>Price (£)</label>
+              <label>Base Price (£)</label>
               <input type="number" id="srv-price" class="form-control" placeholder="e.g. 75" />
             </div>
           </div>
+          <div class="form-group" style="margin-bottom:1rem;">
+            <label>Duration Note <small style="color:var(--muted);font-weight:400;">(optional — e.g. "90-120 min depending on depth")</small></label>
+            <input type="text" id="srv-durationNote" class="form-control" placeholder="e.g. 90-120 minutes, session length varies per client" />
+          </div>
+
+          <!-- Pricing Variants -->
+          <div class="form-group" style="margin-bottom:1.25rem;border:1px solid var(--border);border-radius:10px;padding:0.85rem;">
+            <label style="display:block;margin-bottom:0.6rem;">Pricing Variants <small style="color:var(--muted);font-weight:400;">— for multiple durations or remote vs in-person pricing</small></label>
+            <div id="srv-variants-list" style="display:flex;flex-direction:column;gap:0.45rem;margin-bottom:0.55rem;"></div>
+            <button type="button" onclick="addVariantRow()" style="width:100%;font-size:0.82rem;background:none;border:1px dashed var(--border);color:var(--muted);padding:0.45rem 0.75rem;border-radius:6px;cursor:pointer;transition:border-color 0.15s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">+ Add Pricing Variant</button>
+            <p style="font-size:0.7rem;color:var(--muted);margin-top:0.4rem;line-height:1.5;">Example: <em>Remote | 60 min | £100</em> and <em>In-Person | 60 min | £135</em>. When variants exist they replace the base price on the public page.</p>
+          </div>
+
+          <!-- Icon + Tag + Session Type -->
           <div class="form-row">
-            <div class="form-group">
+            <div class="form-group" style="flex:0 0 auto;min-width:0;">
               <label>Icon</label>
-              <input type="text" id="srv-icon" class="form-control" placeholder="🌀" />
+              <input type="text" id="srv-icon" class="form-control" placeholder="🌀" style="font-size:1.3rem;text-align:center;" />
+              <div style="display:flex;flex-wrap:wrap;gap:0.3rem;margin-top:0.4rem;">
+                <span style="font-size:0.65rem;color:var(--muted);width:100%;">Click to select:</span>
+                ${['🌀','✨','🔮','🌿','🪬','🕊️','💫','🌙','☀️','🙏','💎','🌸','🫧','🌊','🔥','🌺','⚡','🌈','🧘','💠'].map(e=>`<button type="button" onclick="document.getElementById('srv-icon').value='${e}'" style="background:var(--indigo);border:1px solid var(--border);border-radius:4px;padding:0.15rem 0.3rem;cursor:pointer;font-size:1rem;" title="${e}">${e}</button>`).join('')}
+              </div>
             </div>
-            <div class="form-group">
-              <label>Tag</label>
-              <input type="text" id="srv-tag" class="form-control" placeholder="Energy Work" />
-            </div>
-            <div class="form-group">
-              <label>Session Type</label>
-              <input type="text" id="srv-sessionType" class="form-control" placeholder="In-person" />
+            <div class="form-group" style="display:flex;flex-direction:column;gap:0.5rem;">
+              <div>
+                <label>Tag</label>
+                <select id="srv-tag" class="form-control" onchange="if(this.value==='__custom'){this.style.display='none';document.getElementById('srv-tag-custom').style.display='block';document.getElementById('srv-tag-custom').focus();}">
+                  <option value="">— select tag —</option>
+                  <option>Energy Work</option>
+                  <option>Spiritual</option>
+                  <option>Past Life</option>
+                  <option>Meditation</option>
+                  <option>Ancestral Healing</option>
+                  <option>Psychic</option>
+                  <option>Reiki</option>
+                  <option>Qi Gong</option>
+                  <option>Holistic</option>
+                  <option>Regression</option>
+                  <option>Hypnotherapy</option>
+                  <option value="__custom">+ Custom…</option>
+                </select>
+                <input type="text" id="srv-tag-custom" class="form-control" placeholder="Custom tag" style="display:none;margin-top:0.3rem;" oninput="document.getElementById('srv-tag').value=''" />
+              </div>
+              <div>
+                <label>Session Type</label>
+                <select id="srv-sessionType" class="form-control">
+                  <option value="">— select —</option>
+                  <option value="In-Person">In-Person</option>
+                  <option value="Remote">Remote</option>
+                  <option value="Both">Both (In-Person &amp; Remote)</option>
+                </select>
+              </div>
             </div>
           </div>
+
           <div class="form-group" style="margin-bottom:1rem;">
             <label>Best For</label>
             <input type="text" id="srv-bestFor" class="form-control" placeholder="Emotional release, energy restoration..." />
           </div>
           <div class="form-group" style="margin-bottom:1rem;">
             <label>Short Description</label>
-            <textarea id="srv-desc" class="form-control" style="height:55px; resize:vertical;"></textarea>
+            <textarea id="srv-desc" class="form-control" style="height:100px; resize:vertical;"></textarea>
           </div>
           <div class="form-group" style="margin-bottom:1rem;">
             <label>Features (one per line)</label>
-            <textarea id="srv-features" class="form-control" style="height:55px; resize:vertical;" placeholder="Aura Cleansing&#10;Chakra Balancing"></textarea>
+            <textarea id="srv-features" class="form-control" style="height:110px; resize:vertical;" placeholder="Aura Cleansing&#10;Chakra Balancing&#10;Energy Alignment"></textarea>
           </div>
           <div class="form-group" style="margin-bottom:1rem;">
             <label>Long Description (paragraphs, one per line)</label>
-            <textarea id="srv-longDescription" class="form-control" style="height:65px; resize:vertical;"></textarea>
+            <textarea id="srv-longDescription" class="form-control" style="height:130px; resize:vertical;"></textarea>
           </div>
           <div class="form-group" style="margin-bottom:1.5rem;">
             <label>What to Expect (Title|Desc, one per line)</label>
-            <textarea id="srv-expect" class="form-control" style="height:65px; resize:vertical;" placeholder="Initial Assessment|Tuning into your energy field."></textarea>
+            <textarea id="srv-expect" class="form-control" style="height:110px; resize:vertical;" placeholder="Initial Assessment|Tuning into your energy field.&#10;Energy Clearing|Releasing blocks and old patterns."></textarea>
           </div>
           <div class="form-group" style="margin-bottom:1.5rem;">
             <label>Service Image</label>

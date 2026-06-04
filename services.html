@@ -174,9 +174,24 @@
           const featuresHtml = features.length
             ? '<ul style="margin:0.85rem 0 1.25rem;padding-left:1.2rem;color:var(--text-body);line-height:2.1;font-size:0.9rem;">' + features.map(function (f) { return '<li>' + esc(f) + '</li>'; }).join('') + '</ul>'
             : '';
-          const priceHtml = s.price
-            ? '<div style="font-family:var(--font-heading);font-size:1.3rem;color:var(--olive);margin-bottom:1.5rem;">£' + esc(String(s.price)) + ' <span style="font-size:0.85rem;color:var(--text-muted);">/ ' + esc(String(s.duration || 60)) + ' mins</span></div>'
-            : '';
+          var detail = {};
+          try { if (s.extra_details) detail = JSON.parse(s.extra_details); } catch(e) {}
+          var variants = detail.variants && detail.variants.length ? detail.variants : null;
+          var durNote = detail.durationNote || '';
+          var durDisp = durNote ? durNote : (s.duration === 0 ? 'Variable' : (s.duration || 60) + ' min');
+          var priceHtml = '';
+          if (variants) {
+            priceHtml = '<div style="margin-bottom:1.5rem;">' +
+              variants.map(function(v) {
+                var vd = v.duration === 0 ? 'Variable' : v.duration + ' min';
+                return '<div style="font-family:var(--font-heading);font-size:1.15rem;color:var(--olive);">£' + v.price +
+                  ' <span style="font-size:0.82rem;color:var(--text-muted);">/ ' + (v.label ? esc(v.label) + ' · ' : '') + vd + '</span></div>';
+              }).join('') +
+            '</div>';
+          } else if (s.price) {
+            priceHtml = '<div style="font-family:var(--font-heading);font-size:1.3rem;color:var(--olive);margin-bottom:1.5rem;">£' +
+              esc(String(s.price)) + ' <span style="font-size:0.85rem;color:var(--text-muted);">/ ' + esc(durDisp) + '</span></div>';
+          }
           const imgHtml = s.image_url
             ? '<img src="' + esc(s.image_url) + '" alt="' + esc(s.title) + '" />'
             : '<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:4rem;opacity:0.25;background:linear-gradient(135deg,var(--cream-alt),var(--cream));">✦</div>';
