@@ -38,6 +38,39 @@ function formatTime(timeStr) {
   return `${hour % 12 || 12}:${m} ${hour < 12 ? 'AM' : 'PM'}`;
 }
 
+function generateICS({ service, slot, customerName, customerEmail, bookingRef }) {
+  function pad(n) { return String(n).padStart(2, '0'); }
+  function dtLocal(dateStr, timeStr) {
+    const [y, mo, d] = dateStr.split('-');
+    const [hh, mm] = timeStr.split(':');
+    return `${y}${mo}${d}T${hh}${mm}00`;
+  }
+  function dtEnd(dateStr, timeStr, mins) {
+    const dt = new Date(`${dateStr}T${timeStr}:00`);
+    dt.setMinutes(dt.getMinutes() + (parseInt(mins) || 60));
+    return `${dt.getFullYear()}${pad(dt.getMonth()+1)}${pad(dt.getDate())}T${pad(dt.getHours())}${pad(dt.getMinutes())}00`;
+  }
+  const dtstamp = new Date().toISOString().replace(/[-:]/g,'').split('.')[0] + 'Z';
+  const uid     = `sh-${bookingRef||Date.now()}@soulbodyhealing.com`;
+  const desc    = `Your ${service} session with Reena at Sacred Healing.${bookingRef ? '\\nBooking Reference: ' + bookingRef : ''}\\n\\nFor queries\\, reply to this email.`;
+  return [
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Sacred Healing//EN',
+    'CALSCALE:GREGORIAN', 'METHOD:REQUEST',
+    'BEGIN:VEVENT',
+    `UID:${uid}`,
+    `DTSTAMP:${dtstamp}`,
+    `DTSTART;TZID=Europe/London:${dtLocal(slot.date, slot.time)}`,
+    `DTEND;TZID=Europe/London:${dtEnd(slot.date, slot.time, slot.duration)}`,
+    `SUMMARY:Sacred Healing — ${service}`,
+    `DESCRIPTION:${desc}`,
+    'LOCATION:Croydon\\, London (or Online if agreed)',
+    `ORGANIZER;CN="Sacred Healing":mailto:${ADMIN_EMAIL || 'noreply@soulbodyhealing.com'}`,
+    `ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN="${customerName}":mailto:${customerEmail}`,
+    'STATUS:CONFIRMED',
+    'END:VEVENT', 'END:VCALENDAR',
+  ].join('\r\n');
+}
+
 async function sendBookingConfirmation({ customerName, customerEmail, service, slot, servicePrice, cancelUrl, bookingRef }) {
   if (!transporter) return;
   const price     = servicePrice != null ? parseFloat(servicePrice) : parseFloat(slot.price || 0);
@@ -50,6 +83,11 @@ async function sendBookingConfirmation({ customerName, customerEmail, service, s
     replyTo: REPLY_TO,
     to:      customerEmail,
     subject: `Your ${service} session is booked ✦ Sacred Healing`,
+    attachments: [{
+      filename:    'sacred-healing-session.ics',
+      content:     generateICS({ service, slot, customerName, customerEmail, bookingRef }),
+      contentType: 'text/calendar; charset=utf-8; method=REQUEST',
+    }],
     html: `
       <div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;background:#0a0a0a;color:#FDFCF8;padding:2.5rem;border-radius:12px;">
         <h1 style="color:#DAB467;font-size:1.6rem;margin-bottom:0.5rem;">Sacred Healing</h1>

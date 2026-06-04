@@ -400,8 +400,19 @@
         <div class="card" style="margin-bottom:0;">
           <div class="card-title">Bulk Slot Generator</div>
           <div class="form-row">
-            <div class="form-group"><label>Start Date</label><input type="date" class="form-control" id="bulk-start" /></div>
+            <div class="form-group"><label>Start Date</label><input type="date" class="form-control" id="bulk-start" onchange="updateBulkEndHint()" /></div>
             <div class="form-group"><label>End Date</label><input type="date" class="form-control" id="bulk-end" /></div>
+          </div>
+          <div class="form-group" style="margin-bottom:1rem;">
+            <label style="margin-bottom:0.4rem;display:block;">Quick Repeat</label>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+              <button type="button" class="btn-sm" onclick="setRepeatEnd(1)" style="background:rgba(218,180,103,0.12);border:1px solid rgba(218,180,103,0.3);color:var(--cream);font-size:0.78rem;padding:0.3rem 0.6rem;border-radius:5px;cursor:pointer;">1 week</button>
+              <button type="button" class="btn-sm" onclick="setRepeatEnd(2)" style="background:rgba(218,180,103,0.12);border:1px solid rgba(218,180,103,0.3);color:var(--cream);font-size:0.78rem;padding:0.3rem 0.6rem;border-radius:5px;cursor:pointer;">2 weeks</button>
+              <button type="button" class="btn-sm" onclick="setRepeatEnd(4)" style="background:rgba(218,180,103,0.12);border:1px solid rgba(218,180,103,0.3);color:var(--cream);font-size:0.78rem;padding:0.3rem 0.6rem;border-radius:5px;cursor:pointer;">1 month</button>
+              <button type="button" class="btn-sm" onclick="setRepeatEnd(8)" style="background:rgba(218,180,103,0.12);border:1px solid rgba(218,180,103,0.3);color:var(--cream);font-size:0.78rem;padding:0.3rem 0.6rem;border-radius:5px;cursor:pointer;">2 months</button>
+              <button type="button" class="btn-sm" onclick="setRepeatEnd(12)" style="background:rgba(218,180,103,0.12);border:1px solid rgba(218,180,103,0.3);color:var(--cream);font-size:0.78rem;padding:0.3rem 0.6rem;border-radius:5px;cursor:pointer;">3 months</button>
+            </div>
+            <p style="font-size:0.7rem;color:var(--muted);margin-top:0.35rem;">Sets the End Date relative to Start Date — then Preview to see all generated slots.</p>
           </div>
           <div class="form-group" style="margin-bottom:1rem;">
             <label>Days of Week</label>
@@ -1080,6 +1091,17 @@
     const nm = new Date(); nm.setDate(nm.getDate() + 30);
     document.getElementById('bulk-end').value = nm.toISOString().split('T')[0];
   }
+
+  function setRepeatEnd(weeks) {
+    const startVal = document.getElementById('bulk-start').value;
+    const base = startVal ? new Date(startVal + 'T00:00:00') : new Date();
+    const end = new Date(base);
+    end.setDate(end.getDate() + (weeks * 7) - 1);
+    document.getElementById('bulk-end').value = end.toISOString().split('T')[0];
+    previewBulk();
+  }
+
+  function updateBulkEndHint() { /* refreshed when start changes */ }
 
   function getSelectedDuration(name) {
     const checked = document.querySelector(`input[name="${name}"]:checked`);

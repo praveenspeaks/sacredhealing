@@ -1,18 +1,19 @@
 /* ============================================================
-   SACRED HEALING — WARM MINIMAL THEME
+   SACRED HEALING — SOFT LUXURY THEME
    Color Palette:
-   --cream:       #F2EDE4   (main background)
-   --cream-alt:   #EAE3D8   (alternate section background)
-   --cream-light: #F8F4EF   (lightest sections)
-   --olive:       #5C5B47   (primary accent / buttons)
-   --olive-dark:  #3D3C2E   (footer / dark sections)
-   --olive-mid:   #4A4938   (testimonials section)
-   --olive-light: #7A7860   (hover / lighter olive)
-   --charcoal:    #2C2A26   (primary text)
-   --text-body:   #5C5248   (body text)
-   --text-muted:  #8A8070   (muted / secondary text)
-   --border:      rgba(92,91,71,0.12)
-   --border-strong: rgba(92,91,71,0.25)
+   --cream:        #F8F5F0   Soft Ivory     (main background)
+   --cream-alt:    #F5E9D6   Warm Cream     (alternate sections)
+   --cream-light:  #EAF2F7   Misty Blue     (about / philosophy sections)
+   --soft-lavender:#F2EEF8   Soft Lavender  (clarity / featured sections)
+   --olive:        #8B6B4A   Warm Amber     (buttons / nav / accents)
+   --olive-dark:   #2A1F1A   Warm Deep      (footer / very dark sections)
+   --olive-mid:    #3D2D1E   Dark Warm      (testimonials background)
+   --olive-light:  #C8A98A   Champagne Gold (decorative / icons / highlights)
+   --charcoal:     #2A1F1A   (primary text / headings)
+   --text-body:    #6B4F3A   (body text)
+   --text-muted:   #9E8268   (secondary / muted text)
+   --border:       rgba(200,169,138,0.22)
+   --border-strong:rgba(140,100,65,0.32)
    ============================================================ */
 
 /* ---- RESET & ROOT ---- */
@@ -25,24 +26,25 @@
 }
 
 :root {
-  --cream: #F2EDE4;
-  --cream-alt: #EAE3D8;
-  --cream-light: #F8F4EF;
-  --olive: #5C5B47;
-  --olive-dark: #3D3C2E;
-  --olive-mid: #4A4938;
-  --olive-light: #7A7860;
-  --olive-glow: rgba(92, 91, 71, 0.12);
-  --charcoal: #2C2A26;
-  --text-body: #5C5248;
-  --text-muted: #8A8070;
-  --text-light: #A89E92;
-  --border: rgba(92, 91, 71, 0.12);
-  --border-strong: rgba(92, 91, 71, 0.28);
+  --cream: #F8F5F0;
+  --cream-alt: #F5E9D6;
+  --cream-light: #EAF2F7;
+  --soft-lavender: #F2EEF8;
+  --olive: #8B6B4A;
+  --olive-dark: #2A1F1A;
+  --olive-mid: #3D2D1E;
+  --olive-light: #C8A98A;
+  --olive-glow: rgba(200, 169, 138, 0.15);
+  --charcoal: #2A1F1A;
+  --text-body: #6B4F3A;
+  --text-muted: #9E8268;
+  --text-light: #C4A882;
+  --border: rgba(200, 169, 138, 0.22);
+  --border-strong: rgba(140, 100, 65, 0.32);
   --white: #FFFFFF;
-  --shadow-sm: 0 2px 12px rgba(44, 42, 38, 0.08);
-  --shadow-md: 0 6px 28px rgba(44, 42, 38, 0.10);
-  --shadow-lg: 0 16px 48px rgba(44, 42, 38, 0.14);
+  --shadow-sm: 0 2px 12px rgba(42, 31, 26, 0.08);
+  --shadow-md: 0 6px 28px rgba(42, 31, 26, 0.10);
+  --shadow-lg: 0 16px 48px rgba(42, 31, 26, 0.14);
   --transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   --radius: 10px;
   --radius-lg: 16px;
@@ -1052,7 +1054,7 @@ body.has-announce .navbar {
 
 .testimonials .section-title { color: #fff; }
 
-.testimonials .section-title em { color: rgba(220, 210, 190, 0.9); }
+.testimonials .section-title em { color: var(--olive-light); }
 
 .testimonials .section-subtitle { color: rgba(255,255,255,0.6); }
 
@@ -1278,7 +1280,7 @@ body.has-announce .navbar {
    ============================================================ */
 .clarity-section {
   padding: 6rem 0;
-  background: var(--cream-light);
+  background: var(--soft-lavender);
   border-top: 1px solid var(--border);
 }
 
@@ -1740,10 +1742,10 @@ body.has-announce .navbar {
 }
 
 .slot-dur-tag.dur-15 { background: rgba(92,91,71,0.08); color: var(--olive-light); }
-.slot-dur-tag.dur-30 { background: rgba(92,91,71,0.10); color: var(--olive); }
-.slot-dur-tag.dur-60 { background: rgba(92,91,71,0.13); color: var(--olive); }
-.slot-dur-tag.dur-90 { background: rgba(92,91,71,0.15); color: var(--olive-dark); }
-.slot-dur-tag.dur-120 { background: rgba(92,91,71,0.18); color: var(--olive-dark); }
+.slot-dur-tag.dur-30 { background: var(--olive-glow); color: var(--olive); }
+.slot-dur-tag.dur-60 { background: var(--olive-glow); color: var(--olive); }
+.slot-dur-tag.dur-90 { background: rgba(139,107,74,0.18); color: var(--olive-dark); }
+.slot-dur-tag.dur-120 { background: rgba(139,107,74,0.22); color: var(--olive-dark); }
 
 .slot-price {
   font-family: var(--font-heading);
