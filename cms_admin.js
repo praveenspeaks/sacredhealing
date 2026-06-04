@@ -40,7 +40,7 @@ async function loadContent() {
 }
 
 async function saveContent() {
-    const textKeys = ['hero_title', 'hero_subtitle', 'hero_button_text', 'explore_button_text', 'about_title', 'about_paragraph1', 'about_paragraph2', 'contact_email', 'contact_phone', 'contact_location', 'social_instagram', 'social_whatsapp', 'contact_page_title', 'contact_page_subtitle', 'contact_page_intro'];
+    const textKeys = ['hero_title', 'hero_subtitle', 'hero_button_text', 'explore_button_text', 'about_title', 'about_paragraph1', 'about_paragraph2', 'contact_email', 'contact_phone', 'contact_location', 'social_instagram', 'social_whatsapp', 'footer_tagline', 'footer_online_text', 'footer_copyright', 'footer_credit', 'contact_page_title', 'contact_page_subtitle', 'contact_page_intro'];
     const updates = {};
     textKeys.forEach(k => {
         const el = document.getElementById('cms-' + k);

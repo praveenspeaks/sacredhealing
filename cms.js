@@ -87,7 +87,7 @@ module.exports = {
     }
     for (const [key, val] of Object.entries(realContent)) {
       await pool.query(
-        'INSERT INTO site_content (key, value) VALUES ($1, $2) ON CONFLICT(key) DO UPDATE SET value = EXCLUDED.value',
+        'INSERT INTO site_content (key, value) VALUES ($1, $2) ON CONFLICT(key) DO NOTHING',
         [key, val]
       );
     }
