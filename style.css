@@ -1231,6 +1231,136 @@ body.has-announce .navbar {
 }
 
 /* ============================================================
+   THE 6 R'S OF SACRED HEALING™
+   ============================================================ */
+.six-rs-section {
+  padding: 7rem 0 6rem;
+  background: rgba(243, 238, 251, 0.72);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+
+.six-rs-intro {
+  text-align: center;
+  max-width: 680px;
+  margin: 0 auto 4rem;
+}
+
+.six-rs-trademark {
+  font-family: var(--font-heading);
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-weight: 400;
+  color: var(--charcoal);
+  line-height: 1.3;
+  margin-bottom: 1rem;
+}
+
+.six-rs-trademark em {
+  color: var(--olive);
+  font-style: italic;
+}
+
+.six-rs-flow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 1.25rem;
+}
+
+.six-rs-flow-item {
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  color: var(--olive);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+
+.six-rs-flow-dot {
+  color: var(--olive-light);
+  font-size: 0.5rem;
+  align-self: center;
+}
+
+.six-rs-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.75rem;
+}
+
+.rs-card {
+  background: rgba(255, 255, 255, 0.82);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 2.25rem 1.75rem 2rem;
+  position: relative;
+  transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.rs-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-md);
+  border-color: var(--border-strong);
+}
+
+.rs-number {
+  position: absolute;
+  top: 1.1rem;
+  left: 1.25rem;
+  font-family: var(--font-heading);
+  font-size: 2.8rem;
+  font-weight: 300;
+  color: var(--olive-light);
+  opacity: 0.5;
+  line-height: 1;
+}
+
+.rs-icon {
+  font-size: 2.8rem;
+  margin-bottom: 0.85rem;
+  line-height: 1;
+  display: block;
+}
+
+.rs-title {
+  font-family: var(--font-heading);
+  font-size: 1.65rem;
+  font-weight: 500;
+  color: var(--charcoal);
+  margin-bottom: 0.6rem;
+  letter-spacing: 0.02em;
+}
+
+.rs-tagline {
+  font-style: italic;
+  font-size: 0.9rem;
+  color: var(--olive);
+  line-height: 1.6;
+  margin-bottom: 0.85rem;
+  font-family: var(--font-heading);
+}
+
+.rs-desc {
+  font-size: 0.87rem;
+  color: var(--text-body);
+  line-height: 1.8;
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  .six-rs-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 560px) {
+  .six-rs-grid { grid-template-columns: 1fr; }
+}
+
+/* ============================================================
    PHILOSOPHY SECTION
    ============================================================ */
 .philosophy-section {
