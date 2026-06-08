@@ -350,13 +350,16 @@
           `<option value="${s.id}">${s.title}${parseFloat(s.price) > 0 ? ' — £' + s.price : ' — Free'}</option>`
         ).join('');
 
+      // Resolve which service to pre-select: explicit slug → first in list
+      let defaultSvc = null;
       if (preselect) {
-        const found = gbmServices.find(s =>
+        defaultSvc = gbmServices.find(s =>
           (s.slug && s.slug === preselect) ||
           s.title.toLowerCase().replace(/\s+/g, '-') === preselect
         );
-        if (found) { sel.value = found.id; gbmSelSvc = found; }
       }
+      if (!defaultSvc && gbmServices.length) defaultSvc = gbmServices[0];
+      if (defaultSvc) { sel.value = defaultSvc.id; gbmSelSvc = defaultSvc; }
     } catch (e) { console.error('gbm: failed to load services', e); }
   }
 
@@ -433,7 +436,8 @@
         const time = String(sl.time).substring(0, 5);
         const booked = sl.is_booked == 1 || sl.is_booked === true;
         const svcP  = gbmSelSvc ? parseFloat(gbmSelSvc.price) : 0;
-        const price = svcP > 0 ? `£${svcP}` : (parseFloat(sl.price) > 0 ? `£${sl.price}` : 'Free');
+        const slP   = parseFloat(sl.price) > 0 ? parseFloat(sl.price) : 0;
+        const price = svcP > 0 ? `£${svcP}` : (slP > 0 ? `£${slP}` : 'Free');
         return `<button class="gbm-slot-btn" data-slot-id="${sl.id}"
           ${booked ? 'disabled title="Already booked"' : `onclick="window._gbmSelSlot(${sl.id})"`}>
           ${time}<small>${price}${booked ? ' · Booked' : ''}</small></button>`;
