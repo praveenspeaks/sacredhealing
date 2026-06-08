@@ -363,6 +363,8 @@
   window._gbmOnSvcChange = function () {
     const sel = document.getElementById('gbm-svc');
     gbmSelSvc = gbmServices.find(s => s.id == sel.value) || null;
+    // Re-render slot tiles so the price label reflects the newly selected service
+    if (gbmSelDate) _gbmLoadDateSlots(gbmSelDate);
   };
 
   // ── Calendar ──────────────────────────────────────────────────────────────
@@ -430,7 +432,8 @@
       grid.innerHTML = slots.map(sl => {
         const time = String(sl.time).substring(0, 5);
         const booked = sl.is_booked == 1 || sl.is_booked === true;
-        const price  = parseFloat(sl.price) > 0 ? `£${sl.price}` : 'Free';
+        const svcP  = gbmSelSvc ? parseFloat(gbmSelSvc.price) : 0;
+        const price = svcP > 0 ? `£${svcP}` : (parseFloat(sl.price) > 0 ? `£${sl.price}` : 'Free');
         return `<button class="gbm-slot-btn" data-slot-id="${sl.id}"
           ${booked ? 'disabled title="Already booked"' : `onclick="window._gbmSelSlot(${sl.id})"`}>
           ${time}<small>${price}${booked ? ' · Booked' : ''}</small></button>`;
