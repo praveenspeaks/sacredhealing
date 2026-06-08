@@ -470,7 +470,11 @@
       if (n < step)      el.classList.add('done');
       else if (n == step) el.classList.add('active');
     });
-    if (step === 2) _gbmFillSummary('gbm-summary');
+    if (step === 2) {
+      _gbmFillSummary('gbm-summary');
+      const submitBtn = document.getElementById('gbm-submit-btn');
+      if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Confirm Booking ✦'; }
+    }
   };
 
   function _gbmFillSummary (id) {
@@ -480,7 +484,8 @@
     const dateObj  = new Date(sl.date + 'T12:00:00');
     const dateStr  = dateObj.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     const timeStr  = String(sl.time).substring(0, 5);
-    const price    = parseFloat(sl.price) > 0 ? `£${sl.price}` : 'Free';
+    const svcPrice = svc ? parseFloat(svc.price) : 0;
+    const price    = svcPrice > 0 ? `£${svcPrice}` : (parseFloat(sl.price) > 0 ? `£${sl.price}` : 'Free');
     const svcTitle = svc ? svc.title : 'Healing Session';
     document.getElementById(id).innerHTML = `
       <span class="gbm-sum-k">Service</span><span class="gbm-sum-v">${svcTitle}</span>
@@ -539,8 +544,9 @@
     const svc = gbmSelSvc;
     const dateObj = new Date(sl.date + 'T12:00:00');
     const dateStr = dateObj.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
-    const timeStr = String(sl.time).substring(0, 5);
-    const price   = parseFloat(sl.price) > 0 ? `£${sl.price}` : 'Free';
+    const timeStr  = String(sl.time).substring(0, 5);
+    const svcPrice = svc ? parseFloat(svc.price) : 0;
+    const price    = svcPrice > 0 ? `£${svcPrice}` : (parseFloat(sl.price) > 0 ? `£${sl.price}` : 'Free');
 
     document.getElementById('gbm-conf-card').innerHTML = `
       <span class="gbm-ck">Reference</span>

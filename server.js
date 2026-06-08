@@ -294,13 +294,23 @@ app.post('/api/bookings', async (req, res) => {
       return res.status(409).json({ error: 'This slot is no longer available. Please choose another time.' });
     }
 
+    // Block double-booking: reject if a confirmed or pending_payment booking already exists for this slot
+    const existingBooking = await pool.query(
+      "SELECT id FROM bookings WHERE slot_id = $1 AND status IN ('confirmed', 'pending_payment')",
+      [slot_id]
+    );
+    if (existingBooking.rows.length > 0) {
+      return res.status(409).json({ error: 'This slot is no longer available. Please choose another time.' });
+    }
+
     const cancelToken = crypto.randomBytes(32).toString('hex');
     const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
     const cancelUrl = `${baseUrl}/cancel?token=${cancelToken}`;
 
-    // Look up service price — payment is driven by service type, not slot
+    // Look up service price — fall back to slot price if service has no price set
     const svcResult = await pool.query('SELECT price FROM services WHERE title = $1', [service.trim()]);
-    const servicePrice = svcResult.rows[0] ? parseFloat(svcResult.rows[0].price) : 0;
+    const svcPrice = svcResult.rows[0] ? parseFloat(svcResult.rows[0].price) : 0;
+    const servicePrice = svcPrice > 0 ? svcPrice : parseFloat(slot.price || 0);
 
     const stripeKey = process.env.STRIPE_SECRET_KEY || '';
     const stripeActive = stripeKey.startsWith('sk_test_') || stripeKey.startsWith('sk_live_');
