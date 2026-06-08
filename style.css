@@ -1321,10 +1321,26 @@ body.has-announce .navbar {
 }
 
 .rs-icon {
-  font-size: 2.8rem;
+  width: 80px;
+  height: 80px;
   margin-bottom: 0.85rem;
-  line-height: 1;
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.rs-icon svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.rs-icon svg .icon-stroke {
+  transition: stroke 0.4s ease;
+}
+
+.rs-card:hover .rs-icon svg .icon-stroke {
+  stroke: var(--olive);
 }
 
 .rs-title {
