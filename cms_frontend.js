@@ -210,7 +210,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         for (const [key, val] of Object.entries(content)) {
             document.querySelectorAll(`[id="${key}"]`).forEach(el => {
                 if (el.tagName === 'IMG') {
-                    if (val) el.src = val;
+                    if (val) {
+                        const fallback = el.getAttribute('src') || '';
+                        el.onerror = function() { if (fallback) this.src = fallback; this.onerror = null; };
+                        el.src = val;
+                    }
                 } else if (key.endsWith('_bg_img')) {
                     el.style.backgroundImage = `url(${val})`;
                 } else if (el.tagName === 'A') {
