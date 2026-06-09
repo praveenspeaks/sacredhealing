@@ -1115,7 +1115,8 @@
         slotsGrid.innerHTML = slots.map(slot => {
           const timeStr = String(slot.time).substring(0, 5);
           const isBooked = slot.is_booked == 1 || slot.is_booked === true;
-          const price = slot.price > 0 ? `£${slot.price}` : 'Free';
+          const svcP = currentService ? parseFloat(currentService.price) : 0;
+          const price = svcP > 0 ? `£${svcP}` : (slot.price > 0 ? `£${slot.price}` : 'Free');
           const durMins = slot.duration;
           return `
             <button class="cal-slot-btn"
