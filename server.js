@@ -88,6 +88,29 @@ function slugify(title) {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
+// Resolve the price for a booking's "service" string, which may be either a
+// plain service title or "<Service Title> — <Variant Label>" when the
+// customer picked a pricing variant (e.g. Phone vs Remote).
+async function getServicePrice(serviceName) {
+  const svcResult = await pool.query('SELECT price FROM services WHERE title = $1', [serviceName]);
+  if (svcResult.rows[0]) return parseFloat(svcResult.rows[0].price) || 0;
+
+  const sepIdx = serviceName.lastIndexOf(' — ');
+  if (sepIdx > -1) {
+    const baseTitle = serviceName.slice(0, sepIdx);
+    const variantLabel = serviceName.slice(sepIdx + 3);
+    const baseResult = await pool.query('SELECT extra_details FROM services WHERE title = $1', [baseTitle]);
+    if (baseResult.rows[0]) {
+      try {
+        const detail = JSON.parse(baseResult.rows[0].extra_details || '{}');
+        const variant = (detail.variants || []).find(v => (v.label || (v.duration === 0 ? 'Variable' : v.duration + ' min')) === variantLabel);
+        if (variant) return parseFloat(variant.price) || 0;
+      } catch (e) {}
+    }
+  }
+  return 0;
+}
+
 // Multi-page section routes (must be before /services/:slug)
 app.get('/about',        (req, res) => res.sendFile(path.join(__dirname, 'about.html')));
 app.get('/philosophy',   (req, res) => res.sendFile(path.join(__dirname, 'philosophy.html')));
@@ -308,8 +331,7 @@ app.post('/api/bookings', async (req, res) => {
     const cancelUrl = `${baseUrl}/cancel?token=${cancelToken}`;
 
     // Look up service price — fall back to slot price if service has no price set
-    const svcResult = await pool.query('SELECT price FROM services WHERE title = $1', [service.trim()]);
-    const svcPrice = svcResult.rows[0] ? parseFloat(svcResult.rows[0].price) : 0;
+    const svcPrice = await getServicePrice(service.trim());
     const servicePrice = svcPrice > 0 ? svcPrice : parseFloat(slot.price || 0);
 
     const stripeKey = process.env.STRIPE_SECRET_KEY || '';
@@ -475,8 +497,7 @@ app.post('/api/bookings/confirm', async (req, res) => {
 
     const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
     const cancelUrl = booking.cancel_token ? `${baseUrl}/cancel?token=${booking.cancel_token}` : null;
-    const svcResult = await pool.query('SELECT price FROM services WHERE title = $1', [booking.service]);
-    const servicePrice = svcResult.rows[0] ? parseFloat(svcResult.rows[0].price) : 0;
+    const servicePrice = await getServicePrice(booking.service);
 
     sendBookingConfirmation({
       customerName: booking.customer_name, customerEmail: booking.customer_email,
@@ -540,8 +561,7 @@ app.get('/api/bookings/success', async (req, res) => {
     }
 
     if (confirmed) {
-      const svcResult = await pool.query('SELECT price FROM services WHERE title = $1', [booking.service]);
-      const servicePrice = svcResult.rows[0] ? parseFloat(svcResult.rows[0].price) : 0;
+      const servicePrice = await getServicePrice(booking.service);
       const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
       const cancelUrl = booking.cancel_token ? `${baseUrl}/cancel?token=${booking.cancel_token}` : null;
 

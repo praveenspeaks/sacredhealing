@@ -889,6 +889,25 @@
   <script>
     // ── Service page state ──
     let currentService = null;
+    let currentVariants = null;
+    let selectedVariantIndex = 0;
+
+    function variantLabelText(v) {
+      return v.label || (v.duration === 0 ? 'Variable' : v.duration + ' min');
+    }
+
+    function renderVariantBadge() {
+      if (!currentVariants) return;
+      const v = currentVariants[selectedVariantIndex];
+      document.getElementById('stat-price').textContent = v.price > 0 ? '£' + v.price : 'Free';
+      document.getElementById('stat-price-sub').textContent = variantLabelText(v) + ' session';
+    }
+
+    function selectVariant(i) {
+      selectedVariantIndex = i;
+      renderVariantBadge();
+      if (calSelectedDate) calSelectDate(calSelectedDate);
+    }
 
     // ── Calendar state ──
     const now = new Date();
@@ -938,23 +957,21 @@
 
         // Pricing variants
         const variants = (detail.variants && detail.variants.length) ? detail.variants : null;
-        const priceBadge = document.getElementById('stat-price').parentElement;
+        currentVariants = variants;
+        selectedVariantIndex = 0;
         const sidebarPrice = document.getElementById('sidebar-price');
         const sidebarDur = document.getElementById('sidebar-duration');
 
         if (variants) {
-          priceBadge.innerHTML = variants.map(v => {
-            const vDur = v.duration === 0 ? 'Variable' : v.duration + ' min';
-            return `<div style="display:flex;align-items:baseline;gap:0.4rem;margin-bottom:0.3rem;">
-              <span class="price-val">£${v.price}</span>
-              <span class="price-per">${v.label ? v.label + ' · ' : ''}${vDur}</span>
-            </div>`;
-          }).join('');
-          sidebarPrice.innerHTML = variants.map(v =>
-            `<div style="display:flex;justify-content:space-between;align-items:baseline;font-size:1rem;margin-bottom:0.2rem;">
-              <span style="font-size:0.8rem;color:var(--text-muted);">${v.label || ''}</span>
-              <span style="font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:300;">£${v.price}</span>
-            </div>`
+          renderVariantBadge();
+          sidebarPrice.innerHTML = variants.map((v, i) =>
+            `<label class="service-opt" style="display:flex;margin-bottom:0.4rem;">
+              <input type="radio" name="variant-pick" value="${i}" ${i === 0 ? 'checked' : ''} onchange="selectVariant(${i})" />
+              <span class="service-opt-inner" style="width:100%;justify-content:space-between;">
+                <span>${variantLabelText(v)}</span>
+                <span style="font-family:'Cormorant Garamond',serif;font-size:1.3rem;font-weight:300;">£${v.price}</span>
+              </span>
+            </label>`
           ).join('');
           sidebarDur.textContent = durLabel;
         } else {
@@ -1116,7 +1133,9 @@
         slotsGrid.innerHTML = slots.map(slot => {
           const timeStr = String(slot.time).substring(0, 5);
           const isBooked = slot.is_booked == 1 || slot.is_booked === true;
-          const svcP = currentService ? parseFloat(currentService.price) : 0;
+          const svcP = (currentVariants && currentVariants.length)
+            ? parseFloat(currentVariants[selectedVariantIndex].price) || 0
+            : (currentService ? parseFloat(currentService.price) : 0);
           const price = svcP > 0 ? `£${svcP}` : (slot.price > 0 ? `£${slot.price}` : 'Free');
           const durMins = slot.duration;
           return `
@@ -1143,11 +1162,13 @@
 
     function openCalBooking(slotId, date, time, price, duration) {
       const serviceTitle = currentService ? currentService.title : 'Healing Session';
+      const variant = (currentVariants && currentVariants.length) ? currentVariants[selectedVariantIndex] : null;
+      const fullServiceName = variant ? `${serviceTitle} — ${variantLabelText(variant)}` : serviceTitle;
       const dateObj = new Date(date + 'T12:00:00');
       const dateLabel = dateObj.toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'long' });
 
       document.getElementById('b-slot-id').value = slotId;
-      document.getElementById('b-service').value = serviceTitle;
+      document.getElementById('b-service').value = fullServiceName;
 
       const slotInfo = document.getElementById('modal-slot-info');
       document.getElementById('modal-slot-label').textContent = `${dateLabel} at ${time} · ${price} · ${duration} min`;
@@ -1204,7 +1225,7 @@
       try {
         const body = {
           slot_id: slotId ? parseInt(slotId) : undefined,
-          service: currentService ? currentService.title : 'Healing Session',
+          service: document.getElementById('b-service').value || (currentService ? currentService.title : 'Healing Session'),
           customer_name: name,
           customer_email: email,
           customer_phone: phone,
