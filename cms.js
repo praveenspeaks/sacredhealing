@@ -483,13 +483,14 @@ module.exports = {
     app.post('/api/admin/services', requireAdmin, express.json(), async (req, res) => {
       try {
         const { title, description, features, duration, price, order_num, extra_details, image_url } = req.body;
-        const featureStr = JSON.stringify(Array.isArray(features) ? features : features.split('\\n'));
+        if (!title || !description) return res.status(400).json({ error: 'title and description are required' });
+        const featureStr = JSON.stringify(Array.isArray(features) ? features : (features || '').split('\\n').filter(Boolean));
         const extraStr = extra_details ? JSON.stringify(extra_details) : '{}';
-        await pool.query(
-          'INSERT INTO services (title, description, features, duration, price, order_num, extra_details, image_url) VALUES ($1, $2, $3, $4, $5, $6, $7, $8)',
-          [title, description, featureStr, duration, price, order_num || 0, extraStr, image_url || null]
+        const result = await pool.query(
+          'INSERT INTO services (title, description, features, duration, price, order_num, extra_details, image_url) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id',
+          [title, description, featureStr, duration || 60, price || 0, order_num || 0, extraStr, image_url || null]
         );
-        res.json({ success: true });
+        res.status(201).json({ success: true, id: result.rows[0].id });
       } catch (err) {
         res.status(500).json({ error: 'Failed to add service' });
       }
@@ -498,12 +499,14 @@ module.exports = {
     app.put('/api/admin/services/:id', requireAdmin, express.json(), async (req, res) => {
       try {
         const { title, description, features, duration, price, order_num, extra_details, image_url } = req.body;
-        const featureStr = JSON.stringify(Array.isArray(features) ? features : features.split('\\n'));
+        if (!title || !description) return res.status(400).json({ error: 'title and description are required' });
+        const featureStr = JSON.stringify(Array.isArray(features) ? features : (features || '').split('\\n').filter(Boolean));
         const extraStr = extra_details ? JSON.stringify(extra_details) : '{}';
-        await pool.query(
+        const result = await pool.query(
           'UPDATE services SET title=$1, description=$2, features=$3, duration=$4, price=$5, order_num=$6, extra_details=$7, image_url=$8 WHERE id=$9',
-          [title, description, featureStr, duration, price, order_num || 0, extraStr, image_url || null, req.params.id]
+          [title, description, featureStr, duration || 60, price || 0, order_num || 0, extraStr, image_url || null, req.params.id]
         );
+        if (result.rowCount === 0) return res.status(404).json({ error: 'Service not found' });
         res.json({ success: true });
       } catch (err) {
         res.status(500).json({ error: 'Failed to update service' });
@@ -512,7 +515,8 @@ module.exports = {
 
     app.delete('/api/admin/services/:id', requireAdmin, async (req, res) => {
       try {
-        await pool.query('DELETE FROM services WHERE id=$1', [req.params.id]);
+        const result = await pool.query('DELETE FROM services WHERE id=$1', [req.params.id]);
+        if (result.rowCount === 0) return res.status(404).json({ error: 'Service not found' });
         res.json({ success: true });
       } catch (err) {
         res.status(500).json({ error: 'Failed to delete service' });
@@ -523,11 +527,12 @@ module.exports = {
     app.post('/api/admin/faqs', requireAdmin, express.json(), async (req, res) => {
       try {
         const { question, answer, order_num } = req.body;
-        await pool.query(
-          'INSERT INTO faqs (question, answer, order_num) VALUES ($1, $2, $3)',
+        if (!question || !answer) return res.status(400).json({ error: 'question and answer are required' });
+        const result = await pool.query(
+          'INSERT INTO faqs (question, answer, order_num) VALUES ($1, $2, $3) RETURNING id',
           [question, answer, order_num || 0]
         );
-        res.json({ success: true });
+        res.status(201).json({ success: true, id: result.rows[0].id });
       } catch (err) {
         res.status(500).json({ error: 'Failed to add faq' });
       }
@@ -536,10 +541,12 @@ module.exports = {
     app.put('/api/admin/faqs/:id', requireAdmin, express.json(), async (req, res) => {
       try {
         const { question, answer, order_num } = req.body;
-        await pool.query(
+        if (!question || !answer) return res.status(400).json({ error: 'question and answer are required' });
+        const result = await pool.query(
           'UPDATE faqs SET question=$1, answer=$2, order_num=$3 WHERE id=$4',
           [question, answer, order_num || 0, req.params.id]
         );
+        if (result.rowCount === 0) return res.status(404).json({ error: 'FAQ not found' });
         res.json({ success: true });
       } catch (err) {
         res.status(500).json({ error: 'Failed to update faq' });
@@ -548,7 +555,8 @@ module.exports = {
 
     app.delete('/api/admin/faqs/:id', requireAdmin, async (req, res) => {
       try {
-        await pool.query('DELETE FROM faqs WHERE id=$1', [req.params.id]);
+        const result = await pool.query('DELETE FROM faqs WHERE id=$1', [req.params.id]);
+        if (result.rowCount === 0) return res.status(404).json({ error: 'FAQ not found' });
         res.json({ success: true });
       } catch (err) {
         res.status(500).json({ error: 'Failed to delete faq' });

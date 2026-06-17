@@ -790,7 +790,8 @@
             <label>Answer</label>
             <textarea id="faq-answer" class="form-control" style="height:120px; resize:vertical;"></textarea>
           </div>
-          <button class="btn-primary" onclick="addFaq()">💾 Save FAQ</button>
+          <button class="btn-primary" id="faq-save-btn" onclick="saveFaq()">💾 Save FAQ</button>
+          <button class="btn-outline" id="faq-cancel-btn" style="display:none;margin-top:0.5rem;width:100%;" onclick="cancelFaqEdit()">✕ Cancel Edit</button>
         </div>
 
         <!-- FAQ Table -->

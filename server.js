@@ -720,6 +720,8 @@ app.delete('/api/admin/slots/:id', requireAdmin, async (req, res) => {
     const slot = slotResult.rows[0];
     if (!slot) return res.status(404).json({ error: 'Slot not found' });
     if (slot.is_booked) return res.status(409).json({ error: 'Cannot delete a booked slot. Cancel the booking first.' });
+    // Remove cancelled booking records referencing this slot before deleting (FK constraint)
+    await pool.query("DELETE FROM bookings WHERE slot_id = $1 AND status = 'cancelled'", [id]);
     await pool.query('DELETE FROM slots WHERE id = $1', [id]);
     res.json({ success: true });
   } catch (err) {

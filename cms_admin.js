@@ -395,6 +395,8 @@ async function deleteService(id) {
 }
 
 // ── FAQs ──
+let faqEditingId = null;
+
 async function loadFaqs() {
     try {
         const res = await fetch('/api/content');
@@ -413,12 +415,13 @@ function renderFaqsTable() {
             <td style="max-width:300px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis">${f.answer}</td>
             <td>
                 <div class="td-actions">
+                    <button class="btn-sm btn-primary" onclick="editFaq(${f.id})">Edit</button>
                     <button class="btn-sm btn-danger" onclick="deleteFaq(${f.id})">Delete</button>
                 </div>
             </td>
         </tr>
     `).join('');
-    
+
     document.getElementById('faqs-table').innerHTML = `
     <table>
         <thead><tr><th>Question</th><th>Answer</th><th>Actions</th></tr></thead>
@@ -427,32 +430,73 @@ function renderFaqsTable() {
     `;
 }
 
-async function addFaq() {
+function editFaq(id) {
+    const faq = faqsList.find(f => f.id === id);
+    if (!faq) return;
+    faqEditingId = id;
+    document.getElementById('faq-question').value = faq.question;
+    document.getElementById('faq-answer').value = faq.answer;
+    document.getElementById('faq-save-btn').textContent = '💾 Update FAQ';
+    document.getElementById('faq-cancel-btn').style.display = 'inline-block';
+    document.getElementById('faq-question').focus();
+}
+
+function cancelFaqEdit() {
+    faqEditingId = null;
+    document.getElementById('faq-question').value = '';
+    document.getElementById('faq-answer').value = '';
+    document.getElementById('faq-save-btn').textContent = '💾 Save FAQ';
+    document.getElementById('faq-cancel-btn').style.display = 'none';
+}
+
+async function saveFaq() {
     const question = document.getElementById('faq-question').value.trim();
     const answer = document.getElementById('faq-answer').value.trim();
     if (!question || !answer) return toast('Fill out both fields', 'error');
-    
-    try {
-        const res = await fetch('/api/admin/faqs', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'x-admin-password': adminToken },
-            body: JSON.stringify({ question, answer, order_num: faqsList.length + 1 })
-        });
-        if (res.ok) {
-            toast('FAQ added', 'success');
-            document.getElementById('faq-question').value = '';
-            document.getElementById('faq-answer').value = '';
-            loadFaqs();
-        } else {
-            toast('Failed to add FAQ', 'error');
+
+    if (faqEditingId) {
+        try {
+            const res = await fetch('/api/admin/faqs/' + faqEditingId, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'x-admin-password': adminToken },
+                body: JSON.stringify({ question, answer, order_num: faqsList.findIndex(f => f.id === faqEditingId) + 1 })
+            });
+            if (res.ok) {
+                toast('FAQ updated', 'success');
+                cancelFaqEdit();
+                loadFaqs();
+            } else {
+                const data = await res.json().catch(() => ({}));
+                toast(data.error || 'Failed to update FAQ', 'error');
+            }
+        } catch(err) {
+            toast('Error updating FAQ', 'error');
         }
-    } catch(err) {
-        toast('Error adding FAQ', 'error');
+    } else {
+        try {
+            const res = await fetch('/api/admin/faqs', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-admin-password': adminToken },
+                body: JSON.stringify({ question, answer, order_num: faqsList.length + 1 })
+            });
+            if (res.ok) {
+                toast('FAQ added', 'success');
+                document.getElementById('faq-question').value = '';
+                document.getElementById('faq-answer').value = '';
+                loadFaqs();
+            } else {
+                const data = await res.json().catch(() => ({}));
+                toast(data.error || 'Failed to add FAQ', 'error');
+            }
+        } catch(err) {
+            toast('Error adding FAQ', 'error');
+        }
     }
 }
 
 async function deleteFaq(id) {
     if (!confirm('Delete this FAQ?')) return;
+    if (faqEditingId === id) cancelFaqEdit();
     try {
         const res = await fetch('/api/admin/faqs/' + id, { method: 'DELETE', headers: { 'x-admin-password': adminToken } });
         if (res.ok) {

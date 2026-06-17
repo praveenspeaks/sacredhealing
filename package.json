@@ -16,6 +16,7 @@
     "multer": "^2.1.1",
     "nodemailer": "^8.0.5",
     "pg": "^8.21.0",
+    "resolve": "^1.22.12",
     "stripe": "^22.0.0"
   },
   "devDependencies": {

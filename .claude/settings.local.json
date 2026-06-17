@@ -42,7 +42,16 @@
       "PowerShell(Get-Command pg_config -ErrorAction SilentlyContinue)",
       "PowerShell(Get-Command choco -ErrorAction SilentlyContinue)",
       "PowerShell(Get-Command scoop -ErrorAction SilentlyContinue)",
-      "PowerShell(Get-Command winget -ErrorAction SilentlyContinue)"
+      "PowerShell(Get-Command winget -ErrorAction SilentlyContinue)",
+      "Bash(npx jest *)",
+      "Bash(node_modules/.bin/jest --forceExit)",
+      "PowerShell(Set-Location \"d:\\\\My Professional Projects\\\\sacredhealing\"; $bytes = [System.IO.File]::ReadAllBytes\\(\"jest.setup.js\"\\); Write-Host \"File size: $\\($bytes.Length\\) bytes\"; Write-Host \"First 10 bytes: $\\($bytes[0..9] -join ', '\\)\")",
+      "PowerShell(Set-Location \"d:\\\\My Professional Projects\\\\sacredhealing\"; $file = \"node_modules\\\\jest-circus\\\\runner.js\"; Test-Path $file; \\(Get-Item $file\\).Length; Get-Content $file -TotalCount 3)",
+      "PowerShell(yarn --version 2>&1)",
+      "PowerShell(pnpm --version 2>&1)",
+      "PowerShell(Set-Location \"d:\\\\My Professional Projects\\\\sacredhealing\"; \\(Get-ChildItem \"node_modules\\\\pg\" -ErrorAction SilentlyContinue | Measure-Object\\).Count; \\(Get-ChildItem \"node_modules\\\\resolve\" -ErrorAction SilentlyContinue | Measure-Object\\).Count)",
+      "PowerShell(docker stop sacredhealing-test-db)",
+      "PowerShell(docker rm sacredhealing-test-db)"
     ]
   }
 }

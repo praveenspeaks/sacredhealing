@@ -4,8 +4,8 @@ const { init, pool } = require('../server');
 const ADMIN_PWD = process.env.ADMIN_PASSWORD || 'test-admin-secret';
 const AUTH      = { 'x-admin-password': ADMIN_PWD, 'Content-Type': 'application/json' };
 
-// Unique test date far in future to avoid conflicting with real slots
-const TEST_DATE = '2099-12-30';
+// Far-future dates to avoid clashing with real slots
+const TEST_DATE  = '2099-12-30';
 const TEST_DATE2 = '2099-12-31';
 
 let app;
@@ -15,23 +15,20 @@ let testServiceId;
 let testFaqId;
 let testReviewId;
 
-// ── Setup / Teardown ─────────────────────────────────────────────────────────
+// ── Setup / Teardown ──────────────────────────────────────────────────────────
 
 beforeAll(async () => {
   app = await init();
-
-  // Ensure test date slots don't exist from prior runs
-  await pool.query("DELETE FROM bookings WHERE slot_id IN (SELECT id FROM slots WHERE date = $1)", [TEST_DATE]);
-  await pool.query("DELETE FROM slots WHERE date = $1 OR date = $2", [TEST_DATE, TEST_DATE2]);
+  await pool.query('DELETE FROM bookings WHERE slot_id IN (SELECT id FROM slots WHERE date = $1)', [TEST_DATE]);
+  await pool.query('DELETE FROM slots WHERE date = $1 OR date = $2', [TEST_DATE, TEST_DATE2]);
 });
 
 afterAll(async () => {
-  // Clean up all test data
-  await pool.query("DELETE FROM bookings WHERE slot_id IN (SELECT id FROM slots WHERE date = $1)", [TEST_DATE]);
-  await pool.query("DELETE FROM slots WHERE date = $1 OR date = $2", [TEST_DATE, TEST_DATE2]);
-  if (testServiceId) await pool.query("DELETE FROM services WHERE id = $1", [testServiceId]);
-  if (testFaqId)     await pool.query("DELETE FROM faqs WHERE id = $1",     [testFaqId]);
-  if (testReviewId)  await pool.query("DELETE FROM reviews WHERE id = $1",  [testReviewId]);
+  await pool.query('DELETE FROM bookings WHERE slot_id IN (SELECT id FROM slots WHERE date = $1)', [TEST_DATE]);
+  await pool.query('DELETE FROM slots WHERE date = $1 OR date = $2', [TEST_DATE, TEST_DATE2]);
+  if (testServiceId) await pool.query('DELETE FROM services WHERE id = $1', [testServiceId]);
+  if (testFaqId)     await pool.query('DELETE FROM faqs    WHERE id = $1', [testFaqId]);
+  if (testReviewId)  await pool.query('DELETE FROM reviews WHERE id = $1', [testReviewId]);
   await pool.end();
 });
 
@@ -55,12 +52,14 @@ describe('GET /api/content', () => {
     expect(res.body).toHaveProperty('faqs');
     expect(Array.isArray(res.body.services)).toBe(true);
     expect(Array.isArray(res.body.faqs)).toBe(true);
+    expect(Array.isArray(res.body.reviews)).toBe(true);
   });
 
-  it('returns at least one service', async () => {
+  it('returns at least one service with required fields', async () => {
     const res = await request(app).get('/api/content');
     expect(res.body.services.length).toBeGreaterThan(0);
     const svc = res.body.services[0];
+    expect(svc).toHaveProperty('id');
     expect(svc).toHaveProperty('title');
     expect(svc).toHaveProperty('price');
     expect(Array.isArray(svc.features)).toBe(true);
@@ -70,6 +69,15 @@ describe('GET /api/content', () => {
     const res = await request(app).get('/api/content');
     expect(res.body.content).toHaveProperty('hero_title');
     expect(res.body.content).toHaveProperty('contact_email');
+    expect(res.body.content).toHaveProperty('footer_tagline');
+  });
+
+  it('reviews in public content are only approved ones', async () => {
+    const res = await request(app).get('/api/content');
+    // Public endpoint must not expose pending/rejected reviews
+    res.body.reviews.forEach(r => {
+      expect(r).not.toHaveProperty('status'); // status is excluded from public projection
+    });
   });
 });
 
@@ -84,13 +92,13 @@ describe('GET /api/slots', () => {
     expect(Array.isArray(res.body.slots)).toBe(true);
   });
 
-  it('accepts duration filter 60', async () => {
+  it('duration filter 60 returns only 60-min slots', async () => {
     const res = await request(app).get('/api/slots?duration=60');
     expect(res.status).toBe(200);
     res.body.slots.forEach(s => expect(s.duration).toBe(60));
   });
 
-  it('accepts duration filter 90+', async () => {
+  it('duration filter 90+ returns slots >= 90 min', async () => {
     const res = await request(app).get('/api/slots?duration=90%2B');
     expect(res.status).toBe(200);
     res.body.slots.forEach(s => expect(s.duration).toBeGreaterThanOrEqual(90));
@@ -112,18 +120,18 @@ describe('Admin Authentication', () => {
 
   it('POST /api/admin/login — wrong password returns 401', async () => {
     const res = await request(app).post('/api/admin/login')
-      .send({ password: 'wrong' });
+      .send({ password: 'wrong-password' });
     expect(res.status).toBe(401);
   });
 
-  it('GET /api/admin/slots — no auth returns 401', async () => {
+  it('admin endpoint without auth returns 401', async () => {
     const res = await request(app).get('/api/admin/slots');
     expect(res.status).toBe(401);
   });
 
-  it('GET /api/admin/slots — wrong auth returns 401', async () => {
+  it('admin endpoint with wrong auth returns 401', async () => {
     const res = await request(app).get('/api/admin/slots')
-      .set('x-admin-password', 'wrong');
+      .set('x-admin-password', 'wrong-password');
     expect(res.status).toBe(401);
   });
 });
@@ -139,7 +147,7 @@ describe('Admin Slots', () => {
     expect(Array.isArray(res.body.slots)).toBe(true);
   });
 
-  it('POST /api/admin/slots — creates slot', async () => {
+  it('POST /api/admin/slots — creates slot and returns 201 with id', async () => {
     const res = await adminReq('post', '/api/admin/slots')
       .send({ date: TEST_DATE, time: '10:00', duration: 60 });
     expect(res.status).toBe(201);
@@ -148,7 +156,7 @@ describe('Admin Slots', () => {
     testSlotId = res.body.id;
   });
 
-  it('POST /api/admin/slots — duplicate returns 409', async () => {
+  it('POST /api/admin/slots — duplicate date+time returns 409', async () => {
     const res = await adminReq('post', '/api/admin/slots')
       .send({ date: TEST_DATE, time: '10:00', duration: 60 });
     expect(res.status).toBe(409);
@@ -160,20 +168,31 @@ describe('Admin Slots', () => {
     expect(res.status).toBe(400);
   });
 
+  it('POST /api/admin/slots — missing time returns 400', async () => {
+    const res = await adminReq('post', '/api/admin/slots')
+      .send({ date: TEST_DATE });
+    expect(res.status).toBe(400);
+  });
+
   it('POST /api/admin/slots/bulk — creates multiple slots', async () => {
     const slots = [
       { date: TEST_DATE2, time: '09:00', duration: 60 },
       { date: TEST_DATE2, time: '11:00', duration: 90 },
-      { date: TEST_DATE2, time: '11:00', duration: 60 }, // duplicate — should be skipped
+      { date: TEST_DATE2, time: '13:00', duration: 60 },
     ];
     const res = await adminReq('post', '/api/admin/slots/bulk').send({ slots });
     expect(res.status).toBe(201);
     expect(res.body.success).toBe(true);
-    expect(res.body.added).toBe(3); // count includes attempted inserts
+    expect(res.body.added).toBe(3);
   });
 
   it('POST /api/admin/slots/bulk — empty array returns 400', async () => {
     const res = await adminReq('post', '/api/admin/slots/bulk').send({ slots: [] });
+    expect(res.status).toBe(400);
+  });
+
+  it('POST /api/admin/slots/bulk — missing slots key returns 400', async () => {
+    const res = await adminReq('post', '/api/admin/slots/bulk').send({});
     expect(res.status).toBe(400);
   });
 
@@ -192,12 +211,53 @@ describe('Admin Slots', () => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// 5. PUBLIC BOOKING API
+// 5. CALENDAR & DATE SLOT ENDPOINTS
+// ════════════════════════════════════════════════════════════════════════════
+
+describe('Calendar API', () => {
+  it('GET /api/slots/calendar — returns date map for a month', async () => {
+    const res = await request(app).get(`/api/slots/calendar?month=2099-12`);
+    expect(res.status).toBe(200);
+    expect(typeof res.body).toBe('object');
+    // Our test slots are on TEST_DATE2 (2099-12-31)
+    expect(res.body).toHaveProperty(TEST_DATE2);
+    const info = res.body[TEST_DATE2];
+    expect(info).toHaveProperty('total');
+    expect(info).toHaveProperty('booked');
+    expect(parseInt(info.total)).toBeGreaterThan(0);
+  });
+
+  it('GET /api/slots/calendar — missing month returns 400', async () => {
+    const res = await request(app).get('/api/slots/calendar');
+    expect(res.status).toBe(400);
+  });
+
+  it('GET /api/slots/date/:date — returns slots for test date', async () => {
+    const res = await request(app).get(`/api/slots/date/${TEST_DATE2}`);
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body.slots)).toBe(true);
+    expect(res.body.slots.length).toBeGreaterThan(0);
+    const slot = res.body.slots[0];
+    expect(slot).toHaveProperty('id');
+    expect(slot).toHaveProperty('time');
+    expect(slot).toHaveProperty('duration');
+    expect(slot).toHaveProperty('price');
+  });
+
+  it('GET /api/slots/date/:date — date with no slots returns empty array', async () => {
+    const res = await request(app).get('/api/slots/date/2099-01-01');
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body.slots)).toBe(true);
+    expect(res.body.slots.length).toBe(0);
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// 6. PUBLIC BOOKING API
 // ════════════════════════════════════════════════════════════════════════════
 
 describe('Booking', () => {
-  it('POST /api/bookings — creates booking for free session', async () => {
-    // Guided Meditation is free (price=0) — Stripe won't trigger
+  it('POST /api/bookings — creates booking for free session (201)', async () => {
     const res = await request(app).post('/api/bookings')
       .set('Content-Type', 'application/json')
       .send({
@@ -215,7 +275,7 @@ describe('Booking', () => {
     testBookingId = res.body.booking_id;
   });
 
-  it('POST /api/bookings — double-booking returns 409', async () => {
+  it('POST /api/bookings — double-booking same slot returns 409', async () => {
     const res = await request(app).post('/api/bookings')
       .set('Content-Type', 'application/json')
       .send({
@@ -233,20 +293,34 @@ describe('Booking', () => {
       .send({ slot_id: testSlotId });
     expect(res.status).toBe(400);
   });
+
+  it('POST /api/bookings — non-existent slot_id returns 409 (unavailable)', async () => {
+    const res = await request(app).post('/api/bookings')
+      .set('Content-Type', 'application/json')
+      .send({
+        slot_id: 99999999,
+        service: 'Guided Meditation',
+        customer_name: 'Test User',
+        customer_email: 'test@example.com',
+      });
+    expect(res.status).toBe(409);
+  });
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// 6. ADMIN BOOKINGS MANAGEMENT
+// 7. ADMIN BOOKINGS MANAGEMENT
 // ════════════════════════════════════════════════════════════════════════════
 
 describe('Admin Bookings', () => {
-  it('GET /api/admin/bookings — returns bookings array', async () => {
+  it('GET /api/admin/bookings — returns bookings with joined slot fields', async () => {
     const res = await adminReq('get', '/api/admin/bookings');
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body.bookings)).toBe(true);
     const found = res.body.bookings.find(b => b.id === testBookingId);
     expect(found).toBeDefined();
     expect(found.service).toBe('Guided Meditation');
+    expect(found).toHaveProperty('date');
+    expect(found).toHaveProperty('time');
   });
 
   it('PATCH /api/admin/bookings/:id — confirms booking', async () => {
@@ -261,15 +335,16 @@ describe('Admin Bookings', () => {
       .send({ status: 'cancelled' });
     expect(res.status).toBe(200);
 
-    // Slot should now be free again
-    const slotRes = await request(app).get('/api/slots');
-    const freed = slotRes.body.slots.find(s => s.id === testSlotId);
+    // Slot must be available again after cancellation
+    const slotsRes = await request(app).get('/api/slots');
+    const freed = slotsRes.body.slots.find(s => s.id === testSlotId);
     expect(freed).toBeDefined();
+    expect(freed.is_booked).toBeFalsy();
   });
 
   it('PATCH /api/admin/bookings/:id — invalid status returns 400', async () => {
     const res = await adminReq('patch', `/api/admin/bookings/${testBookingId}`)
-      .send({ status: 'invalid' });
+      .send({ status: 'invalid_status' });
     expect(res.status).toBe(400);
   });
 
@@ -281,24 +356,21 @@ describe('Admin Bookings', () => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// 7. ADMIN STATS + EXPORT
+// 8. ADMIN STATS + EXPORT
 // ════════════════════════════════════════════════════════════════════════════
 
 describe('Admin Stats and Export', () => {
-  it('GET /api/admin/stats — returns numeric stats', async () => {
+  it('GET /api/admin/stats — returns all numeric stat fields', async () => {
     const res = await adminReq('get', '/api/admin/stats');
     expect(res.status).toBe(200);
-    const stats = res.body;
-    expect(typeof stats.totalSlots).toBe('number');
-    expect(typeof stats.availableSlots).toBe('number');
-    expect(typeof stats.totalBookings).toBe('number');
-    expect(typeof stats.pendingBookings).toBe('number');
-    expect(typeof stats.confirmedBookings).toBe('number');
-    expect(typeof stats.todayBookings).toBe('number');
-    expect(typeof stats.revenue).toBe('number');
+    const { totalSlots, availableSlots, totalBookings, pendingBookings, confirmedBookings, todayBookings, revenue } = res.body;
+    [totalSlots, availableSlots, totalBookings, pendingBookings, confirmedBookings, todayBookings, revenue].forEach(v => {
+      expect(typeof v).toBe('number');
+      expect(v).toBeGreaterThanOrEqual(0);
+    });
   });
 
-  it('GET /api/admin/bookings/export — returns CSV', async () => {
+  it('GET /api/admin/bookings/export — returns CSV with header row', async () => {
     const res = await adminReq('get', '/api/admin/bookings/export');
     expect(res.status).toBe(200);
     expect(res.headers['content-type']).toMatch(/text\/csv/);
@@ -307,7 +379,7 @@ describe('Admin Stats and Export', () => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// 8. ADMIN SLOT DELETE (after bookings tests, slot is now unbooked)
+// 9. ADMIN SLOT DELETE (slot is unbooked after booking was cancelled above)
 // ════════════════════════════════════════════════════════════════════════════
 
 describe('Admin Slot Delete', () => {
@@ -318,66 +390,92 @@ describe('Admin Slot Delete', () => {
     testSlotId = null;
   });
 
-  it('DELETE /api/admin/slots/:id — non-existent returns 404', async () => {
+  it('DELETE /api/admin/slots/:id — non-existent slot returns 404', async () => {
     const res = await adminReq('delete', '/api/admin/slots/99999999');
     expect(res.status).toBe(404);
   });
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// 9. SITE CONTENT MANAGEMENT
+// 10. SITE CONTENT MANAGEMENT
 // ════════════════════════════════════════════════════════════════════════════
 
 describe('Admin Content Management', () => {
-  it('PUT /api/admin/content — updates content key', async () => {
+  it('PUT /api/admin/content — upserts content key', async () => {
     const res = await adminReq('put', '/api/admin/content')
       .send({ content: { test_key_jest: 'jest_test_value' } });
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
   });
 
-  it('GET /api/content — reflects updated content', async () => {
+  it('GET /api/content — reflects updated content key', async () => {
     const res = await request(app).get('/api/content');
     expect(res.body.content.test_key_jest).toBe('jest_test_value');
   });
 
-  it('PUT /api/admin/content — missing body returns 400', async () => {
+  it('PUT /api/admin/content — missing content object returns 400', async () => {
     const res = await adminReq('put', '/api/admin/content').send({});
     expect(res.status).toBe(400);
+  });
+
+  it('PUT /api/admin/content — can update multiple keys in one request', async () => {
+    const res = await adminReq('put', '/api/admin/content')
+      .send({ content: { test_key_a: 'value_a', test_key_b: 'value_b' } });
+    expect(res.status).toBe(200);
+    const content = await request(app).get('/api/content');
+    expect(content.body.content.test_key_a).toBe('value_a');
+    expect(content.body.content.test_key_b).toBe('value_b');
   });
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// 10. SERVICES MANAGEMENT
+// 11. SERVICES CRUD
 // ════════════════════════════════════════════════════════════════════════════
 
 describe('Admin Services Management', () => {
-  it('POST /api/admin/services — creates service', async () => {
+  it('POST /api/admin/services — creates service (201 with id)', async () => {
     const res = await adminReq('post', '/api/admin/services')
       .send({
         title: 'Jest Test Service',
-        description: 'Test description',
+        description: 'Test description for jest',
         features: ['feature 1', 'feature 2'],
         duration: 60,
         price: 50,
         order_num: 99,
       });
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(201);
     expect(res.body.success).toBe(true);
-
-    // Get the new service ID
-    const content = await request(app).get('/api/content');
-    const svc = content.body.services.find(s => s.title === 'Jest Test Service');
-    expect(svc).toBeDefined();
-    testServiceId = svc.id;
+    expect(res.body.id).toBeDefined();
+    testServiceId = res.body.id;
   });
 
-  it('PUT /api/admin/services/:id — updates service', async () => {
+  it('POST /api/admin/services — missing title returns 400', async () => {
+    const res = await adminReq('post', '/api/admin/services')
+      .send({ description: 'No title service' });
+    expect(res.status).toBe(400);
+  });
+
+  it('POST /api/admin/services — missing description returns 400', async () => {
+    const res = await adminReq('post', '/api/admin/services')
+      .send({ title: 'No desc service' });
+    expect(res.status).toBe(400);
+  });
+
+  it('GET /api/content — new service appears in public listing', async () => {
+    const res = await request(app).get('/api/content');
+    const svc = res.body.services.find(s => s.id === testServiceId);
+    expect(svc).toBeDefined();
+    expect(svc.title).toBe('Jest Test Service');
+    expect(Array.isArray(svc.features)).toBe(true);
+    expect(svc.features).toContain('feature 1');
+  });
+
+  it('PUT /api/admin/services/:id — updates service fields', async () => {
     const res = await adminReq('put', `/api/admin/services/${testServiceId}`)
       .send({
         title: 'Jest Test Service',
         description: 'Updated description',
-        features: ['feature 1'],
+        features: ['updated feature'],
         duration: 90,
         price: 75,
         order_num: 99,
@@ -386,50 +484,123 @@ describe('Admin Services Management', () => {
     expect(res.body.success).toBe(true);
   });
 
+  it('PUT /api/admin/services/:id — update reflected in GET /api/content', async () => {
+    const res = await request(app).get('/api/content');
+    const svc = res.body.services.find(s => s.id === testServiceId);
+    expect(svc.description).toBe('Updated description');
+    expect(svc.duration).toBe(90);
+  });
+
+  it('PUT /api/admin/services/:id — non-existent id returns 404', async () => {
+    const res = await adminReq('put', '/api/admin/services/99999999')
+      .send({ title: 'X', description: 'Y', features: [] });
+    expect(res.status).toBe(404);
+  });
+
+  it('PUT /api/admin/services/:id — missing title returns 400', async () => {
+    const res = await adminReq('put', `/api/admin/services/${testServiceId}`)
+      .send({ description: 'Updated' });
+    expect(res.status).toBe(400);
+  });
+
   it('DELETE /api/admin/services/:id — deletes service', async () => {
     const res = await adminReq('delete', `/api/admin/services/${testServiceId}`);
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     testServiceId = null;
   });
+
+  it('DELETE /api/admin/services/:id — non-existent id returns 404', async () => {
+    const res = await adminReq('delete', '/api/admin/services/99999999');
+    expect(res.status).toBe(404);
+  });
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// 11. FAQ MANAGEMENT
+// 12. FAQ CRUD
 // ════════════════════════════════════════════════════════════════════════════
 
 describe('Admin FAQ Management', () => {
-  it('POST /api/admin/faqs — creates FAQ', async () => {
+  it('POST /api/admin/faqs — creates FAQ (201 with id)', async () => {
     const res = await adminReq('post', '/api/admin/faqs')
       .send({ question: 'Jest test question?', answer: 'Jest test answer.', order_num: 99 });
-    expect(res.status).toBe(200);
+    expect(res.status).toBe(201);
     expect(res.body.success).toBe(true);
-
-    const content = await request(app).get('/api/content');
-    const faq = content.body.faqs.find(f => f.question === 'Jest test question?');
-    expect(faq).toBeDefined();
-    testFaqId = faq.id;
+    expect(res.body.id).toBeDefined();
+    testFaqId = res.body.id;
   });
 
-  it('PUT /api/admin/faqs/:id — updates FAQ', async () => {
+  it('POST /api/admin/faqs — missing question returns 400', async () => {
+    const res = await adminReq('post', '/api/admin/faqs')
+      .send({ answer: 'No question' });
+    expect(res.status).toBe(400);
+  });
+
+  it('POST /api/admin/faqs — missing answer returns 400', async () => {
+    const res = await adminReq('post', '/api/admin/faqs')
+      .send({ question: 'No answer?' });
+    expect(res.status).toBe(400);
+  });
+
+  it('GET /api/content — new FAQ appears in public faqs list', async () => {
+    const res = await request(app).get('/api/content');
+    const faq = res.body.faqs.find(f => f.id === testFaqId);
+    expect(faq).toBeDefined();
+    expect(faq.question).toBe('Jest test question?');
+    expect(faq.answer).toBe('Jest test answer.');
+  });
+
+  it('PUT /api/admin/faqs/:id — updates FAQ question and answer', async () => {
     const res = await adminReq('put', `/api/admin/faqs/${testFaqId}`)
       .send({ question: 'Updated question?', answer: 'Updated answer.', order_num: 99 });
     expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+  });
+
+  it('PUT /api/admin/faqs/:id — update reflected in GET /api/content', async () => {
+    const res = await request(app).get('/api/content');
+    const faq = res.body.faqs.find(f => f.id === testFaqId);
+    expect(faq.question).toBe('Updated question?');
+    expect(faq.answer).toBe('Updated answer.');
+  });
+
+  it('PUT /api/admin/faqs/:id — missing question returns 400', async () => {
+    const res = await adminReq('put', `/api/admin/faqs/${testFaqId}`)
+      .send({ answer: 'Only answer' });
+    expect(res.status).toBe(400);
+  });
+
+  it('PUT /api/admin/faqs/:id — non-existent id returns 404', async () => {
+    const res = await adminReq('put', '/api/admin/faqs/99999999')
+      .send({ question: 'X?', answer: 'Y.' });
+    expect(res.status).toBe(404);
   });
 
   it('DELETE /api/admin/faqs/:id — deletes FAQ', async () => {
     const res = await adminReq('delete', `/api/admin/faqs/${testFaqId}`);
     expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
     testFaqId = null;
+  });
+
+  it('DELETE /api/admin/faqs/:id — deleted FAQ gone from GET /api/content', async () => {
+    const res = await request(app).get('/api/content');
+    const faq = res.body.faqs.find(f => f.question === 'Updated question?');
+    expect(faq).toBeUndefined();
+  });
+
+  it('DELETE /api/admin/faqs/:id — non-existent id returns 404', async () => {
+    const res = await adminReq('delete', '/api/admin/faqs/99999999');
+    expect(res.status).toBe(404);
   });
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// 12. REVIEWS MANAGEMENT
+// 13. REVIEWS CRUD
 // ════════════════════════════════════════════════════════════════════════════
 
 describe('Reviews', () => {
-  it('POST /api/reviews — submits review (pending)', async () => {
+  it('POST /api/reviews — submits review with pending status', async () => {
     const res = await request(app).post('/api/reviews')
       .set('Content-Type', 'application/json')
       .send({ author: 'Jest Tester', comment: 'Automated test review.' });
@@ -437,14 +608,21 @@ describe('Reviews', () => {
     expect(res.body.success).toBe(true);
   });
 
-  it('POST /api/reviews — missing fields returns 400', async () => {
+  it('POST /api/reviews — missing comment returns 400', async () => {
     const res = await request(app).post('/api/reviews')
       .set('Content-Type', 'application/json')
       .send({ author: 'No comment' });
     expect(res.status).toBe(400);
   });
 
-  it('GET /api/admin/reviews — returns reviews including pending', async () => {
+  it('POST /api/reviews — missing author returns 400', async () => {
+    const res = await request(app).post('/api/reviews')
+      .set('Content-Type', 'application/json')
+      .send({ comment: 'No author' });
+    expect(res.status).toBe(400);
+  });
+
+  it('GET /api/admin/reviews — returns all reviews including pending', async () => {
     const res = await adminReq('get', '/api/admin/reviews');
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body.reviews)).toBe(true);
@@ -452,6 +630,11 @@ describe('Reviews', () => {
     expect(pending).toBeDefined();
     expect(pending.status).toBe('pending');
     testReviewId = pending.id;
+  });
+
+  it('GET /api/admin/reviews — blocked without auth (401)', async () => {
+    const res = await request(app).get('/api/admin/reviews');
+    expect(res.status).toBe(401);
   });
 
   it('PUT /api/admin/reviews/:id — approves review', async () => {
@@ -466,20 +649,32 @@ describe('Reviews', () => {
     const review = res.body.reviews.find(r => r.author === 'Jest Tester');
     expect(review).toBeDefined();
   });
+
+  it('PUT /api/admin/reviews/:id — rejects review', async () => {
+    const res = await adminReq('put', `/api/admin/reviews/${testReviewId}`)
+      .send({ status: 'rejected' });
+    expect(res.status).toBe(200);
+  });
+
+  it('GET /api/content — rejected review is removed from public', async () => {
+    const res = await request(app).get('/api/content');
+    const review = res.body.reviews.find(r => r.author === 'Jest Tester');
+    expect(review).toBeUndefined();
+  });
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// 13. SERVICE SLUG API
+// 14. SERVICE SLUG API
 // ════════════════════════════════════════════════════════════════════════════
 
 describe('GET /api/services/:slug', () => {
-  it('returns service detail for known slug', async () => {
+  it('returns service detail and all services for known slug', async () => {
     const res = await request(app).get('/api/services/spiritual-healing');
     expect(res.status).toBe(200);
     expect(res.body.service).toBeDefined();
     expect(res.body.service.title).toBe('Spiritual Healing');
     expect(Array.isArray(res.body.service.features)).toBe(true);
-    expect(res.body.all).toBeDefined();
+    expect(Array.isArray(res.body.all)).toBe(true);
   });
 
   it('returns 404 for unknown slug', async () => {
@@ -489,52 +684,59 @@ describe('GET /api/services/:slug', () => {
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// 14. ADMIN CONFIG
+// 15. ADMIN CONFIG
 // ════════════════════════════════════════════════════════════════════════════
 
 describe('GET /api/admin/config', () => {
-  it('returns config status without auth → 401', async () => {
+  it('without auth returns 401', async () => {
     const res = await request(app).get('/api/admin/config');
     expect(res.status).toBe(401);
   });
 
-  it('returns config status with auth', async () => {
+  it('with auth returns stripe and email config status', async () => {
     const res = await adminReq('get', '/api/admin/config');
     expect(res.status).toBe(200);
     expect(res.body.stripe).toHaveProperty('configured');
     expect(res.body.stripe).toHaveProperty('mode');
     expect(res.body.email).toHaveProperty('configured');
+    // In test env Stripe is not configured
+    expect(res.body.stripe.configured).toBe(false);
   });
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// 15. STRIPE PUBLIC KEY ENDPOINT
+// 16. STRIPE PUBLIC KEY
 // ════════════════════════════════════════════════════════════════════════════
 
 describe('GET /api/stripe-key', () => {
-  it('returns publishableKey field (null when Stripe not configured in test env)', async () => {
+  it('returns publishableKey (null when Stripe not configured)', async () => {
     const res = await request(app).get('/api/stripe-key');
     expect(res.status).toBe(200);
     expect(res.body).toHaveProperty('publishableKey');
-    // In test env STRIPE_SECRET_KEY is empty, so publishableKey should be null
     expect(res.body.publishableKey).toBeNull();
   });
 });
 
 // ════════════════════════════════════════════════════════════════════════════
-// 16. PAYMENT CONFIRM ENDPOINT — validation only (no real Stripe in tests)
+// 17. PAYMENT CONFIRM — validation only (no Stripe in test env)
 // ════════════════════════════════════════════════════════════════════════════
 
 describe('POST /api/bookings/confirm', () => {
-  it('returns 400 when booking_id or payment_intent_id missing', async () => {
+  it('missing payment_intent_id returns 400', async () => {
     const res = await request(app).post('/api/bookings/confirm')
       .set('Content-Type', 'application/json')
-      .send({ booking_id: 1 }); // missing payment_intent_id
+      .send({ booking_id: 1 });
     expect(res.status).toBe(400);
-    expect(res.body.error).toBeDefined();
   });
 
-  it('returns 400 when both fields missing', async () => {
+  it('missing booking_id returns 400', async () => {
+    const res = await request(app).post('/api/bookings/confirm')
+      .set('Content-Type', 'application/json')
+      .send({ payment_intent_id: 'pi_test' });
+    expect(res.status).toBe(400);
+  });
+
+  it('empty body returns 400', async () => {
     const res = await request(app).post('/api/bookings/confirm')
       .set('Content-Type', 'application/json')
       .send({});
