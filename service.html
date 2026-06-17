@@ -143,6 +143,10 @@
 
     .content-block-title em { font-style: italic; color: var(--olive); }
     .content-block p { color: var(--text-body); line-height: 1.9; font-size: 0.98rem; margin-bottom: 1rem; }
+    .content-block .rich-list { margin: 0.5rem 0 1rem; }
+    .content-block .rich-list li { color: var(--text-body); font-size: 0.97rem; line-height: 1.8; }
+    .faq-answer p { margin-bottom: 0.6rem; }
+    .faq-answer p:last-child { margin-bottom: 0; }
 
     .expect-list {
       list-style: none;
@@ -708,6 +712,58 @@
       </div>
     </section>
 
+    <!-- ── Content + Sidebar ── -->
+    <section class="service-content">
+      <div class="container">
+        <div class="service-content-grid">
+
+          <div>
+            <div class="content-block">
+              <h2 class="content-block-title">About This <em>Service</em></h2>
+              <div id="long-description"><p>Loading…</p></div>
+            </div>
+
+            <div class="content-block">
+              <h2 class="content-block-title">What to <em>Expect</em></h2>
+              <ol class="expect-list" id="expect-list"></ol>
+            </div>
+
+            <div class="content-block">
+              <h2 class="content-block-title">What's <em>Included</em></h2>
+              <ul class="features-bullet-list" id="features-grid"></ul>
+            </div>
+          </div>
+
+          <aside class="service-sidebar">
+            <div class="sidebar-card">
+              <div class="sidebar-card-title">Book Your Session</div>
+              <div class="sidebar-book-price" id="sidebar-price">—</div>
+              <div class="sidebar-book-duration" id="sidebar-duration">—</div>
+              <button class="sidebar-book-btn" onclick="scrollToCalendar()">Reserve Your Spot ✦</button>
+              <button class="sidebar-trial-btn" onclick="openClarityModal()">🕐 Try a Free 15-min Clarity Call</button>
+            </div>
+
+            <div class="sidebar-card">
+              <div class="sidebar-card-title">Our Promise</div>
+              <ul class="guarantee-list">
+                <li><span>✦</span><span>100% Confidential Sessions</span></li>
+                <li><span>🌿</span><span>Safe, Non-Judgmental Space</span></li>
+                <li><span>🌐</span><span>In-Person & Remote Available</span></li>
+                <li><span>✨</span><span>Divinely Guided Practice</span></li>
+                <li><span>📋</span><span>UK Law Compliant</span></li>
+              </ul>
+            </div>
+
+            <div class="sidebar-card">
+              <div class="sidebar-card-title">Other Services</div>
+              <div id="related-services" style="display:flex;flex-direction:column;gap:0.75rem;"></div>
+            </div>
+          </aside>
+
+        </div>
+      </div>
+    </section>
+
     <!-- ── Calendar Booking ── -->
     <section id="cal-booking">
       <div class="container">
@@ -756,58 +812,6 @@
             </div>
             <p class="cal-tz-note">🕐 London time (GMT/BST) · Tap a time to book</p>
           </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ── Content + Sidebar ── -->
-    <section class="service-content">
-      <div class="container">
-        <div class="service-content-grid">
-
-          <div>
-            <div class="content-block">
-              <h2 class="content-block-title">About This <em>Service</em></h2>
-              <div id="long-description"><p>Loading…</p></div>
-            </div>
-
-            <div class="content-block">
-              <h2 class="content-block-title">What to <em>Expect</em></h2>
-              <ol class="expect-list" id="expect-list"></ol>
-            </div>
-
-            <div class="content-block">
-              <h2 class="content-block-title">What's <em>Included</em></h2>
-              <div class="features-grid" id="features-grid"></div>
-            </div>
-          </div>
-
-          <aside class="service-sidebar">
-            <div class="sidebar-card">
-              <div class="sidebar-card-title">Book Your Session</div>
-              <div class="sidebar-book-price" id="sidebar-price">—</div>
-              <div class="sidebar-book-duration" id="sidebar-duration">—</div>
-              <button class="sidebar-book-btn" onclick="scrollToCalendar()">Reserve Your Spot ✦</button>
-              <button class="sidebar-trial-btn" onclick="openClarityModal()">🕐 Try a Free 15-min Clarity Call</button>
-            </div>
-
-            <div class="sidebar-card">
-              <div class="sidebar-card-title">Our Promise</div>
-              <ul class="guarantee-list">
-                <li><span>✦</span><span>100% Confidential Sessions</span></li>
-                <li><span>🌿</span><span>Safe, Non-Judgmental Space</span></li>
-                <li><span>🌐</span><span>In-Person & Remote Available</span></li>
-                <li><span>✨</span><span>Divinely Guided Practice</span></li>
-                <li><span>📋</span><span>UK Law Compliant</span></li>
-              </ul>
-            </div>
-
-            <div class="sidebar-card">
-              <div class="sidebar-card-title">Other Services</div>
-              <div id="related-services" style="display:flex;flex-direction:column;gap:0.75rem;"></div>
-            </div>
-          </aside>
-
         </div>
       </div>
     </section>
@@ -887,6 +891,30 @@
 
   <script src="/script.js"></script>
   <script>
+    // ── Helpers ──
+    function escHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    function renderRichText(raw) {
+      if (!raw) return '';
+      const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const inline = s => s
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*([^*]+?)\*/g, '<em>$1</em>');
+      const blocks = esc(raw).split(/\n{2,}/);
+      return blocks.map(block => {
+        const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
+        if (!lines.length) return '';
+        if (lines.every(l => /^[-•·]\s/.test(l))) {
+          return '<ul class="rich-list">' +
+            lines.map(l => `<li>${inline(l.replace(/^[-•·]\s+/, ''))}</li>`).join('') +
+            '</ul>';
+        }
+        return `<p>${inline(lines.join(' '))}</p>`;
+      }).join('');
+    }
+
     // ── Service page state ──
     let currentService = null;
     let currentVariants = null;
@@ -941,7 +969,7 @@
         document.getElementById('hero-tag').textContent = detail.tag || 'Sacred Healing';
         document.getElementById('hero-title-line1').textContent = detail.titleLine1 || service.title;
         document.getElementById('hero-title-line2').textContent = detail.titleLine2 || '';
-        document.getElementById('hero-desc').textContent = service.description;
+        document.getElementById('hero-desc').innerHTML = renderRichText(service.description);
 
         // Duration label
         const durLabel = detail.durationNote ? detail.durationNote
@@ -989,8 +1017,11 @@
         }
 
         const descEl = document.getElementById('long-description');
-        const paras = (detail.longDescription && detail.longDescription.length > 0) ? detail.longDescription : [service.description];
-        descEl.innerHTML = paras.map(p => `<p>${p}</p>`).join('');
+        if (detail.longDescription && detail.longDescription.length > 0) {
+          descEl.innerHTML = detail.longDescription.map(p => renderRichText(p)).join('');
+        } else {
+          descEl.innerHTML = renderRichText(service.description);
+        }
 
         const expectEl = document.getElementById('expect-list');
         const steps = (detail.expect && detail.expect.length > 0)
@@ -1007,10 +1038,10 @@
 
         const featEl = document.getElementById('features-grid');
         featEl.innerHTML = (service.features || []).map(f => `
-          <div class="feature-pill">
-            <span class="feature-pill-dot"></span>
-            <span>${f}</span>
-          </div>
+          <li class="features-bullet-item">
+            <span class="features-bullet-dot">✦</span>
+            <span>${escHtml(f)}</span>
+          </li>
         `).join('');
 
         const relEl = document.getElementById('related-services');

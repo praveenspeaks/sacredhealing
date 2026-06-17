@@ -85,6 +85,25 @@ function escHtml(str) {
   return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
+function renderRichText(raw) {
+  if (!raw) return '';
+  const esc = s => s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const inline = s => s
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*([^*]+?)\*/g, '<em>$1</em>');
+  const blocks = esc(raw).split(/\n{2,}/);
+  return blocks.map(block => {
+    const lines = block.split('\n').map(l => l.trim()).filter(Boolean);
+    if (!lines.length) return '';
+    if (lines.every(l => /^[-•·]\s/.test(l))) {
+      return '<ul class="rich-list">' +
+        lines.map(l => `<li>${inline(l.replace(/^[-•·]\s+/, ''))}</li>`).join('') +
+        '</ul>';
+    }
+    return `<p>${inline(lines.join(' '))}</p>`;
+  }).join('');
+}
+
 function navHref(key, cfg, onHome, allCfg) {
   // Any section with location='page' gets its own clean URL (no hashes)
   if (cfg.location === 'page') {
@@ -251,24 +270,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (data.services && servicesGrid) {
             servicesGrid.innerHTML = '';
             data.services.forEach((s, idx) => {
-                const fHTML = s.features.map(f => `<li>${f}</li>`).join('');
+                const fHTML = s.features.map(f => `<li>${escHtml(f)}</li>`).join('');
                 const number = (idx+1).toString().padStart(2, '0');
                 const isFeatured = idx === 1 ? 'featured' : '';
                 const featuredBadge = idx === 1 ? `<div class="service-card-badge">Most Loved</div>` : '';
+                const slug = s.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                const priceLabel = s.price > 0 ? `£${s.price}` : 'Free';
+                const titleEsc = s.title.replace(/'/g,"\\'");
 
                 servicesGrid.innerHTML += `
                 <div class="service-card ${isFeatured}">
                   <div class="service-card-glow"></div>
                   ${featuredBadge}
                   <div class="service-number">${number}</div>
-                  <h3 class="service-title">${s.title}</h3>
-                  <p class="service-desc">${s.description}</p>
+                  <h3 class="service-title">${escHtml(s.title)}</h3>
+                  <div class="service-desc">${renderRichText(s.description)}</div>
                   <ul class="service-features">${fHTML}</ul>
-                  <div class="service-price" style="color:var(--olive); font-size:1.2rem; margin-bottom:1.5rem; font-family:var(--font-heading);">
-                    <span>£${s.price}</span> <span style="font-size:0.9rem; color:var(--text-muted)">/ ${s.duration} mins</span>
+                  <div class="service-price">
+                    <span>${priceLabel}</span>
+                    <span class="service-price-dur">/ ${s.duration} mins</span>
                   </div>
-                  <a href="/services/${s.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}" class="service-link-detail" style="font-size:0.8rem;color:var(--text-muted);text-decoration:none;display:block;margin-bottom:0.5rem;">View Details →</a>
-                  <button onclick="openBookingForService('${s.title.replace(/'/g,"\\'")}', ${s.price})" class="service-link">Reserve This Path →</button>
+                  <div class="service-card-actions">
+                    <a href="/services/${slug}" class="btn btn-gold service-learn-more">Learn More →</a>
+                    <button onclick="openBookingForService('${titleEsc}', ${s.price})" class="service-book-btn">Book Now</button>
+                  </div>
                 </div>
                 `;
             });
@@ -304,8 +329,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             data.faqs.forEach(faq => {
                 faqsContainer.innerHTML += `
                 <div class="card" style="padding: 1.5rem 2rem;">
-                  <h4 style="color:var(--olive); margin-bottom:0.75rem;">${faq.question}</h4>
-                  <p style="color:var(--text-body); line-height:1.8;">${faq.answer}</p>
+                  <h4 style="color:var(--olive); margin-bottom:0.75rem;">${escHtml(faq.question)}</h4>
+                  <div class="faq-answer" style="color:var(--text-body); line-height:1.8;">${renderRichText(faq.answer)}</div>
                 </div>
                 `;
             });
