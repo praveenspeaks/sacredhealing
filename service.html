@@ -671,7 +671,7 @@
               <span id="hero-title-line1">Healing</span><br />
               <em id="hero-title-line2">Session</em>
             </h1>
-            <p class="service-hero-desc" id="hero-desc">Loading service details…</p>
+            <div class="service-hero-desc" id="hero-desc">Loading service details…</div>
             <div class="service-hero-actions">
               <button class="btn btn-gold" onclick="scrollToCalendar()">Book This Session ✦</button>
               <a href="#cal-booking" class="btn btn-outline">View Available Slots</a>
@@ -1018,7 +1018,8 @@
 
         const descEl = document.getElementById('long-description');
         if (detail.longDescription && detail.longDescription.length > 0) {
-          descEl.innerHTML = detail.longDescription.map(p => renderRichText(p)).join('');
+          // Render raw — admin content may contain HTML (images, markup)
+          descEl.innerHTML = detail.longDescription.map(p => `<p>${p}</p>`).join('');
         } else {
           descEl.innerHTML = renderRichText(service.description);
         }

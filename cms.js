@@ -71,7 +71,8 @@ module.exports = {
       'logo_img':           'assets/logo-sbh.png',
       'hero_bg_img':        'assets/sacred_healing_hero_bg.png',
       'chakra_img':         'assets/mandala.png',
-      'healer_img':         'assets/healer.jpg'
+      'healer_img':         'assets/RP_BLUE_1st.png',
+      'healer_img2':        'assets/RP_Blue_2nd.png'
     };
     // Contact page content — use DO NOTHING so admin edits survive restarts
     const contactPageDefaults = {
@@ -91,6 +92,11 @@ module.exports = {
         [key, val]
       );
     }
+
+    // Migrate healer_img from old default to new RP photo (one-time, only if still healer.jpg)
+    await pool.query(
+      "UPDATE site_content SET value = 'assets/RP_BLUE_1st.png' WHERE key = 'healer_img' AND value = 'assets/healer.jpg'"
+    );
 
     // ── Nav config defaults ──────────────────────────────────────
     const navDefaults = {
