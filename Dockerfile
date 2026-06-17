@@ -10,8 +10,14 @@ RUN npm install --production
 # Bundle app source
 COPY . .
 
-# Expose port 3000
+# Persistent uploads directory — mount a named volume here in EasyPanel
+# so admin-uploaded images survive redeployments.
+# Set UPLOAD_DIR=/data/uploads in EasyPanel env vars to match this path.
+RUN mkdir -p /data/uploads
+
 EXPOSE 3000
 
-# Start the application
+# Declare the mount point so EasyPanel / Docker Compose can attach a volume
+VOLUME ["/data/uploads"]
+
 CMD ["node", "server.js"]

@@ -5,3 +5,6 @@ data/
 *.db-shm
 *.db-wal
 .claude/
+# Runtime-uploaded images — persisted via Docker volume, not git
+assets/uploads/*
+!assets/uploads/.gitkeep

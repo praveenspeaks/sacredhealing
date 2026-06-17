@@ -51,7 +51,9 @@
       "PowerShell(pnpm --version 2>&1)",
       "PowerShell(Set-Location \"d:\\\\My Professional Projects\\\\sacredhealing\"; \\(Get-ChildItem \"node_modules\\\\pg\" -ErrorAction SilentlyContinue | Measure-Object\\).Count; \\(Get-ChildItem \"node_modules\\\\resolve\" -ErrorAction SilentlyContinue | Measure-Object\\).Count)",
       "PowerShell(docker stop sacredhealing-test-db)",
-      "PowerShell(docker rm sacredhealing-test-db)"
+      "PowerShell(docker rm sacredhealing-test-db)",
+      "PowerShell(New-Item -ItemType Directory -Force \"d:\\\\My Professional Projects\\\\sacredhealing\\\\assets\\\\uploads\")",
+      "PowerShell(New-Item -ItemType File -Force \"d:\\\\My Professional Projects\\\\sacredhealing\\\\assets\\\\uploads\\\\.gitkeep\")"
     ]
   }
 }

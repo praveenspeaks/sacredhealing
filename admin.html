@@ -681,9 +681,8 @@
             <div class="form-group" style="flex:0 0 auto;min-width:0;">
               <label>Icon</label>
               <input type="text" id="srv-icon" class="form-control" placeholder="🌀" style="font-size:1.3rem;text-align:center;" />
-              <div style="display:flex;flex-wrap:wrap;gap:0.3rem;margin-top:0.4rem;">
+              <div id="srv-icon-picker" style="display:flex;flex-wrap:wrap;gap:0.3rem;margin-top:0.4rem;">
                 <span style="font-size:0.65rem;color:var(--muted);width:100%;">Click to select:</span>
-                ${['🌀','✨','🔮','🌿','🪬','🕊️','💫','🌙','☀️','🙏','💎','🌸','🫧','🌊','🔥','🌺','⚡','🌈','🧘','💠'].map(e=>`<button type="button" onclick="document.getElementById('srv-icon').value='${e}'" style="background:var(--indigo);border:1px solid var(--border);border-radius:4px;padding:0.15rem 0.3rem;cursor:pointer;font-size:1rem;" title="${e}">${e}</button>`).join('')}
               </div>
             </div>
             <div class="form-group" style="display:flex;flex-direction:column;gap:0.5rem;">
@@ -1360,6 +1359,22 @@
       btn.innerHTML = '✉ Send Test Email';
     }
   }
+
+  // Populate emoji icon picker for service form
+  (function() {
+    const emojis = ['🌀','✨','🔮','🌿','🪬','🕊️','💫','🌙','☀️','🙏','💎','🌸','🫧','🌊','🔥','🌺','⚡','🌈','🧘','💠'];
+    const picker = document.getElementById('srv-icon-picker');
+    if (!picker) return;
+    emojis.forEach(e => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.textContent = e;
+      btn.title = e;
+      btn.style.cssText = 'background:var(--indigo);border:1px solid var(--border);border-radius:4px;padding:0.15rem 0.3rem;cursor:pointer;font-size:1rem;';
+      btn.onclick = () => { document.getElementById('srv-icon').value = e; };
+      picker.appendChild(btn);
+    });
+  })();
 </script>
 <script src="cms_admin.js"></script>
 </body>
