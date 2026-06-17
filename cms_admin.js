@@ -100,13 +100,20 @@ async function loadServices() {
 }
 
 function renderServicesTable() {
-    const tbody = servicesList.map(s => {
+    const tbody = servicesList.map((s, idx) => {
         const fList = Array.isArray(s.features) ? s.features.join(', ') : s.features;
         const imgHtml = s.image_url
             ? `<img src="${s.image_url}" alt="" style="width:48px;height:36px;object-fit:cover;border-radius:4px;vertical-align:middle;margin-right:0.5rem;" />`
             : `<span style="display:inline-block;width:48px;height:36px;background:#f3f4f6;border-radius:4px;vertical-align:middle;margin-right:0.5rem;"></span>`;
+        const isFirst = idx === 0;
+        const isLast = idx === servicesList.length - 1;
         return `
         <tr>
+            <td style="text-align:center;white-space:nowrap;width:80px;">
+                <button class="btn-sm" onclick="moveService(${s.id},-1)" ${isFirst ? 'disabled' : ''} style="padding:0.15rem 0.45rem;font-size:1rem;line-height:1;" title="Move up">↑</button>
+                <span style="display:inline-block;min-width:1.4rem;text-align:center;font-weight:600;color:var(--muted);font-size:0.8rem;">${idx + 1}</span>
+                <button class="btn-sm" onclick="moveService(${s.id},1)" ${isLast ? 'disabled' : ''} style="padding:0.15rem 0.45rem;font-size:1rem;line-height:1;" title="Move down">↓</button>
+            </td>
             <td>${imgHtml}<strong>${s.title}</strong></td>
             <td>£${s.price}</td>
             <td>${s.duration} min</td>
@@ -123,13 +130,54 @@ function renderServicesTable() {
 
     document.getElementById('services-table').innerHTML = `
     <table>
-        <thead><tr><th>Title</th><th>Price</th><th>Duration</th><th>Features</th><th>Actions</th></tr></thead>
-        <tbody>${tbody || '<tr><td colspan="5" style="text-align:center">No services found</td></tr>'}</tbody>
+        <thead><tr><th style="text-align:center;width:80px;">Order</th><th>Title</th><th>Price</th><th>Duration</th><th>Features</th><th>Actions</th></tr></thead>
+        <tbody>${tbody || '<tr><td colspan="6" style="text-align:center">No services found</td></tr>'}</tbody>
     </table>
     `;
 }
 
+async function moveService(id, dir) {
+    const idx = servicesList.findIndex(s => s.id === id);
+    if (idx < 0) return;
+    const targetIdx = idx + dir;
+    if (targetIdx < 0 || targetIdx >= servicesList.length) return;
+
+    const a = servicesList[idx];
+    const b = servicesList[targetIdx];
+
+    const makeBody = (svc, order_num) => JSON.stringify({
+        title: svc.title,
+        description: svc.description,
+        features: Array.isArray(svc.features) ? svc.features : [],
+        duration: svc.duration,
+        price: svc.price,
+        order_num,
+        extra_details: svc.extra_details || {},
+        image_url: svc.image_url || null
+    });
+
+    try {
+        const [r1, r2] = await Promise.all([
+            fetch(`/api/admin/services/${a.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'x-admin-password': adminToken },
+                body: makeBody(a, targetIdx + 1)
+            }),
+            fetch(`/api/admin/services/${b.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json', 'x-admin-password': adminToken },
+                body: makeBody(b, idx + 1)
+            })
+        ]);
+        if (!r1.ok || !r2.ok) throw new Error('Update failed');
+        await loadServices();
+    } catch (err) {
+        toast('Failed to update order', 'error');
+    }
+}
+
 let editServiceId = null;
+let editServiceOrderNum = null;
 
 function addVariantRow(label, duration, price) {
     const row = document.createElement('div');
@@ -184,6 +232,7 @@ function editService(id) {
     const s = servicesList.find(x => x.id === id);
     if (!s) return;
     editServiceId = id;
+    editServiceOrderNum = s.order_num;
     document.getElementById('srv-title').value = s.title;
     document.getElementById('srv-price').value = s.price;
     document.getElementById('srv-duration').value = s.duration;
@@ -267,7 +316,7 @@ async function updateService() {
         const res = await fetch('/api/admin/services/' + editServiceId, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', 'x-admin-password': adminToken },
-            body: JSON.stringify({ title, price, duration, description: desc, features, extra_details, image_url })
+            body: JSON.stringify({ title, price, duration, description: desc, features, order_num: editServiceOrderNum, extra_details, image_url })
         });
         if (res.ok) {
             toast('Service updated successfully', 'success');
@@ -313,6 +362,7 @@ async function addService() {
 
 function clearServiceForm() {
     editServiceId = null;
+    editServiceOrderNum = null;
     document.getElementById('srv-title').value = '';
     document.getElementById('srv-price').value = '';
     document.getElementById('srv-duration').value = '60';
