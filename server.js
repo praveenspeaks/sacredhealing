@@ -6,8 +6,9 @@ require('dotenv').config();
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder');
 const { sendBookingConfirmation, sendAdminAlert, sendContactEnquiry } = require('./mailer');
 
-const crypto = require('crypto');
-const pool   = require('./db');
+const crypto    = require('crypto');
+const pool      = require('./db');
+const rateLimit = require('express-rate-limit');
 
 const app  = express();
 const PORT = process.env.PORT || 3000;
@@ -17,6 +18,31 @@ const corsOrigin = process.env.ALLOWED_ORIGIN;
 app.use(cors(corsOrigin ? { origin: corsOrigin } : {}));
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
+
+// ── Rate limiters ───────────────────────────────────────────
+const bookingLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many booking attempts. Please wait 15 minutes and try again.' },
+});
+
+const slotsLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 60,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many requests. Please slow down.' },
+});
+
+const contactLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many messages sent. Please wait an hour before trying again.' },
+});
 
 // ── Admin config ────────────────────────────────────────────
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'sacred2024';
@@ -204,7 +230,7 @@ app.get('/api/services/:slug', async (req, res) => {
 // ════════════════════════════════════════════════════════════
 
 // POST /api/contact — Contact form submission
-app.post('/api/contact', async (req, res) => {
+app.post('/api/contact', contactLimiter, async (req, res) => {
   const { name, email, message } = req.body;
   if (!name || !email || !message) return res.status(400).json({ error: 'All fields are required.' });
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return res.status(400).json({ error: 'Invalid email address.' });
@@ -219,7 +245,7 @@ app.post('/api/contact', async (req, res) => {
 });
 
 // GET /api/slots/calendar?month=YYYY-MM — per-date availability summary
-app.get('/api/slots/calendar', async (req, res) => {
+app.get('/api/slots/calendar', slotsLimiter, async (req, res) => {
   const { month, duration } = req.query;
   if (!month || !/^\d{4}-\d{2}$/.test(month)) {
     return res.status(400).json({ error: 'month parameter required (YYYY-MM)' });
@@ -251,7 +277,7 @@ app.get('/api/slots/calendar', async (req, res) => {
 });
 
 // GET /api/slots/date/:date — all slots for a date (available + booked) for calendar time display
-app.get('/api/slots/date/:date', async (req, res) => {
+app.get('/api/slots/date/:date', slotsLimiter, async (req, res) => {
   const { date } = req.params;
   const { duration } = req.query;
   if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return res.status(400).json({ error: 'Invalid date format' });
@@ -272,7 +298,7 @@ app.get('/api/slots/date/:date', async (req, res) => {
 });
 
 // GET /api/slots  — Available future slots (unbooked only)
-app.get('/api/slots', async (req, res) => {
+app.get('/api/slots', slotsLimiter, async (req, res) => {
   try {
     const today = new Date().toISOString().split('T')[0];
     const { duration } = req.query;
@@ -303,7 +329,7 @@ app.get('/api/slots', async (req, res) => {
 });
 
 // POST /api/bookings  — Customer books a slot
-app.post('/api/bookings', async (req, res) => {
+app.post('/api/bookings', bookingLimiter, async (req, res) => {
   try {
     const { slot_id, service, customer_name, customer_email, customer_phone, message } = req.body;
 

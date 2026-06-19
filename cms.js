@@ -72,7 +72,37 @@ module.exports = {
       'hero_bg_img':        'assets/sacred_healing_hero_bg.png',
       'chakra_img':         'assets/mandala.png',
       'healer_img':         'assets/RP_BLUE_1st.png',
-      'healer_img2':        'assets/RP_Blue_2nd.png'
+      'healer_img2':        'assets/RP_Blue_2nd.png',
+
+      // 6 R's of Sacred Healing
+      'rs_1_title':   'Recognise',
+      'rs_1_tagline': '"Identify what is stopping you from reaching your full potential"',
+      'rs_1_desc':    'Identify your masks, patterns, triggers and reactions.',
+      'rs_2_title':   'Release',
+      'rs_2_tagline': '"Let go of what no longer serves you."',
+      'rs_2_desc':    'Let go of emotional wounds, limiting beliefs, old patterns, and energetic blocks.',
+      'rs_3_title':   'Restore',
+      'rs_3_tagline': '"Return to balance and inner peace."',
+      'rs_3_desc':    'Restore balance, vitality, self-worth, and inner peace.',
+      'rs_4_title':   'Realign',
+      'rs_4_tagline': '"Reconnect with your soul\'s wisdom."',
+      'rs_4_desc':    'Reconnect with your soul, purpose, intuition, and authentic self.',
+      'rs_5_title':   'Reclaim',
+      'rs_5_tagline': '"Step into your authentic power."',
+      'rs_5_desc':    'Reclaim your power, voice, gifts, boundaries, and truth.',
+      'rs_6_title':   'Radiate',
+      'rs_6_tagline': '"Share your light with the world."',
+      'rs_6_desc':    'Live from wholeness and share your light with confidence and purpose.',
+
+      // How It Works
+      'process_step1_title': 'Connect',
+      'process_step1_desc':  'Reach out and share your intention. We\'ll find the perfect healing path for your unique journey.',
+      'process_step2_title': 'Discover',
+      'process_step2_desc':  'In your session, we explore the deeper layers of your being with compassion and sacred intention.',
+      'process_step3_title': 'Transform',
+      'process_step3_desc':  'Experience profound shifts as energy moves, patterns dissolve, and your true self emerges.',
+      'process_cta_desc':    'Many people come to us feeling lost or disconnected — overwhelmed by life\'s challenges, struggling with recurring patterns, or simply seeking a deeper understanding of their life\'s purpose. If you\'re seeking clarity, emotional release, or spiritual guidance, we\'re here to help. Reach out for a complimentary 15-minute clarity call.',
+      'process_cta_btn':     'Schedule a Free Clarity Call →'
     };
     // Contact page content — use DO NOTHING so admin edits survive restarts
     const contactPageDefaults = {
