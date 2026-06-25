@@ -71,9 +71,8 @@ module.exports = {
       'logo_img':            'assets/logo-sbh.png',
       'hero_bg_img':         '',
       'chakra_img':          'assets/mandala.png',
-      'healer_img':          'assets/RP_BLUE_1st.png',
-      'healer_img2':         'assets/RP_Blue_2nd.png',
-      'healer_hero_img':     'assets/healer.jpg',
+      'healer_img':          'assets/healer.jpg',       // hero right-side photo
+      'healer_img2':         'assets/RP_BLUE_1st.png',  // about section photo
       // Section background images (empty = no background)
       'about_bg_img':        '',
       'philosophy_bg_img':   '',
@@ -133,10 +132,16 @@ module.exports = {
       );
     }
 
-    // Migrate healer_img from old default to new RP photo (one-time, only if still healer.jpg)
+    // healer_img now drives the HERO right-side photo; healer_img2 drives the About section.
+    // Correct any existing DB rows that still hold the old swapped values.
     await pool.query(
-      "UPDATE site_content SET value = 'assets/RP_BLUE_1st.png' WHERE key = 'healer_img' AND value = 'assets/healer.jpg'"
+      "UPDATE site_content SET value = 'assets/healer.jpg' WHERE key = 'healer_img' AND value = 'assets/RP_BLUE_1st.png'"
     );
+    await pool.query(
+      "UPDATE site_content SET value = 'assets/RP_BLUE_1st.png' WHERE key = 'healer_img2' AND value = 'assets/RP_Blue_2nd.png'"
+    );
+    // Remove the now-unused healer_hero_img key
+    await pool.query("DELETE FROM site_content WHERE key = 'healer_hero_img'");
 
     // ── Nav config defaults ──────────────────────────────────────
     const navDefaults = {

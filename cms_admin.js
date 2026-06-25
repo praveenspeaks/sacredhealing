@@ -28,7 +28,7 @@ async function loadContent() {
 
         // Populate image previews for all upload fields
         const imgKeys = [
-            'logo_img', 'healer_img', 'healer_img2', 'healer_hero_img',
+            'logo_img', 'healer_img', 'healer_img2',
             'hero_bg_img', 'about_bg_img', 'philosophy_bg_img',
             'services_bg_img', 'process_bg_img', 'testimonials_bg_img',
             'rs_1_img', 'rs_2_img', 'rs_3_img', 'rs_4_img', 'rs_5_img', 'rs_6_img',
