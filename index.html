@@ -78,16 +78,7 @@
   <!-- ============ NAVIGATION ============ -->
   <nav class="navbar" id="navbar">
     <div class="nav-container">
-      <!-- Left: hamburger (mobile) + left nav links (desktop) -->
-      <div class="nav-section nav-section-left">
-        <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
-          <span></span><span></span><span></span>
-        </button>
-        <ul class="nav-links-left" id="nav-links-left">
-          <!-- populated by cms_frontend.js buildNav() -->
-        </ul>
-      </div>
-      <!-- Centre: logo -->
+      <!-- Left: logo -->
       <a href="/" class="nav-logo">
         <div class="logo-circle">
           <img src="assets/logo-sbh.png" alt="Sacred Healing Logo" class="logo-img" id="logo_img" />
@@ -97,12 +88,18 @@
           <div class="logo-slogan">सफलम् जन्मम् प्रवासम्</div>
         </div>
       </a>
-      <!-- Right: right nav links (desktop) + Book CTA -->
-      <div class="nav-section nav-section-right">
+      <!-- Right: nav links + Book CTA + hamburger (mobile) -->
+      <div class="nav-right">
+        <ul class="nav-links-left" id="nav-links-left">
+          <!-- populated by cms_frontend.js buildNav() -->
+        </ul>
         <ul class="nav-links-right" id="nav-links-right">
           <!-- populated by cms_frontend.js buildNav() -->
         </ul>
         <button class="btn btn-gold nav-cta" onclick="openBookingModal()">Book Session</button>
+        <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
+          <span></span><span></span><span></span>
+        </button>
       </div>
     </div>
     <!-- Mobile slide-down panel -->
