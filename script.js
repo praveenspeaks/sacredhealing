@@ -530,32 +530,255 @@ function openBookingForService(serviceName, servicePrice) {
 
 // ── Bulk booking state & helpers ──────────────────────────────
 let _bulkPreviewSlots = null;
-let _pendingBulkMode  = false;
+
+// ── Package Modal (standalone bulk booking entry point) ────────
+let _pkgPreviewSlots   = null;
+let _pkgBookingData    = null;
+let _pkgStripeElements = null;
 
 function openBulkBooking(serviceName, servicePrice) {
-  _pendingBulkMode = true;
-  if (serviceName) {
-    openBookingForService(serviceName, servicePrice);
-    // Update the service banner to mention "first session"
-    setTimeout(() => {
-      const span = document.querySelector('#service-preselect-banner span');
-      if (span) {
-        const priceStr = servicePrice > 0 ? ` · £${servicePrice}` : '';
-        span.innerHTML = `✦ <strong style="color:var(--olive)">${serviceName}</strong>${priceStr} — pick your <strong>first session</strong> and we'll reserve your full package`;
-      }
-    }, 60);
-  } else {
-    document.getElementById('contact').scrollIntoView({ behavior: 'smooth' });
-    const existing = document.getElementById('service-preselect-banner');
-    if (existing) existing.remove();
-    const grid = document.getElementById('public-slots-grid');
-    if (grid) {
-      grid.insertAdjacentHTML('beforebegin', `
-        <div id="service-preselect-banner" style="margin-bottom:1rem;padding:0.75rem 1.25rem;background:rgba(92,91,71,0.12);border:1px solid rgba(92,91,71,0.3);border-radius:8px;display:flex;align-items:center;justify-content:space-between;font-size:0.9rem;color:var(--text-body);">
-          <span>✦ Package booking — pick your <strong>first session</strong> below and we'll find and reserve the rest for you</span>
-          <button onclick="_pendingBulkMode=false;document.getElementById('service-preselect-banner').remove();" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:1.1rem;padding:0 0.25rem;">✕</button>
-        </div>`);
+  const modal = document.getElementById('pkg-modal');
+  if (!modal) return;
+  pkgShowStep('config');
+  modal.classList.add('open');
+  document.body.style.overflow = 'hidden';
+  pkgLoadSlots();
+  pkgLoadServices(serviceName);
+  // Wire up "Custom" radio for count
+  document.querySelectorAll('input[name="pkg-count"]').forEach(r => {
+    r.onchange = () => {
+      document.getElementById('pkg-count-custom').style.display =
+        r.value === 'custom' && r.checked ? 'block' : 'none';
+    };
+  });
+}
+
+function closePkgModal() {
+  const modal = document.getElementById('pkg-modal');
+  if (modal) modal.classList.remove('open');
+  document.body.style.overflow = '';
+  _pkgPreviewSlots   = null;
+  _pkgBookingData    = null;
+  if (_pkgStripeElements) {
+    try { _pkgStripeElements.getElement('payment')?.unmount(); } catch(e) {}
+    _pkgStripeElements = null;
+  }
+}
+
+function pkgShowStep(name) {
+  ['config','details','preview','payment','success'].forEach(s => {
+    const el = document.getElementById(`pkg-step-${s}`);
+    if (el) el.style.display = s === name ? 'block' : 'none';
+  });
+}
+
+async function pkgLoadSlots() {
+  const sel = document.getElementById('pkg-start-slot');
+  if (!sel) return;
+  sel.innerHTML = '<option value="">Loading…</option>';
+  try {
+    const res  = await fetch('/api/slots');
+    const data = await res.json();
+    const avail = (data.slots || []).filter(s => !s.is_booked);
+    if (!avail.length) {
+      sel.innerHTML = '<option value="">No available slots — check back soon</option>';
+      return;
     }
+    sel.innerHTML = '<option value="">Choose your first session…</option>' +
+      avail.map(s => {
+        const d = new Date(s.date + 'T00:00:00').toLocaleDateString('en-GB',
+          { weekday:'short', day:'numeric', month:'short', year:'numeric' });
+        const t = formatTime12h(s.time);
+        const price = s.price > 0 ? ` · £${parseFloat(s.price).toFixed(2)}` : ' · Free';
+        return `<option value="${s.id}">${d} at ${t} (${s.duration}min${price})</option>`;
+      }).join('');
+  } catch(e) {
+    sel.innerHTML = '<option value="">Could not load slots</option>';
+  }
+}
+
+async function pkgLoadServices(preselect) {
+  const sel = document.getElementById('pkg-service');
+  if (!sel) return;
+  try {
+    const res  = await fetch('/api/content');
+    const data = await res.json();
+    const svcs = data.services || [];
+    if (svcs.length) {
+      sel.innerHTML = '<option value="">Choose a service…</option>' +
+        svcs.map(s => `<option value="${escHtmlJs(s.title)}"${preselect === s.title ? ' selected' : ''}>${escHtmlJs(s.title)}</option>`).join('');
+    } else {
+      sel.innerHTML = '<option value="">Spiritual Healing</option><option value="Psychic Reading">Psychic Reading</option><option value="Past Life Healing">Past Life Healing</option>';
+      if (preselect) sel.value = preselect;
+    }
+  } catch(e) {
+    sel.innerHTML = '<option value="">Could not load services</option>';
+  }
+}
+
+function escHtmlJs(str) {
+  return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function pkgGoToDetails() {
+  const service = document.getElementById('pkg-service').value;
+  const slotId  = document.getElementById('pkg-start-slot').value;
+  const countEl = document.querySelector('input[name="pkg-count"]:checked');
+  const countVal = countEl?.value;
+  const count   = countVal === 'custom'
+    ? parseInt(document.getElementById('pkg-count-custom').value)
+    : parseInt(countVal || '10');
+
+  if (!service) { alert('Please choose a service.'); return; }
+  if (!slotId)  { alert('Please choose a starting slot.'); return; }
+  if (!count || count < 2 || count > 50) { alert('Please enter a valid session count (2–50).'); return; }
+  pkgShowStep('details');
+}
+
+async function pkgPreview() {
+  const service = document.getElementById('pkg-service').value;
+  const slotId  = parseInt(document.getElementById('pkg-start-slot').value);
+  const countVal = document.querySelector('input[name="pkg-count"]:checked')?.value;
+  const count   = countVal === 'custom'
+    ? parseInt(document.getElementById('pkg-count-custom').value)
+    : parseInt(countVal || '10');
+  const name  = document.getElementById('pkg-name').value.trim();
+  const email = document.getElementById('pkg-email').value.trim();
+  if (!name || !email) { alert('Please enter your name and email.'); return; }
+
+  const btn = document.getElementById('pkg-preview-btn');
+  btn.textContent = 'Finding sessions…';
+  btn.disabled = true;
+
+  try {
+    const res  = await fetch('/api/bookings/bulk/preview', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slot_id: slotId, count, service }),
+    });
+    const data = await res.json();
+    if (!res.ok) { alert(data.error || 'Could not find enough available slots.'); return; }
+
+    _pkgPreviewSlots = data.slots;
+    const sym = { GBP:'£', USD:'$', EUR:'€', INR:'₹', AUD:'A$' }[data.currency] || data.currency;
+
+    document.getElementById('pkg-preview-summary').innerHTML =
+      `<strong>${data.slots.length} sessions</strong> · ${escHtmlJs(service)} · ${sym}${parseFloat(data.session_price).toFixed(2)} per session`;
+    document.getElementById('pkg-preview-list').innerHTML = data.slots.map((s, i) => {
+      const d = new Date(s.date + 'T00:00:00').toLocaleDateString('en-GB',
+        { weekday:'short', day:'numeric', month:'short', year:'numeric' });
+      return `<div class="bulk-slot-row">
+        <span class="bulk-slot-num">${i + 1}</span>
+        <span>${d}</span>
+        <span>${formatTime12h(s.time)} · ${s.duration} min</span>
+      </div>`;
+    }).join('');
+    document.getElementById('pkg-preview-total').innerHTML =
+      data.total_amount > 0
+        ? `Total: <strong>${sym}${parseFloat(data.total_amount).toFixed(2)}</strong>`
+        : 'Total: <strong>Free</strong>';
+    pkgShowStep('preview');
+  } catch(e) {
+    alert('Could not connect. Please try again.');
+  } finally {
+    btn.textContent = 'Preview Package →';
+    btn.disabled = false;
+  }
+}
+
+async function pkgConfirm() {
+  if (!_pkgPreviewSlots) return;
+  const slot_ids = _pkgPreviewSlots.map(s => s.id);
+  const service  = document.getElementById('pkg-service').value;
+  const name     = document.getElementById('pkg-name').value.trim();
+  const email    = document.getElementById('pkg-email').value.trim();
+  const phone    = document.getElementById('pkg-phone').value.trim();
+  const message  = document.getElementById('pkg-message').value.trim();
+
+  const btn = document.getElementById('pkg-confirm-btn');
+  btn.textContent = 'Booking…';
+  btn.disabled = true;
+
+  try {
+    const res  = await fetch('/api/bookings/bulk', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slot_ids, service, customer_name: name, customer_email: email,
+        customer_phone: phone, message }),
+    });
+    const data = await res.json();
+    if (!res.ok) { alert(data.error || 'Booking failed. Please try again.'); return; }
+
+    _pkgBookingData = data;
+
+    if (data.client_secret && _stripeInstance) {
+      // Paid — mount Stripe payment element
+      const sym = { GBP:'£', USD:'$', EUR:'€', INR:'₹', AUD:'A$' }[data.currency] || '';
+      document.getElementById('pkg-payment-summary').textContent =
+        `${slot_ids.length} sessions of ${service} — Total: ${sym}${parseFloat(data.total_amount || 0).toFixed(2)}`;
+      _pkgStripeElements = _stripeInstance.elements({
+        clientSecret: data.client_secret,
+        appearance: { theme:'flat', variables: { colorPrimary:'#5c5b47', colorBackground:'#f9f8f4',
+          colorText:'#1a1a18', fontFamily:'Georgia, serif', borderRadius:'6px' } },
+      });
+      document.getElementById('pkg-payment-element').innerHTML = '';
+      _pkgStripeElements.create('payment').mount('#pkg-payment-element');
+      document.getElementById('pkg-payment-error').style.display = 'none';
+      pkgShowStep('payment');
+    } else {
+      // Free — confirm directly
+      document.getElementById('pkg-success-msg').innerHTML =
+        `<strong>${slot_ids.length} sessions</strong> of <strong>${escHtmlJs(service)}</strong> are confirmed.<br><br>
+         Booking reference: <strong>${data.booking_ref}</strong><br><br>
+         A confirmation email is on its way. We look forward to your healing journey. ✦`;
+      pkgShowStep('success');
+    }
+  } catch(e) {
+    alert('Could not connect. Please try again.');
+  } finally {
+    btn.textContent = 'Book All Sessions →';
+    btn.disabled = false;
+  }
+}
+
+async function pkgSubmitPayment() {
+  if (!_pkgStripeElements || !_pkgBookingData) return;
+  const btn = document.getElementById('pkg-pay-btn');
+  btn.textContent = 'Processing…';
+  btn.disabled = true;
+  document.getElementById('pkg-payment-error').style.display = 'none';
+
+  try {
+    const { error, paymentIntent } = await _stripeInstance.confirmPayment({
+      elements: _pkgStripeElements,
+      redirect: 'if_required',
+    });
+    if (error) {
+      document.getElementById('pkg-payment-error').textContent  = error.message;
+      document.getElementById('pkg-payment-error').style.display = 'block';
+      return;
+    }
+    if (paymentIntent?.status === 'succeeded') {
+      const res  = await fetch('/api/bookings/bulk/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ bulk_booking_id: _pkgBookingData.bulk_booking_id,
+          payment_intent_id: paymentIntent.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) { alert(data.error || 'Confirmation failed. Please contact us.'); return; }
+      document.getElementById('pkg-success-msg').innerHTML =
+        `Payment received. <strong>${data.confirmed} sessions</strong> of <strong>${escHtmlJs(document.getElementById('pkg-service').value)}</strong> are confirmed.<br><br>
+         Booking reference: <strong>${data.booking_ref}</strong><br><br>
+         A full schedule has been sent to your email. ✦`;
+      pkgShowStep('success');
+    }
+  } catch(e) {
+    document.getElementById('pkg-payment-error').textContent  = 'Payment error. Please try again.';
+    document.getElementById('pkg-payment-error').style.display = 'block';
+  } finally {
+    btn.textContent = 'Pay Now →';
+    btn.disabled = false;
   }
 }
 
@@ -742,13 +965,6 @@ function openBookingModal(slotId, date, time, duration) {
 
   modal.classList.add('open');
   document.body.style.overflow = 'hidden';
-
-  // Auto-enable bulk mode when triggered from "Book a Package" CTA
-  if (_pendingBulkMode) {
-    _pendingBulkMode = false;
-    const toggle = document.getElementById('bulk-toggle');
-    if (toggle && !toggle.checked) { toggle.checked = true; toggleBulkMode(); }
-  }
 }
 
 function closeBookingModal() {
@@ -867,7 +1083,10 @@ async function submitBooking(e) {
 
 // Close modal on Escape key
 document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') closeBookingModal();
+  if (e.key === 'Escape') {
+    closeBookingModal();
+    closePkgModal();
+  }
 });
 
 // ── Testimonials Carousel ─────────────────────────────────────

@@ -2763,7 +2763,8 @@ textarea.modal-input {
   color: var(--text-body);
 }
 
-.payment-error {
+.payment-error,
+.payment-error-msg {
   color: #dc2626;
   font-size: 0.85rem;
   margin: 0.75rem 0 0;

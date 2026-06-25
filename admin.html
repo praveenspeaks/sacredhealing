@@ -272,6 +272,27 @@
     .loading-spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: middle; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* ── HELP & GUIDE ── */
+    .guide-pill { display:inline-block; padding:0.35rem 0.85rem; background:rgba(218,180,103,0.1); border:1px solid rgba(218,180,103,0.25); border-radius:20px; color:var(--cream); font-size:0.8rem; text-decoration:none; transition:background 0.18s,border-color 0.18s; }
+    .guide-pill:hover { background:rgba(218,180,103,0.22); border-color:rgba(218,180,103,0.5); }
+    .guide-card { margin-bottom:1.25rem; scroll-margin-top:1.5rem; }
+    .guide-section-head { display:flex; align-items:flex-start; gap:1rem; margin-bottom:1rem; }
+    .guide-icon { font-size:2rem; line-height:1; flex-shrink:0; }
+    .guide-where { font-size:0.75rem; color:var(--gold); margin-top:0.2rem; letter-spacing:0.02em; }
+    .guide-intro { color:var(--cream-dim); font-size:0.9rem; line-height:1.7; margin-bottom:1.25rem; }
+    .guide-steps { display:flex; flex-direction:column; gap:0.85rem; margin-bottom:1.25rem; }
+    .guide-step { display:flex; gap:0.85rem; align-items:flex-start; }
+    .step-num { flex-shrink:0; width:24px; height:24px; border-radius:50%; background:rgba(218,180,103,0.18); border:1px solid rgba(218,180,103,0.35); color:var(--gold); font-size:0.72rem; font-weight:700; display:flex; align-items:center; justify-content:center; margin-top:1px; }
+    .guide-step > div { color:var(--cream-dim); font-size:0.875rem; line-height:1.7; }
+    .guide-step > div strong { color:var(--cream); }
+    .guide-step > div code { background:rgba(218,180,103,0.12); color:var(--gold); padding:0.1rem 0.35rem; border-radius:3px; font-size:0.82rem; }
+    .guide-tip { display:flex; gap:0.75rem; align-items:flex-start; background:rgba(218,180,103,0.07); border:1px solid rgba(218,180,103,0.2); border-radius:8px; padding:0.85rem 1rem; }
+    .tip-icon { font-size:1rem; flex-shrink:0; margin-top:1px; }
+    .guide-tip span:last-child { color:var(--muted); font-size:0.83rem; line-height:1.65; }
+    .guide-feature-block { background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:8px; padding:1rem 1.1rem; }
+    .guide-feature-title { font-weight:600; color:var(--cream); font-size:0.88rem; margin-bottom:0.4rem; }
+    .guide-feature-block p { color:var(--muted); font-size:0.82rem; line-height:1.65; margin:0; }
+
     /* ── TOAST ── */
     .toast-container { position: fixed; bottom: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
     .toast { min-width: 280px; padding: 1rem 1.5rem; background: var(--panel); border: 1px solid var(--border); border-left: 4px solid var(--gold); color: var(--cream); border-radius: var(--radius); font-size: 0.9rem; font-weight: 500; box-shadow: var(--shadow-hover); animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
@@ -327,6 +348,7 @@
       <div class="nav-item" onclick="showPage('navigation')" id="nav-navigation"><span class="nav-icon">🧭</span><span>Navigation</span></div>
       <div class="nav-item" onclick="showPage('theme')" id="nav-theme"><span class="nav-icon">🎨</span><span>Theme &amp; Fonts</span></div>
       <div class="nav-item" onclick="showPage('settings')" id="nav-settings"><span class="nav-icon">⚙</span><span>Settings</span></div>
+      <div class="nav-item" onclick="showPage('guide')" id="nav-guide"><span class="nav-icon">📖</span><span>Help & Guide</span></div>
     </nav>
     <div class="sidebar-footer">
       <button class="logout-btn" onclick="toggleTheme()" style="margin-bottom:1rem;color:var(--gold);">
@@ -1095,6 +1117,317 @@
 
       </div>
     </div>
+
+    <!-- ── HELP & GUIDE ── -->
+    <div class="page" id="page-guide">
+      <div class="page-header">
+        <h1 class="page-title">Help &amp; <em>Guide</em></h1>
+        <span style="font-size:0.82rem;color:var(--muted);">Everything you need to manage your Sacred Healing website</span>
+      </div>
+
+      <!-- Quick nav -->
+      <div class="card" style="margin-bottom:1.5rem;">
+        <div class="card-title" style="margin-bottom:1rem;">Quick Navigation</div>
+        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">
+          <a href="#guide-slots"     class="guide-pill">📅 Slots</a>
+          <a href="#guide-bookings"  class="guide-pill">📋 Bookings</a>
+          <a href="#guide-bulk"      class="guide-pill">🗂 Bulk Packages</a>
+          <a href="#guide-content"   class="guide-pill">✍ Site Content</a>
+          <a href="#guide-images"    class="guide-pill">🖼 Images</a>
+          <a href="#guide-services"  class="guide-pill">✨ Services</a>
+          <a href="#guide-reviews"   class="guide-pill">⭐ Reviews</a>
+          <a href="#guide-faqs"      class="guide-pill">❓ FAQs</a>
+          <a href="#guide-nav"       class="guide-pill">🧭 Navigation</a>
+          <a href="#guide-theme"     class="guide-pill">🎨 Theme &amp; Fonts</a>
+          <a href="#guide-settings"  class="guide-pill">⚙ Settings</a>
+        </div>
+      </div>
+
+      <!-- ① SLOTS -->
+      <div class="card guide-card" id="guide-slots">
+        <div class="guide-section-head">
+          <span class="guide-icon">📅</span>
+          <div>
+            <div class="card-title" style="margin-bottom:0;">Manage Slots</div>
+            <div class="guide-where">Admin → Manage Slots</div>
+          </div>
+        </div>
+        <p class="guide-intro">Slots are the available time windows customers can book. They must exist before anyone can book a session.</p>
+
+        <div class="guide-steps">
+          <div class="guide-step"><span class="step-num">1</span><div><strong>Add a single slot</strong> — Fill in Date, Time, Duration, Price, and Currency in the left panel. Set price to <code>0</code> for a free session. Click <strong>Add Slot</strong>.</div></div>
+          <div class="guide-step"><span class="step-num">2</span><div><strong>Repeat / bulk create</strong> — Tick <em>Repeat this slot</em> before clicking Add Slot. Choose how many weeks ahead to repeat and which days of the week. Useful for setting up a whole month of Tuesdays at once.</div></div>
+          <div class="guide-step"><span class="step-num">3</span><div><strong>Delete a slot</strong> — Click the ✕ button on any row in the slots table. Booked slots cannot be deleted — cancel the booking first.</div></div>
+          <div class="guide-step"><span class="step-num">4</span><div><strong>Move slots</strong> — Use the ↑ ↓ arrow buttons to reorder how slots appear on the public booking calendar.</div></div>
+        </div>
+
+        <div class="guide-tip">
+          <span class="tip-icon">💡</span>
+          <span>Slots with price &gt; 0 trigger Stripe payment. Free slots (price = 0) are confirmed immediately without payment. If Stripe is not set up, all bookings are treated as free.</span>
+        </div>
+      </div>
+
+      <!-- ② BOOKINGS -->
+      <div class="card guide-card" id="guide-bookings">
+        <div class="guide-section-head">
+          <span class="guide-icon">📋</span>
+          <div>
+            <div class="card-title" style="margin-bottom:0;">Bookings</div>
+            <div class="guide-where">Admin → Bookings</div>
+          </div>
+        </div>
+        <p class="guide-intro">View and manage every session booked by customers. Bookings move through a status lifecycle: <strong>pending → confirmed → cancelled</strong>.</p>
+
+        <div class="guide-steps">
+          <div class="guide-step"><span class="step-num">1</span><div><strong>View bookings</strong> — The table shows each booking with customer name, service, date, time, status badge, and payment amount. Use the status filter dropdown to narrow down the list.</div></div>
+          <div class="guide-step"><span class="step-num">2</span><div><strong>Confirm a booking</strong> — Click <strong>Confirm</strong> on a pending booking to mark it confirmed and lock the slot. A confirmation email is sent to the customer automatically.</div></div>
+          <div class="guide-step"><span class="step-num">3</span><div><strong>Cancel a booking</strong> — Click <strong>Cancel</strong> to mark it cancelled. The slot is freed up and becomes available for others. For paid bookings, issue refunds manually via your Stripe dashboard.</div></div>
+          <div class="guide-step"><span class="step-num">4</span><div><strong>Export</strong> — Click <strong>Export CSV</strong> to download all bookings as a spreadsheet for your records.</div></div>
+        </div>
+
+        <div class="guide-tip">
+          <span class="tip-icon">⚠️</span>
+          <span>Paid bookings confirmed via Stripe are auto-confirmed when payment succeeds — you don't need to manually confirm them. Manual confirmation is mainly for free sessions or offline arrangements.</span>
+        </div>
+      </div>
+
+      <!-- ③ BULK BOOKINGS -->
+      <div class="card guide-card" id="guide-bulk">
+        <div class="guide-section-head">
+          <span class="guide-icon">🗂</span>
+          <div>
+            <div class="card-title" style="margin-bottom:0;">Bulk Bookings / Packages</div>
+            <div class="guide-where">Admin → Bulk Bookings &nbsp;|&nbsp; Public site → "Book a Package" button</div>
+          </div>
+        </div>
+        <p class="guide-intro">Customers can book 5, 10, 15, or a custom number of sessions in one go and pay once. All slots are locked simultaneously.</p>
+
+        <div class="guide-steps">
+          <div class="guide-step"><span class="step-num">1</span><div><strong>How customers book a package</strong> — On the homepage, click <em>Book a Package ›</em> in the hero or next to any service. Or open the booking modal by clicking any time slot, then tick <em>"Book a package of multiple sessions"</em>. Choose 5 / 10 / 15 / Custom, fill in details, then pay.</div></div>
+          <div class="guide-step"><span class="step-num">2</span><div><strong>View all packages</strong> — Go to <strong>Admin → Bulk Bookings</strong>. Each row shows the customer name, session count, total amount, and status. Click a row to expand and see every individual slot included.</div></div>
+          <div class="guide-step"><span class="step-num">3</span><div><strong>Release a slot</strong> — If a customer wants to change one of their booked times, click <strong>Release</strong> next to that slot. The slot becomes free on the calendar. The bulk booking status changes to <em>partial</em>.</div></div>
+          <div class="guide-step"><span class="step-num">4</span><div><strong>Rebook a slot</strong> — After releasing, click <strong>Rebook</strong> on the same row. A panel appears with a dropdown of all available future slots. Select the customer's preferred new time and click <strong>Confirm Rebook</strong>.</div></div>
+          <div class="guide-step"><span class="step-num">5</span><div><strong>Refunds</strong> — If payment was taken but all slots become unavailable, the system automatically issues a full Stripe refund and marks the booking as <em>refunded</em>. Manual refunds for partial changes must be processed in your Stripe dashboard.</div></div>
+        </div>
+      </div>
+
+      <!-- ④ SITE CONTENT -->
+      <div class="card guide-card" id="guide-content">
+        <div class="guide-section-head">
+          <span class="guide-icon">✍</span>
+          <div>
+            <div class="card-title" style="margin-bottom:0;">Site Content</div>
+            <div class="guide-where">Admin → Site Content</div>
+          </div>
+        </div>
+        <p class="guide-intro">Edit every piece of text that appears on the public website — hero, about, contact, footer, the 6 R's cards, and the How It Works steps.</p>
+
+        <div class="guide-steps">
+          <div class="guide-step"><span class="step-num">1</span><div><strong>Edit any text</strong> — Type directly into any field. All text boxes are live-editable. Click <strong>💾 Save Changes</strong> at the top-right when done. Changes appear on the website instantly.</div></div>
+          <div class="guide-step"><span class="step-num">2</span><div><strong>Homepage Texts</strong> — Change the large hero title, subtitle, and the two button labels (<em>Begin Your Journey</em> and <em>Explore Services</em>).</div></div>
+          <div class="guide-step"><span class="step-num">3</span><div><strong>About Section</strong> — Update the About title and two body paragraphs shown on the homepage About block and the About page.</div></div>
+          <div class="guide-step"><span class="step-num">4</span><div><strong>Contact &amp; Footer Info</strong> — Update your email address, phone number, location, Instagram URL, WhatsApp link, footer tagline, and copyright text. These appear in the footer and contact sections on every page.</div></div>
+          <div class="guide-step"><span class="step-num">5</span><div><strong>6 R's of Sacred Healing™</strong> — Edit the title, pull-quote, and description for each of the 6 cards (Recognise, Release, Restore, Realign, Reclaim, Radiate). These appear on the homepage, Philosophy page, and About page.</div></div>
+          <div class="guide-step"><span class="step-num">6</span><div><strong>How It Works</strong> — Edit the three journey steps and the "Not Sure?" guidance section and its button label.</div></div>
+        </div>
+
+        <div class="guide-tip">
+          <span class="tip-icon">💡</span>
+          <span>Content is shared across all pages automatically. Changing the hero title here updates it on the homepage, and changing footer info updates it on every page simultaneously.</span>
+        </div>
+      </div>
+
+      <!-- ⑤ IMAGES -->
+      <div class="card guide-card" id="guide-images">
+        <div class="guide-section-head">
+          <span class="guide-icon">🖼</span>
+          <div>
+            <div class="card-title" style="margin-bottom:0;">Images &amp; Backgrounds</div>
+            <div class="guide-where">Admin → Site Content → Image Uploads section</div>
+          </div>
+        </div>
+        <p class="guide-intro">Upload photos for your site logo, healer photos, and section background images. All uploads are applied instantly — no page reload needed.</p>
+
+        <div class="guide-steps">
+          <div class="guide-step"><span class="step-num">1</span><div><strong>Site Logo</strong> — Upload a PNG or SVG logo. Appears in the top-left navbar and footer on every page.</div></div>
+          <div class="guide-step"><span class="step-num">2</span><div><strong>Healer Photo — Hero section</strong> — The photo that appears next to the main title on the homepage hero.</div></div>
+          <div class="guide-step"><span class="step-num">3</span><div><strong>Healer Photo — About section</strong> — A separate photo for the About page and the About section on the homepage. Can be the same image or a different one.</div></div>
+          <div class="guide-step"><span class="step-num">4</span><div><strong>Section Background Images</strong> — Upload an optional atmospheric background image for any section (Hero, About, 6 R's, Services, How It Works, Testimonials). A dark overlay is applied automatically so text stays readable. Leave empty to use the default solid colour.</div></div>
+          <div class="guide-step"><span class="step-num">5</span><div><strong>6 R's Icon Images</strong> — Upload a custom photo or icon for each of the 6 R cards. These replace the default illustrated SVG icons. Leave empty to keep the default illustration.</div></div>
+        </div>
+
+        <div class="guide-tip">
+          <span class="tip-icon">💡</span>
+          <span>Accepted formats: JPEG, PNG, WebP. Maximum file size: 5 MB. Images are stored permanently and survive server restarts and redeployments.</span>
+        </div>
+      </div>
+
+      <!-- ⑥ SERVICES -->
+      <div class="card guide-card" id="guide-services">
+        <div class="guide-section-head">
+          <span class="guide-icon">✨</span>
+          <div>
+            <div class="card-title" style="margin-bottom:0;">Services</div>
+            <div class="guide-where">Admin → Services</div>
+          </div>
+        </div>
+        <p class="guide-intro">Add, edit, reorder, and delete the healing services offered on the site. Each service gets its own card on the homepage and its own detail page.</p>
+
+        <div class="guide-steps">
+          <div class="guide-step"><span class="step-num">1</span><div><strong>Add a service</strong> — Fill in the form on the left: title, description, duration, price, and up to 6 bullet-point features. Click <strong>Save Service</strong>. The service appears immediately on the public website.</div></div>
+          <div class="guide-step"><span class="step-num">2</span><div><strong>Edit a service</strong> — Click the <strong>pencil ✎</strong> icon next to any service in the table. The form loads with existing values — update and click <strong>Save Service</strong>.</div></div>
+          <div class="guide-step"><span class="step-num">3</span><div><strong>Reorder services</strong> — Use the <strong>↑ Up</strong> and <strong>↓ Down</strong> buttons to change the order services appear on the homepage and services page. The order saves automatically.</div></div>
+          <div class="guide-step"><span class="step-num">4</span><div><strong>Add an emoji icon</strong> — Click the smiley face button next to the Icon field to open the icon picker. Select any emoji to use as the service card icon.</div></div>
+          <div class="guide-step"><span class="step-num">5</span><div><strong>Service detail page</strong> — Each service automatically gets its own URL at <code>/services/service-title</code>. Customers can visit it directly or be linked there from the service card "Learn More" button.</div></div>
+          <div class="guide-step"><span class="step-num">6</span><div><strong>Delete a service</strong> — Click the <strong>✕ Delete</strong> button. This removes the service from the database and the public website immediately. This action cannot be undone.</div></div>
+        </div>
+      </div>
+
+      <!-- ⑦ REVIEWS -->
+      <div class="card guide-card" id="guide-reviews">
+        <div class="guide-section-head">
+          <span class="guide-icon">⭐</span>
+          <div>
+            <div class="card-title" style="margin-bottom:0;">Reviews</div>
+            <div class="guide-where">Admin → Reviews &nbsp;|&nbsp; Public site → Testimonials section → "Share Your Journey"</div>
+          </div>
+        </div>
+        <p class="guide-intro">Customers can submit reviews from the public site. All reviews are held for your approval before appearing on the website — you decide what goes live.</p>
+
+        <div class="guide-steps">
+          <div class="guide-step"><span class="step-num">1</span><div><strong>How customers submit a review</strong> — On the homepage, scroll to the Testimonials section and click <strong>Share Your Journey</strong>. They fill in their name and experience and submit. The review is sent to you for approval.</div></div>
+          <div class="guide-step"><span class="step-num">2</span><div><strong>Approve a review</strong> — Go to <strong>Admin → Reviews</strong>. Pending reviews are listed at the top. Click <strong>Approve</strong> to make it visible on the public testimonials carousel immediately.</div></div>
+          <div class="guide-step"><span class="step-num">3</span><div><strong>Reject a review</strong> — Click <strong>Delete</strong> to permanently remove a review that is not appropriate or relevant.</div></div>
+          <div class="guide-step"><span class="step-num">4</span><div><strong>Approved reviews appear</strong> — Once approved, the review joins the testimonials carousel on the homepage and the dedicated Testimonials page. It auto-rotates with other reviews.</div></div>
+        </div>
+      </div>
+
+      <!-- ⑧ FAQs -->
+      <div class="card guide-card" id="guide-faqs">
+        <div class="guide-section-head">
+          <span class="guide-icon">❓</span>
+          <div>
+            <div class="card-title" style="margin-bottom:0;">FAQs</div>
+            <div class="guide-where">Admin → FAQ &nbsp;|&nbsp; Public site → /faq.html</div>
+          </div>
+        </div>
+        <p class="guide-intro">Manage the Frequently Asked Questions that appear on the public FAQ page. You can add, edit, delete, and reorder questions.</p>
+
+        <div class="guide-steps">
+          <div class="guide-step"><span class="step-num">1</span><div><strong>Add an FAQ</strong> — Type the question and answer into the form at the top of the FAQ page. Click <strong>Add FAQ</strong>. It appears on the public FAQ page instantly.</div></div>
+          <div class="guide-step"><span class="step-num">2</span><div><strong>Edit an FAQ</strong> — Click the <strong>pencil ✎</strong> icon next to any question. Update the text and save.</div></div>
+          <div class="guide-step"><span class="step-num">3</span><div><strong>Reorder FAQs</strong> — Use the <strong>↑</strong> and <strong>↓</strong> buttons to move questions up or down. The most important questions are typically shown first.</div></div>
+          <div class="guide-step"><span class="step-num">4</span><div><strong>Delete an FAQ</strong> — Click the <strong>✕</strong> button to permanently remove a question.</div></div>
+          <div class="guide-step"><span class="step-num">5</span><div><strong>Rich text in answers</strong> — FAQ answers support basic formatting: wrap text in <code>**bold**</code> for bold, start lines with <code>-</code> for bullet points. Links use standard HTML: <code>&lt;a href="..."&gt;link text&lt;/a&gt;</code>.</div></div>
+        </div>
+      </div>
+
+      <!-- ⑨ NAVIGATION -->
+      <div class="card guide-card" id="guide-nav">
+        <div class="guide-section-head">
+          <span class="guide-icon">🧭</span>
+          <div>
+            <div class="card-title" style="margin-bottom:0;">Navigation &amp; Section Control</div>
+            <div class="guide-where">Admin → Navigation</div>
+          </div>
+        </div>
+        <p class="guide-intro">Control which sections appear in the header and footer menus, whether they live on the homepage or their own page, and what order they appear in.</p>
+
+        <div class="guide-steps">
+          <div class="guide-step"><span class="step-num">1</span><div><strong>Section location — Home vs Own Page</strong> — Each section can either live on the homepage (scrolls to it via anchor) or have its own dedicated URL (e.g. <code>/about</code>, <code>/services</code>). Change this in the <em>Location</em> column dropdown.</div></div>
+          <div class="guide-step"><span class="step-num">2</span><div><strong>Show in Header Nav</strong> — Tick this checkbox to show the section link in the top navigation bar. Untick to hide it from the header.</div></div>
+          <div class="guide-step"><span class="step-num">3</span><div><strong>Show in Footer Nav</strong> — Tick to show the link in the footer navigation. Header and footer can be controlled independently.</div></div>
+          <div class="guide-step"><span class="step-num">4</span><div><strong>Reorder sections</strong> — Drag rows using the ⠿ handle on the left to change the order sections appear in the navigation menus. Lower position = further left in the header.</div></div>
+          <div class="guide-step"><span class="step-num">5</span><div><strong>Menu labels</strong> — Edit the text shown in the navigation menu in the <em>Menu Label</em> column. For example, change "About" to "Our Story".</div></div>
+          <div class="guide-step"><span class="step-num">6</span><div><strong>Save</strong> — Click <strong>💾 Save Changes</strong>. The navigation updates on the live site immediately for all visitors.</div></div>
+        </div>
+
+        <div class="guide-tip">
+          <span class="tip-icon">💡</span>
+          <span>If a section is set to <em>Own Page</em>, it gets a direct URL (e.g. <code>/philosophy</code>) and is removed from the homepage flow. Set it back to <em>Home</em> to reintegrate it into the single-page experience.</span>
+        </div>
+      </div>
+
+      <!-- ⑩ THEME & FONTS -->
+      <div class="card guide-card" id="guide-theme">
+        <div class="guide-section-head">
+          <span class="guide-icon">🎨</span>
+          <div>
+            <div class="card-title" style="margin-bottom:0;">Theme &amp; Fonts</div>
+            <div class="guide-where">Admin → Theme &amp; Fonts</div>
+          </div>
+        </div>
+        <p class="guide-intro">Customise the look of the entire website — change the heading and body fonts, and the accent colour used for buttons, highlights, and decorative elements.</p>
+
+        <div class="guide-steps">
+          <div class="guide-step"><span class="step-num">1</span><div><strong>Heading Font</strong> — Choose a font for all titles, section headers, and pull-quotes. Click any font tile to select it. The live preview on the right updates instantly.</div></div>
+          <div class="guide-step"><span class="step-num">2</span><div><strong>Body Font</strong> — Choose a font for paragraphs, buttons, and navigation. A different body font from the heading creates visual contrast and sophistication.</div></div>
+          <div class="guide-step"><span class="step-num">3</span><div><strong>Accent Colour</strong> — Click any colour swatch to change the accent. This colour is used for buttons, gold star ratings, decorative lines, and hover effects across the whole site.</div></div>
+          <div class="guide-step"><span class="step-num">4</span><div><strong>Save</strong> — Click <strong>💾 Save Theme</strong>. The font and colour changes go live on the public website immediately.</div></div>
+        </div>
+
+        <div class="guide-tip">
+          <span class="tip-icon">💡</span>
+          <span>The live preview card on the right shows exactly how your chosen heading font, body font, and accent colour will look together before you save.</span>
+        </div>
+      </div>
+
+      <!-- ⑪ SETTINGS -->
+      <div class="card guide-card" id="guide-settings">
+        <div class="guide-section-head">
+          <span class="guide-icon">⚙</span>
+          <div>
+            <div class="card-title" style="margin-bottom:0;">System Settings</div>
+            <div class="guide-where">Admin → Settings</div>
+          </div>
+        </div>
+        <p class="guide-intro">View the live status of Stripe payments and email notifications. Configuration is done via the <code>.env</code> file on the server.</p>
+
+        <div class="guide-steps">
+          <div class="guide-step"><span class="step-num">1</span><div><strong>Stripe Payments</strong> — The green/red indicator shows whether Stripe is active. Green = paid bookings go through Stripe checkout. Red = all bookings are free (no payment taken). To enable Stripe, add <code>STRIPE_SECRET_KEY=sk_live_...</code> to your <code>.env</code> file and restart the server.</div></div>
+          <div class="guide-step"><span class="step-num">2</span><div><strong>Test vs Live mode</strong> — Use <code>sk_test_</code> keys while testing. Switch to <code>sk_live_</code> when ready for real payments. Never mix test and live keys.</div></div>
+          <div class="guide-step"><span class="step-num">3</span><div><strong>Email Notifications</strong> — Green = booking confirmation emails are sent to customers and alert emails are sent to you. Red = emails are disabled. To enable, set all SMTP settings in <code>.env</code>: <code>SMTP_HOST</code>, <code>SMTP_PORT</code>, <code>SMTP_USER</code>, <code>SMTP_PASS</code>, <code>SMTP_FROM</code>, and <code>ADMIN_EMAIL</code>.</div></div>
+          <div class="guide-step"><span class="step-num">4</span><div><strong>Change admin password</strong> — Update the <code>ADMIN_PASSWORD</code> value in the <code>.env</code> file and restart the server. Use a strong, unique password for the live site.</div></div>
+        </div>
+
+        <div class="guide-tip">
+          <span class="tip-icon">⚠️</span>
+          <span>After any <code>.env</code> change, the server must be restarted for the change to take effect. Contact your developer if you are unsure how to do this.</span>
+        </div>
+      </div>
+
+      <!-- Public site features summary -->
+      <div class="card guide-card" style="margin-top:0.5rem;">
+        <div class="card-title" style="margin-bottom:1rem;">What Customers Can Do on the Public Site</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+          <div class="guide-feature-block">
+            <div class="guide-feature-title">📅 Book a Session</div>
+            <p>Click any available time slot on the homepage booking calendar. Fill in name, email, phone, service, and optional message. Free sessions confirm instantly; paid sessions go to Stripe checkout.</p>
+          </div>
+          <div class="guide-feature-block">
+            <div class="guide-feature-title">🗂 Book a Package</div>
+            <p>Click <em>Book a Package ›</em> in the hero or next to any service. Choose 5 / 10 / 15 / custom sessions. The system picks the next available slots automatically. Pay once for all sessions.</p>
+          </div>
+          <div class="guide-feature-block">
+            <div class="guide-feature-title">📞 Free Clarity Call</div>
+            <p>Click <em>Schedule a Free Clarity Call</em> in the "How It Works" section. Fill in the short form and Reena is notified by email to arrange a suitable time.</p>
+          </div>
+          <div class="guide-feature-block">
+            <div class="guide-feature-title">⭐ Write a Review</div>
+            <p>Scroll to the Testimonials section and click <em>Share Your Journey</em>. Submit name and experience. Review is held for approval before appearing publicly.</p>
+          </div>
+          <div class="guide-feature-block">
+            <div class="guide-feature-title">❓ FAQ Page</div>
+            <p>Visit <code>/faq.html</code> or click FAQ in the navigation to read answers to common questions. Content is managed from Admin → FAQ.</p>
+          </div>
+          <div class="guide-feature-block">
+            <div class="guide-feature-title">✨ Services Pages</div>
+            <p>Each service has a dedicated detail page at <code>/services/service-name</code> with full description, features, and a direct booking button. Accessible from service cards.</p>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /page-guide -->
 
   </main>
 </div>

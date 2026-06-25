@@ -917,6 +917,102 @@
     </div>
   </footer>
 
+  <!-- ============ PACKAGE BOOKING MODAL ============ -->
+  <div class="modal-overlay" id="pkg-modal" onclick="if(event.target===this)closePkgModal()">
+    <div class="modal-box" style="max-width:520px;">
+      <button class="modal-close" onclick="closePkgModal()">✕</button>
+
+      <!-- Step 1: Configure -->
+      <div id="pkg-step-config">
+        <h2 class="modal-title">Book a Session Package</h2>
+        <p style="color:var(--text-body);font-size:0.88rem;margin-bottom:1.5rem;line-height:1.6;">Choose your service, how many sessions you'd like, and when you'd like to start — we'll find and reserve all the slots for you.</p>
+
+        <div class="modal-form-group">
+          <label>Service</label>
+          <select id="pkg-service" class="modal-input"></select>
+        </div>
+
+        <div class="modal-form-group">
+          <label>Number of Sessions</label>
+          <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-top:0.25rem;">
+            <label class="bulk-count-opt"><input type="radio" name="pkg-count" value="5"><span>5</span></label>
+            <label class="bulk-count-opt"><input type="radio" name="pkg-count" value="10" checked><span>10</span></label>
+            <label class="bulk-count-opt"><input type="radio" name="pkg-count" value="15"><span>15</span></label>
+            <label class="bulk-count-opt"><input type="radio" name="pkg-count" value="custom"><span>Custom</span></label>
+          </div>
+          <input type="number" id="pkg-count-custom" class="modal-input" min="2" max="50" placeholder="Enter number of sessions (2–50)" style="display:none;margin-top:0.6rem;">
+        </div>
+
+        <div class="modal-form-group">
+          <label>Starting From</label>
+          <select id="pkg-start-slot" class="modal-input">
+            <option value="">Loading available slots…</option>
+          </select>
+        </div>
+
+        <button class="btn btn-gold btn-large modal-submit" onclick="pkgGoToDetails()">Next: Your Details →</button>
+      </div>
+
+      <!-- Step 2: Details -->
+      <div id="pkg-step-details" style="display:none;">
+        <h2 class="modal-title">Your Details</h2>
+        <div class="modal-form-group">
+          <label>Full Name</label>
+          <input type="text" id="pkg-name" class="modal-input" placeholder="Your full name" autocomplete="name">
+        </div>
+        <div class="modal-form-group">
+          <label>Email Address</label>
+          <input type="email" id="pkg-email" class="modal-input" placeholder="your@email.com" autocomplete="email">
+        </div>
+        <div class="modal-form-group">
+          <label>Phone Number</label>
+          <input type="tel" id="pkg-phone" class="modal-input" placeholder="+44 7700 000000" autocomplete="tel">
+        </div>
+        <div class="modal-form-group">
+          <label>Message <span style="font-weight:400;color:var(--text-muted);">(optional)</span></label>
+          <textarea id="pkg-message" class="modal-input" rows="2" placeholder="Anything you'd like Reena to know before your sessions…"></textarea>
+        </div>
+        <div style="display:flex;gap:0.75rem;margin-top:1.25rem;">
+          <button class="btn btn-outline" onclick="pkgShowStep('config')">← Back</button>
+          <button class="btn btn-gold btn-large modal-submit" id="pkg-preview-btn" style="flex:1;" onclick="pkgPreview()">Preview Package →</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Preview -->
+      <div id="pkg-step-preview" style="display:none;">
+        <h2 class="modal-title">Your Package</h2>
+        <div id="pkg-preview-summary" style="font-size:0.9rem;color:var(--text-body);margin-bottom:1rem;padding:0.75rem 1rem;background:rgba(184,146,74,0.07);border:1px solid rgba(184,146,74,0.2);border-radius:8px;"></div>
+        <div id="pkg-preview-list" style="display:flex;flex-direction:column;gap:0.4rem;margin-bottom:1rem;max-height:240px;overflow-y:auto;"></div>
+        <div id="pkg-preview-total" style="font-family:var(--font-heading);font-size:1.4rem;color:var(--charcoal);text-align:right;padding-top:0.75rem;border-top:1px solid rgba(184,146,74,0.2);margin-bottom:1.25rem;"></div>
+        <div style="display:flex;gap:0.75rem;">
+          <button class="btn btn-outline" onclick="pkgShowStep('details')">← Back</button>
+          <button class="btn btn-gold btn-large modal-submit" id="pkg-confirm-btn" style="flex:1;" onclick="pkgConfirm()">Book All Sessions →</button>
+        </div>
+      </div>
+
+      <!-- Step 4: Payment -->
+      <div id="pkg-step-payment" style="display:none;">
+        <h2 class="modal-title">Complete Payment</h2>
+        <p style="font-size:0.85rem;color:var(--text-body);margin-bottom:1.25rem;" id="pkg-payment-summary"></p>
+        <div id="pkg-payment-element" style="margin-bottom:1rem;"></div>
+        <div id="pkg-payment-error" class="payment-error-msg" style="display:none;margin-bottom:1rem;"></div>
+        <div style="display:flex;gap:0.75rem;">
+          <button class="btn btn-outline" onclick="pkgShowStep('preview')">← Back</button>
+          <button class="btn btn-gold btn-large modal-submit" id="pkg-pay-btn" style="flex:1;" onclick="pkgSubmitPayment()">Pay Now →</button>
+        </div>
+      </div>
+
+      <!-- Step 5: Success -->
+      <div id="pkg-step-success" style="display:none;text-align:center;padding:1.5rem 0;">
+        <div style="font-size:2.5rem;margin-bottom:1rem;color:var(--olive);">✦</div>
+        <h2 class="modal-title">Package Confirmed!</h2>
+        <div id="pkg-success-msg" style="color:var(--text-body);font-size:0.95rem;line-height:1.8;margin-bottom:1.5rem;"></div>
+        <button class="btn btn-gold" onclick="closePkgModal()">Done ✓</button>
+      </div>
+
+    </div>
+  </div>
+
   <!-- ============ BOOKING MODAL ============ -->
   <div class="modal-overlay" id="booking-modal" onclick="closeModalOnOverlay(event)">
     <div class="modal-box">
