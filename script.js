@@ -734,7 +734,15 @@ function closeBookingModal() {
   if (stepPayment) stepPayment.style.display = 'none';
   if (stepSuccess) stepSuccess.style.display = 'none';
   const stepBulkPreview = document.getElementById('modal-step-bulk-preview');
-  if (stepBulkPreview) stepBulkPreview.style.display = 'none';
+  if (stepBulkPreview) {
+    stepBulkPreview.style.display = 'none';
+    const pl = document.getElementById('bulk-preview-list');
+    const ps = document.getElementById('bulk-preview-summary');
+    const pt = document.getElementById('bulk-preview-total');
+    if (pl) pl.innerHTML = '';
+    if (ps) ps.textContent = '';
+    if (pt) pt.textContent = '';
+  }
   // Tear down Stripe elements
   if (_stripeElements) {
     try { _stripeElements.getElement('payment')?.unmount(); } catch(e) {}
@@ -827,6 +835,65 @@ document.addEventListener('keydown', e => {
   if (e.key === 'Escape') closeBookingModal();
 });
 
+// ── Testimonials Carousel ─────────────────────────────────────
+let _carouselIdx   = 0;
+let _carouselTotal = 0;
+let _carouselTimer = null;
+
+function _carouselGoTo(n) {
+  const track = document.querySelector('.carousel-track');
+  if (!track) return;
+  _carouselIdx = (n + _carouselTotal) % _carouselTotal;
+  track.style.transform = `translateX(-${100 * _carouselIdx}%)`;
+  document.querySelectorAll('.carousel-dot').forEach((d, i) =>
+    d.classList.toggle('active', i === _carouselIdx)
+  );
+}
+
+function _carouselBuildDots() {
+  const el = document.getElementById('carousel-dots');
+  if (!el) return;
+  el.innerHTML = Array.from({ length: _carouselTotal }, (_, i) =>
+    `<button class="carousel-dot${i === 0 ? ' active' : ''}" aria-label="Review ${i + 1}"></button>`
+  ).join('');
+  el.querySelectorAll('.carousel-dot').forEach((d, i) =>
+    d.addEventListener('click', () => { _carouselGoTo(i); _carouselRestart(); })
+  );
+}
+
+function _carouselStart() {
+  _carouselTimer = setInterval(() => { _carouselGoTo(_carouselIdx + 1); }, 6000);
+}
+
+function _carouselRestart() {
+  clearInterval(_carouselTimer);
+  _carouselStart();
+}
+
+function initCarousel() {
+  const track = document.querySelector('.carousel-track');
+  if (!track) return;
+  _carouselTotal = track.querySelectorAll('.testimonial-card').length;
+  if (_carouselTotal < 2) return;
+  _carouselIdx = 0;
+  track.style.transform = 'translateX(0)';
+  _carouselBuildDots();
+  _carouselStart();
+  document.getElementById('carousel-prev')?.addEventListener('click', () => { _carouselGoTo(_carouselIdx - 1); _carouselRestart(); });
+  document.getElementById('carousel-next')?.addEventListener('click', () => { _carouselGoTo(_carouselIdx + 1); _carouselRestart(); });
+}
+
+function reinitCarousel() {
+  clearInterval(_carouselTimer);
+  const track = document.querySelector('.carousel-track');
+  if (!track) return;
+  _carouselTotal = track.querySelectorAll('.testimonial-card').length;
+  _carouselIdx = 0;
+  if (track) track.style.transform = 'translateX(0)';
+  _carouselBuildDots();
+  if (_carouselTotal >= 2) _carouselStart();
+}
+
 // ── Info Banner ───────────────────────────────────────────────
 function showInfoBanner(msg, autoDismissMs = 8000) {
   const banner = document.getElementById('info-banner');
@@ -844,6 +911,7 @@ function showInfoBanner(msg, autoDismissMs = 8000) {
 window.addEventListener('DOMContentLoaded', () => {
   // Pre-fetch Stripe publishable key so it's ready when needed
   initStripe();
+  initCarousel();
 
   const params = new URLSearchParams(window.location.search);
   // Legacy: handle redirect back from old Stripe Checkout Session flow

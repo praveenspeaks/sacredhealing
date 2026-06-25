@@ -1317,7 +1317,7 @@ body.has-announce .navbar {
 }
 
 /* ============================================================
-   TESTIMONIALS
+   TESTIMONIALS — CAROUSEL
    ============================================================ */
 .testimonials {
   position: relative;
@@ -1327,97 +1327,188 @@ body.has-announce .navbar {
 }
 
 .testimonials .section-tag { color: var(--text-muted); }
-
 .testimonials .section-title { color: var(--charcoal); }
-
 .testimonials .section-title em { color: var(--olive); }
-
 .testimonials .section-subtitle { color: var(--text-body); }
 
-.testimonials-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-  align-items: start;
+/* Carousel layout */
+.testimonials-carousel {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  max-width: 780px;
+  margin: 0 auto 1.75rem;
 }
 
-.testimonial-card {
-  background: rgba(255, 255, 255, 0.72);
-  border: 1px solid rgba(196, 168, 130, 0.2);
+.carousel-viewport {
+  flex: 1;
+  overflow: hidden;
   border-radius: var(--radius-lg);
-  padding: 2.25rem 1.75rem;
-  position: relative;
-  transition: var(--transition);
-  backdrop-filter: blur(8px);
 }
 
-.testimonial-card:hover {
-  border-color: rgba(196, 168, 130, 0.38);
-  transform: translateY(-4px);
-  box-shadow: var(--shadow-md);
+.carousel-track {
+  display: flex;
+  transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
 }
 
-.testimonial-card.featured {
-  background: rgba(255, 255, 255, 0.9);
-  border-color: rgba(196, 168, 130, 0.32);
-  box-shadow: var(--shadow-sm);
+/* Arrow buttons */
+.carousel-arrow {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(184, 146, 74, 0.35);
+  background: rgba(255, 255, 255, 0.85);
+  color: var(--olive);
+  font-size: 1.8rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, border-color 0.2s, transform 0.15s;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+}
+.carousel-arrow:hover {
+  background: var(--olive);
+  border-color: var(--olive);
+  color: #fff;
+  transform: scale(1.08);
+}
+
+/* Dot indicators */
+.carousel-dots {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 2.5rem;
+}
+.carousel-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(184, 146, 74, 0.25);
+  cursor: pointer;
+  transition: background 0.25s, transform 0.25s;
+  padding: 0;
+}
+.carousel-dot.active {
+  background: var(--olive);
+  transform: scale(1.35);
+}
+
+/* Individual card */
+.testimonial-card {
+  flex: 0 0 100%;
+  background: #fff;
+  border: 1px solid rgba(196, 168, 130, 0.18);
+  border-radius: var(--radius-lg);
+  padding: 3rem 3.5rem;
+  text-align: center;
+  box-shadow: 0 4px 28px rgba(0, 0, 0, 0.06);
+  box-sizing: border-box;
+}
+
+.testimonial-stars {
+  color: #c9973e;
+  font-size: 1.1rem;
+  letter-spacing: 0.18em;
+  margin-bottom: 1.25rem;
 }
 
 .testimonial-quote {
-  font-family: var(--font-heading);
-  font-size: 3.5rem;
-  line-height: 0.7;
-  color: rgba(196, 168, 130, 0.22);
-  margin-bottom: 1rem;
+  font-family: Georgia, serif;
+  font-size: 4.5rem;
+  line-height: 0.6;
+  color: rgba(184, 146, 74, 0.18);
+  margin-bottom: 1.25rem;
+  display: block;
 }
 
 .testimonial-text {
   font-family: var(--font-heading);
-  font-size: 1.05rem;
+  font-size: 1.13rem;
   color: var(--text-body);
-  line-height: 1.8;
+  line-height: 1.85;
   font-style: italic;
-  margin-bottom: 1.75rem;
+  margin-bottom: 2rem;
+  max-width: 580px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
-.testimonial-author {
+.testimonial-footer {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.85rem;
+  justify-content: center;
+  gap: 0.85rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(196, 168, 130, 0.18);
 }
 
 .author-avatar {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
-  background: var(--olive-glow);
-  border: 1.5px solid var(--border);
+  background: linear-gradient(135deg, rgba(184,146,74,0.15), rgba(184,146,74,0.28));
+  border: 1.5px solid rgba(184, 146, 74, 0.3);
   display: flex;
   align-items: center;
   justify-content: center;
   font-family: var(--font-heading);
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 600;
   color: var(--olive);
   flex-shrink: 0;
 }
 
-.testimonial-author h4 {
-  font-size: 0.9rem;
+.author-info { text-align: left; }
+
+.author-name {
+  font-size: 0.92rem;
+  font-weight: 600;
   color: var(--charcoal);
+  margin: 0 0 0.15rem;
 }
 
-.testimonial-author span {
+.author-service {
   font-size: 0.76rem;
   color: var(--text-muted);
+  letter-spacing: 0.02em;
 }
 
-.testimonial-stars {
-  color: var(--olive-light);
-  font-size: 0.82rem;
-  letter-spacing: 0.1em;
+/* Write a review CTA */
+.review-cta {
+  text-align: center;
+  padding: 2rem 1.5rem;
+  background: rgba(255,255,255,0.55);
+  border: 1px solid rgba(184,146,74,0.18);
+  border-radius: var(--radius-lg);
+  max-width: 480px;
+  margin: 0 auto;
 }
+.review-cta-text {
+  font-size: 0.9rem;
+  color: var(--text-body);
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+.review-cta-btn {
+  padding: 0.7rem 1.75rem;
+  background: var(--olive);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  letter-spacing: 0.03em;
+  transition: opacity 0.2s;
+}
+.review-cta-btn:hover { opacity: 0.88; }
 
 /* ============================================================
    THE 6 R'S OF SACRED HEALING™
@@ -2888,8 +2979,9 @@ textarea.modal-input {
   .guidance-cta-actions .btn { width: 100%; text-align: center; }
 
   .services-grid { grid-template-columns: 1fr; }
-  .testimonials-grid { grid-template-columns: 1fr; }
-  .testimonial-card.featured { transform: none; }
+  .testimonials-carousel { gap: 0.6rem; }
+  .carousel-arrow { width: 36px; height: 36px; font-size: 1.5rem; }
+  .testimonial-card { padding: 2.25rem 1.5rem; }
 
   .process-steps { flex-direction: column; align-items: center; }
   .process-connector { flex-direction: column; }

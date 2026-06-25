@@ -307,25 +307,25 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Populate Reviews
         const reviewsGrid = document.querySelector('.testimonial-slider');
-        if (data.reviews && reviewsGrid) {
+        if (data.reviews && data.reviews.length && reviewsGrid) {
             reviewsGrid.innerHTML = '';
             data.reviews.forEach(r => {
+                const initial = escHtml((r.author || '?')[0].toUpperCase());
                 reviewsGrid.innerHTML += `
                 <div class="testimonial-card">
                   <div class="testimonial-stars">★★★★★</div>
-                  <p class="testimonial-text">"${r.comment}"</p>
-                  <h4 class="testimonial-author">— ${r.author}</h4>
-                </div>
-                `;
+                  <div class="testimonial-quote">❝</div>
+                  <p class="testimonial-text">${escHtml(r.comment)}</p>
+                  <div class="testimonial-footer">
+                    <div class="author-avatar">${initial}</div>
+                    <div class="author-info">
+                      <h4 class="author-name">${escHtml(r.author)}</h4>
+                      <span class="author-service">Healing Client</span>
+                    </div>
+                  </div>
+                </div>`;
             });
-            reviewsGrid.innerHTML += `
-            <div class="testimonial-card submit-review-card" style="display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;background:rgba(255,255,255,0.55);border:1px solid rgba(184,146,74,0.25);padding:2.5rem 1.75rem;">
-                <div style="font-size:2rem;margin-bottom:1rem;color:var(--gold,#b8924a);">✦</div>
-                <h4 style="font-family:var(--font-heading);font-size:1.5rem;color:var(--charcoal,#2A1F1A);font-weight:400;margin-bottom:0.6rem;">Share Your Journey</h4>
-                <p style="font-size:0.88rem;color:var(--text-body,#6B4F3A);line-height:1.75;margin-bottom:1.75rem;max-width:240px;">Your healing story could be the light that guides someone else's path.</p>
-                <button onclick="openReviewModal()" style="padding:0.75rem 1.6rem;background:var(--gold,#b8924a);color:#fff;border:none;border-radius:6px;font-family:var(--font-body);font-size:0.85rem;font-weight:600;cursor:pointer;letter-spacing:0.03em;transition:opacity 0.2s;" onmouseover="this.style.opacity=0.88" onmouseout="this.style.opacity=1">Write a Review →</button>
-            </div>
-            `;
+            if (typeof reinitCarousel === 'function') reinitCarousel();
         }
 
         // Populate FAQs (faq.html)

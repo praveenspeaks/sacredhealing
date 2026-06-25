@@ -59,8 +59,19 @@
       <div class="section-header">
         <p class="section-subtitle">Real healing. Real change. Hear from those who found clarity and peace.</p>
       </div>
-      <div class="testimonials-grid testimonial-slider">
-        <!-- Loaded dynamically by cms_frontend.js -->
+      <div class="testimonials-carousel">
+        <button class="carousel-arrow carousel-arrow--prev" id="carousel-prev" aria-label="Previous review">&#8249;</button>
+        <div class="carousel-viewport">
+          <div class="carousel-track testimonial-slider">
+            <!-- Loaded dynamically by cms_frontend.js -->
+          </div>
+        </div>
+        <button class="carousel-arrow carousel-arrow--next" id="carousel-next" aria-label="Next review">&#8250;</button>
+      </div>
+      <div class="carousel-dots" id="carousel-dots"></div>
+      <div class="review-cta">
+        <p class="review-cta-text">Your healing story could be the light that guides someone else's path.</p>
+        <button class="review-cta-btn" onclick="openReviewModal()">Share Your Journey ›</button>
       </div>
     </div>
   </section>

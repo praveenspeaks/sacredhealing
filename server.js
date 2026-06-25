@@ -44,6 +44,22 @@ const contactLimiter = rateLimit({
   message: { error: 'Too many messages sent. Please wait an hour before trying again.' },
 });
 
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many login attempts. Please wait 15 minutes.' },
+});
+
+const confirmLimiter = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Too many confirmation attempts. Please wait.' },
+});
+
 // ── Admin config ────────────────────────────────────────────
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'sacred2024';
 if (!process.env.ADMIN_PASSWORD) {
@@ -515,6 +531,14 @@ app.post('/api/bookings/confirm', async (req, res) => {
     if (!booking) return res.status(404).json({ error: 'Booking not found.' });
 
     if (booking.status === 'confirmed') {
+      // Idempotent resend: email may have failed on first delivery
+      const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+      const cancelUrl = booking.cancel_token ? `${baseUrl}/cancel?token=${booking.cancel_token}` : null;
+      const servicePrice = await getServicePrice(booking.service);
+      sendBookingConfirmation({
+        customerName: booking.customer_name, customerEmail: booking.customer_email,
+        service: booking.service, slot: booking, servicePrice, cancelUrl, bookingRef: booking.booking_ref,
+      }).catch(err => console.error('Idempotent confirmation email error:', err));
       return res.json({ success: true, booking_ref: booking.booking_ref, already_confirmed: true,
         service: booking.service, slot: { date: booking.date, time: booking.time, duration: booking.duration } });
     }
@@ -656,7 +680,7 @@ app.get('/api/bookings/cancel', async (req, res) => {
 // ════════════════════════════════════════════════════════════
 
 // POST /api/admin/login
-app.post('/api/admin/login', (req, res) => {
+app.post('/api/admin/login', loginLimiter, (req, res) => {
   const { password } = req.body;
   if (password === ADMIN_PASSWORD) res.json({ success: true, token: ADMIN_PASSWORD });
   else res.status(401).json({ error: 'Invalid password' });
@@ -897,10 +921,13 @@ app.post('/api/bookings/bulk/preview', slotsLimiter, async (req, res) => {
 app.post('/api/bookings/bulk', bookingLimiter, async (req, res) => {
   try {
     const { slot_ids, service, customer_name, customer_email, customer_phone, message } = req.body;
-    if (!slot_ids?.length || slot_ids.length < 2 || !service || !customer_name || !customer_email) {
+    if (!Array.isArray(slot_ids) || slot_ids.length < 2 || !service || !customer_name || !customer_email) {
       return res.status(400).json({ error: 'slot_ids (≥2), service, customer_name, and customer_email are required.' });
     }
     if (slot_ids.length > 50) return res.status(400).json({ error: 'Maximum 50 sessions per bulk booking.' });
+    if (!slot_ids.every(id => Number.isInteger(id) && id > 0)) {
+      return res.status(400).json({ error: 'Invalid slot IDs.' });
+    }
 
     // Verify all slots are available
     const slotsResult = await pool.query(
@@ -995,6 +1022,19 @@ app.post('/api/bookings/bulk', bookingLimiter, async (req, res) => {
       client.release();
     }
 
+    const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
+    sendBookingConfirmation({
+      customerName: customer_name.trim(), customerEmail: customer_email.trim().toLowerCase(),
+      service, slot: slotsResult.rows[0], servicePrice: 0, cancelUrl: null, bookingRef: bulkRef,
+      isBulk: true, sessionCount: slot_ids.length,
+    }).catch(err => console.error('Bulk confirmation email error:', err));
+    sendAdminAlert({
+      customerName: customer_name.trim(), customerEmail: customer_email.trim().toLowerCase(),
+      customerPhone: (customer_phone||'').trim(), service, slot: slotsResult.rows[0],
+      servicePrice: 0, message: (message||''), cancelUrl: null, bookingRef: bulkRef,
+      isBulk: true, sessionCount: slot_ids.length,
+    }).catch(err => console.error('Bulk admin alert error:', err));
+
     res.status(201).json({ success: true, bulk_booking_id: bulkId, booking_ref: bulkRef,
       session_count: slot_ids.length, slots: slotsResult.rows, service });
   } catch (err) {
@@ -1004,7 +1044,7 @@ app.post('/api/bookings/bulk', bookingLimiter, async (req, res) => {
 });
 
 // POST /api/bookings/bulk/confirm — verify payment and lock all slots
-app.post('/api/bookings/bulk/confirm', async (req, res) => {
+app.post('/api/bookings/bulk/confirm', confirmLimiter, async (req, res) => {
   try {
     const { bulk_booking_id, payment_intent_id } = req.body;
     if (!bulk_booking_id || !payment_intent_id) {
@@ -1024,30 +1064,42 @@ app.post('/api/bookings/bulk/confirm', async (req, res) => {
       return res.json({ success: true, already_confirmed: true, booking_ref: bulk.booking_ref });
     }
 
-    // Lock all slots atomically and confirm all bookings
+    // Lock all slots atomically — if ANY slot is taken, refund and abort
     const individualBookings = await pool.query(
-      "SELECT * FROM bookings WHERE bulk_booking_id = $1 AND status = 'pending_payment'", [bulk_booking_id]
+      "SELECT b.*, s.date, s.time, s.duration FROM bookings b JOIN slots s ON s.id = b.slot_id WHERE b.bulk_booking_id = $1 AND b.status = 'pending_payment' ORDER BY s.date ASC, s.time ASC",
+      [bulk_booking_id]
     );
 
     const client = await pool.connect();
-    let lockedCount = 0;
+    let confirmed = false;
     try {
       await client.query('BEGIN');
+      // Check all slots are still free before locking any
       for (const b of individualBookings.rows) {
-        const lock = await client.query(
-          'UPDATE slots SET is_booked = 1 WHERE id = $1 AND is_booked = 0 RETURNING id', [b.slot_id]
-        );
-        if (lock.rowCount > 0) {
-          await client.query("UPDATE bookings SET status = 'confirmed' WHERE id = $1", [b.id]);
-          lockedCount++;
-        } else {
-          // Slot taken — mark this individual booking cancelled
-          await client.query("UPDATE bookings SET status = 'cancelled' WHERE id = $1", [b.id]);
+        const check = await client.query('SELECT is_booked FROM slots WHERE id = $1 FOR UPDATE', [b.slot_id]);
+        if (check.rows[0]?.is_booked) {
+          await client.query('ROLLBACK');
+          // Slot taken — issue full Stripe refund and mark bulk as failed
+          try {
+            await stripe.refunds.create({ payment_intent: payment_intent_id });
+          } catch (refundErr) {
+            console.error('Stripe refund failed — manual refund needed for bulk_booking_id', bulk_booking_id, refundErr);
+          }
+          await pool.query("UPDATE bulk_bookings SET status = 'refunded' WHERE id = $1", [bulk_booking_id]);
+          await pool.query("UPDATE bookings SET status = 'cancelled' WHERE bulk_booking_id = $1", [bulk_booking_id]);
+          return res.status(409).json({
+            error: 'One or more of your sessions was just taken by another customer. A full refund has been issued automatically. Please try booking again.',
+          });
         }
       }
-      const finalStatus = lockedCount === individualBookings.rows.length ? 'confirmed' : 'partial';
-      await client.query('UPDATE bulk_bookings SET status = $1 WHERE id = $2', [finalStatus, bulk_booking_id]);
+      // All slots free — lock them all
+      for (const b of individualBookings.rows) {
+        await client.query('UPDATE slots SET is_booked = 1 WHERE id = $1', [b.slot_id]);
+        await client.query("UPDATE bookings SET status = 'confirmed' WHERE id = $1", [b.id]);
+      }
+      await client.query("UPDATE bulk_bookings SET status = 'confirmed' WHERE id = $1", [bulk_booking_id]);
       await client.query('COMMIT');
+      confirmed = true;
     } catch (e) {
       await client.query('ROLLBACK');
       throw e;
@@ -1055,7 +1107,25 @@ app.post('/api/bookings/bulk/confirm', async (req, res) => {
       client.release();
     }
 
-    res.json({ success: true, booking_ref: bulk.booking_ref, confirmed: lockedCount, total: individualBookings.rows.length });
+    // Send confirmation emails
+    if (confirmed) {
+      const firstSlot = individualBookings.rows[0];
+      sendBookingConfirmation({
+        customerName: bulk.customer_name, customerEmail: bulk.customer_email,
+        service: bulk.service, slot: firstSlot, servicePrice: parseFloat(bulk.session_price),
+        cancelUrl: null, bookingRef: bulk.booking_ref,
+        isBulk: true, sessionCount: individualBookings.rows.length,
+      }).catch(err => console.error('Bulk confirmation email error:', err));
+      sendAdminAlert({
+        customerName: bulk.customer_name, customerEmail: bulk.customer_email,
+        customerPhone: bulk.customer_phone, service: bulk.service, slot: firstSlot,
+        servicePrice: parseFloat(bulk.session_price), message: bulk.message,
+        cancelUrl: null, bookingRef: bulk.booking_ref,
+        isBulk: true, sessionCount: individualBookings.rows.length,
+      }).catch(err => console.error('Bulk admin alert error:', err));
+    }
+
+    res.json({ success: true, booking_ref: bulk.booking_ref, confirmed: individualBookings.rows.length, total: individualBookings.rows.length });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to confirm bulk booking' });
@@ -1289,7 +1359,7 @@ async function start() {
   app.listen(PORT, () => {
     console.log(`\n✦ Sacred Healing Server running at http://localhost:${PORT}`);
     console.log(`✦ Admin Panel: http://localhost:${PORT}/admin`);
-    console.log(`✦ Admin Password: ${ADMIN_PASSWORD}\n`);
+    console.log(`✦ Admin Password: [set — check .env or ADMIN_PASSWORD env var]\n`);
   });
 }
 
