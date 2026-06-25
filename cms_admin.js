@@ -26,8 +26,14 @@ async function loadContent() {
             if (el && v !== undefined && v !== null) el.value = v;
         });
 
-        // Populate image previews
-        ['logo_img', 'hero_bg_img', 'healer_img', 'healer_img2'].forEach(k => {
+        // Populate image previews for all upload fields
+        const imgKeys = [
+            'logo_img', 'healer_img', 'healer_img2', 'healer_hero_img',
+            'hero_bg_img', 'about_bg_img', 'philosophy_bg_img',
+            'services_bg_img', 'process_bg_img', 'testimonials_bg_img',
+            'rs_1_img', 'rs_2_img', 'rs_3_img', 'rs_4_img', 'rs_5_img', 'rs_6_img',
+        ];
+        imgKeys.forEach(k => {
             const el = document.getElementById('preview-' + k);
             if (el && siteContent[k]) {
                 el.src = siteContent[k];

@@ -233,6 +233,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                         const fallback = el.getAttribute('src') || '';
                         el.onerror = function() { if (fallback) this.src = fallback; this.onerror = null; };
                         el.src = val;
+                        // Rs icon image: reveal it and hide the SVG fallback behind it
+                        if (el.classList.contains('rs-icon-img')) {
+                            el.style.display = 'block';
+                            const svg = el.closest('.rs-icon') && el.closest('.rs-icon').querySelector('svg');
+                            if (svg) svg.style.display = 'none';
+                        }
                     }
                 } else if (key.endsWith('_bg_img')) {
                     el.style.backgroundImage = `url(${val})`;

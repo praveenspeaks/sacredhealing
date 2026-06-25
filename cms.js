@@ -68,11 +68,21 @@ module.exports = {
       'footer_online_text': '🌐 Online Sessions Available',
       'footer_copyright':   '© 2026 SoulBody Healing · Reena. All rights reserved. Crafted with ✦ love &amp; light.',
       'footer_credit':      'Site designed &amp; developed by <a href="https://shivayinfotech.co.uk/" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;text-underline-offset:3px;">Shivay Infotech Ltd.</a>',
-      'logo_img':           'assets/logo-sbh.png',
-      'hero_bg_img':        'assets/sacred_healing_hero_bg.png',
-      'chakra_img':         'assets/mandala.png',
-      'healer_img':         'assets/RP_BLUE_1st.png',
-      'healer_img2':        'assets/RP_Blue_2nd.png',
+      'logo_img':            'assets/logo-sbh.png',
+      'hero_bg_img':         '',
+      'chakra_img':          'assets/mandala.png',
+      'healer_img':          'assets/RP_BLUE_1st.png',
+      'healer_img2':         'assets/RP_Blue_2nd.png',
+      'healer_hero_img':     'assets/healer.jpg',
+      // Section background images (empty = no background)
+      'about_bg_img':        '',
+      'philosophy_bg_img':   '',
+      'services_bg_img':     '',
+      'process_bg_img':      '',
+      'testimonials_bg_img': '',
+      // 6 R's icon images (empty = use SVG fallback)
+      'rs_1_img': '', 'rs_2_img': '', 'rs_3_img': '',
+      'rs_4_img': '', 'rs_5_img': '', 'rs_6_img': '',
 
       // 6 R's of Sacred Healing
       'rs_1_title':   'Recognise',
