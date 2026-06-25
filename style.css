@@ -479,7 +479,14 @@ body.has-announce .navbar {
   position: relative;
 }
 
-/* Rs card uploaded icon image — shown by JS when admin uploads one */
+/* Rs card default SVG icon from assets/6R/ */
+.rs-icon-svg {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+/* Rs card uploaded icon image — shown by JS when admin uploads a replacement */
 .rs-icon-img {
   width: 100%;
   height: 100%;
