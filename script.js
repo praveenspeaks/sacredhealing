@@ -530,6 +530,34 @@ function openBookingForService(serviceName, servicePrice) {
 
 // ── Bulk booking state & helpers ──────────────────────────────
 let _bulkPreviewSlots = null;
+let _pendingBulkMode  = false;
+
+function openBulkBooking(serviceName, servicePrice) {
+  _pendingBulkMode = true;
+  if (serviceName) {
+    openBookingForService(serviceName, servicePrice);
+    // Update the service banner to mention "first session"
+    setTimeout(() => {
+      const span = document.querySelector('#service-preselect-banner span');
+      if (span) {
+        const priceStr = servicePrice > 0 ? ` · £${servicePrice}` : '';
+        span.innerHTML = `✦ <strong style="color:var(--olive)">${serviceName}</strong>${priceStr} — pick your <strong>first session</strong> and we'll reserve your full package`;
+      }
+    }, 60);
+  } else {
+    document.getElementById('contact').scrollIntoView({ behavior: 'smooth' });
+    const existing = document.getElementById('service-preselect-banner');
+    if (existing) existing.remove();
+    const grid = document.getElementById('public-slots-grid');
+    if (grid) {
+      grid.insertAdjacentHTML('beforebegin', `
+        <div id="service-preselect-banner" style="margin-bottom:1rem;padding:0.75rem 1.25rem;background:rgba(92,91,71,0.12);border:1px solid rgba(92,91,71,0.3);border-radius:8px;display:flex;align-items:center;justify-content:space-between;font-size:0.9rem;color:var(--text-body);">
+          <span>✦ Package booking — pick your <strong>first session</strong> below and we'll find and reserve the rest for you</span>
+          <button onclick="_pendingBulkMode=false;document.getElementById('service-preselect-banner').remove();" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:1.1rem;padding:0 0.25rem;">✕</button>
+        </div>`);
+    }
+  }
+}
 
 function toggleBulkMode() {
   const on = document.getElementById('bulk-toggle').checked;
@@ -714,6 +742,13 @@ function openBookingModal(slotId, date, time, duration) {
 
   modal.classList.add('open');
   document.body.style.overflow = 'hidden';
+
+  // Auto-enable bulk mode when triggered from "Book a Package" CTA
+  if (_pendingBulkMode) {
+    _pendingBulkMode = false;
+    const toggle = document.getElementById('bulk-toggle');
+    if (toggle && !toggle.checked) { toggle.checked = true; toggleBulkMode(); }
+  }
 }
 
 function closeBookingModal() {

@@ -134,6 +134,7 @@
         </p>
         <div class="hero-actions">
           <button class="btn btn-gold" id="hero_button_text" onclick="openBookingModal()">Begin Your Journey →</button>
+          <button class="btn btn-outline" onclick="openBulkBooking()">Book a Package ›</button>
           <a href="/services" class="btn btn-outline" id="explore_button_text">Explore Services</a>
         </div>
       </div>
@@ -341,7 +342,10 @@
               <li>Aura cleansing &amp; protection</li>
               <li>Energy cord cutting</li>
             </ul>
-            <button class="service-link" onclick="openBookingModal('Spiritual Healing')">Book a Session →</button>
+            <div class="service-link-group">
+              <button class="service-link" onclick="openBookingForService('Spiritual Healing',0)">Book a Session →</button>
+              <button class="service-link service-link--package" onclick="openBulkBooking('Spiritual Healing',0)">Book a Package ›</button>
+            </div>
           </div>
           <div class="service-row-img">
             <img src="assets/service-spiritual.jpg" alt="Spiritual Healing session"
@@ -361,7 +365,10 @@
               <li>Relationship insights</li>
               <li>Future path guidance</li>
             </ul>
-            <button class="service-link" onclick="openBookingModal('Psychic Reading')">Book a Session →</button>
+            <div class="service-link-group">
+              <button class="service-link" onclick="openBookingForService('Psychic Reading',0)">Book a Session →</button>
+              <button class="service-link service-link--package" onclick="openBulkBooking('Psychic Reading',0)">Book a Package ›</button>
+            </div>
           </div>
           <div class="service-row-img">
             <img src="assets/service-psychic.jpg" alt="Psychic Reading session"
@@ -380,7 +387,10 @@
               <li>Soul wound healing</li>
               <li>Karmic pattern release</li>
             </ul>
-            <button class="service-link" onclick="openBookingModal('Past Life Healing')">Book a Session →</button>
+            <div class="service-link-group">
+              <button class="service-link" onclick="openBookingForService('Past Life Healing',0)">Book a Session →</button>
+              <button class="service-link service-link--package" onclick="openBulkBooking('Past Life Healing',0)">Book a Package ›</button>
+            </div>
           </div>
           <div class="service-row-img">
             <img src="assets/service-pastlife.jpg" alt="Past Life Healing session"
@@ -399,7 +409,10 @@
               <li>Family constellation work</li>
               <li>Ancestral blessings</li>
             </ul>
-            <button class="service-link" onclick="openBookingModal('Ancestral Healing')">Book a Session →</button>
+            <div class="service-link-group">
+              <button class="service-link" onclick="openBookingForService('Ancestral Healing',0)">Book a Session →</button>
+              <button class="service-link service-link--package" onclick="openBulkBooking('Ancestral Healing',0)">Book a Package ›</button>
+            </div>
           </div>
           <div class="service-row-img">
             <img src="assets/service-ancestral.jpg" alt="Ancestral Healing session"
@@ -418,7 +431,10 @@
               <li>Soul contract exploration</li>
               <li>Between-lives insight</li>
             </ul>
-            <button class="service-link" onclick="openBookingModal('Past Life Regression')">Book a Session →</button>
+            <div class="service-link-group">
+              <button class="service-link" onclick="openBookingForService('Past Life Regression',0)">Book a Session →</button>
+              <button class="service-link service-link--package" onclick="openBulkBooking('Past Life Regression',0)">Book a Package ›</button>
+            </div>
           </div>
           <div class="service-row-img">
             <img src="assets/service-regression.jpg" alt="Past Life Regression session"
@@ -437,7 +453,10 @@
               <li>Breathwork &amp; grounding</li>
               <li>Stress &amp; anxiety release</li>
             </ul>
-            <button class="service-link" onclick="openBookingModal('Guided Meditation')">Book a Session →</button>
+            <div class="service-link-group">
+              <button class="service-link" onclick="openBookingForService('Guided Meditation',0)">Book a Session →</button>
+              <button class="service-link service-link--package" onclick="openBulkBooking('Guided Meditation',0)">Book a Package ›</button>
+            </div>
           </div>
           <div class="service-row-img">
             <img src="assets/service-meditation.jpg" alt="Guided Meditation session"

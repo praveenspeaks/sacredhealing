@@ -298,7 +298,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                   </div>
                   <div class="service-card-actions">
                     <a href="/services/${slug}" class="btn btn-gold service-learn-more">Learn More →</a>
-                    <button onclick="openBookingForService('${titleEsc}', ${s.price})" class="service-book-btn">Book Now</button>
+                    <div style="display:flex;flex-direction:column;gap:0.35rem;align-items:flex-start;">
+                      <button onclick="openBookingForService('${titleEsc}', ${s.price})" class="service-book-btn">Book Now</button>
+                      <button onclick="openBulkBooking('${titleEsc}', ${s.price})" class="service-link service-link--package">Book a Package ›</button>
+                    </div>
                   </div>
                 </div>
                 `;

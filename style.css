@@ -1137,6 +1137,25 @@ body.has-announce .navbar {
   gap: 0.7rem;
 }
 
+.service-link-group {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+}
+
+.service-link--package {
+  color: var(--text-muted);
+  font-size: 0.82rem;
+  font-weight: 500;
+  border-bottom: 1px dashed currentColor;
+  padding-bottom: 1px;
+}
+.service-link--package:hover {
+  color: var(--olive);
+  gap: 0.4rem;
+}
+
 /* ============================================================
    SERVICES — ALTERNATING ROW LAYOUT
    ============================================================ */
