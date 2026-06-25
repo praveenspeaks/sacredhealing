@@ -19,15 +19,15 @@ async function loadContent() {
         const res = await fetch('/api/content');
         const data = await res.json();
         siteContent = data.content;
-        
-        const textKeys = ['hero_title', 'hero_subtitle', 'hero_button_text', 'explore_button_text', 'about_title', 'about_paragraph1', 'about_paragraph2', 'contact_email', 'contact_phone', 'contact_location', 'social_instagram', 'social_whatsapp', 'footer_tagline', 'footer_online_text', 'footer_copyright', 'footer_credit'];
-        textKeys.forEach(k => {
+
+        // Populate every cms-* field that exists in the DB response
+        Object.entries(siteContent).forEach(([k, v]) => {
             const el = document.getElementById('cms-' + k);
-            if (el && siteContent[k]) el.value = siteContent[k];
+            if (el && v !== undefined && v !== null) el.value = v;
         });
-        
+
         // Populate image previews
-        ['logo_img', 'hero_bg_img', 'healer_img'].forEach(k => {
+        ['logo_img', 'hero_bg_img', 'healer_img', 'healer_img2'].forEach(k => {
             const el = document.getElementById('preview-' + k);
             if (el && siteContent[k]) {
                 el.src = siteContent[k];
@@ -40,11 +40,11 @@ async function loadContent() {
 }
 
 async function saveContent() {
-    const textKeys = ['hero_title', 'hero_subtitle', 'hero_button_text', 'explore_button_text', 'about_title', 'about_paragraph1', 'about_paragraph2', 'contact_email', 'contact_phone', 'contact_location', 'social_instagram', 'social_whatsapp', 'footer_tagline', 'footer_online_text', 'footer_copyright', 'footer_credit', 'contact_page_title', 'contact_page_subtitle', 'contact_page_intro'];
     const updates = {};
-    textKeys.forEach(k => {
-        const el = document.getElementById('cms-' + k);
-        if (el) updates[k] = el.value;
+    // Collect every cms-* field visible in the admin panel — no hardcoded list needed
+    document.querySelectorAll('[id^="cms-"]').forEach(el => {
+        const k = el.id.replace(/^cms-/, '');
+        updates[k] = el.value;
     });
     
     try {
