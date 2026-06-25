@@ -836,25 +836,43 @@ document.addEventListener('keydown', e => {
 });
 
 // ── Testimonials Carousel ─────────────────────────────────────
-let _carouselIdx   = 0;
+let _carouselPage  = 0;
 let _carouselTotal = 0;
 let _carouselTimer = null;
 
-function _carouselGoTo(n) {
+function _carouselPerPage() { return window.innerWidth >= 768 ? 3 : 1; }
+
+function _carouselTotalPages() { return Math.ceil(_carouselTotal / _carouselPerPage()); }
+
+function _carouselGoTo(pageIdx) {
   const track = document.querySelector('.carousel-track');
   if (!track) return;
-  _carouselIdx = (n + _carouselTotal) % _carouselTotal;
-  track.style.transform = `translateX(-${100 * _carouselIdx}%)`;
+  const cards    = track.querySelectorAll('.testimonial-card');
+  if (!cards.length) return;
+
+  const totalPgs = _carouselTotalPages();
+  _carouselPage  = ((pageIdx % totalPgs) + totalPgs) % totalPgs;
+
+  // Pixel offset: card width + gap, stepped by perPage cards
+  const cardWidth = cards[0].offsetWidth;
+  const gap       = parseFloat(getComputedStyle(track).columnGap) || 0;
+  const rawOffset = _carouselPage * _carouselPerPage() * (cardWidth + gap);
+  // Clamp so we never scroll past the last card
+  const maxOffset = Math.max(0, track.scrollWidth - track.parentElement.offsetWidth);
+  const offset    = Math.min(rawOffset, maxOffset);
+
+  track.style.transform = `translateX(-${offset}px)`;
   document.querySelectorAll('.carousel-dot').forEach((d, i) =>
-    d.classList.toggle('active', i === _carouselIdx)
+    d.classList.toggle('active', i === _carouselPage)
   );
 }
 
 function _carouselBuildDots() {
   const el = document.getElementById('carousel-dots');
   if (!el) return;
-  el.innerHTML = Array.from({ length: _carouselTotal }, (_, i) =>
-    `<button class="carousel-dot${i === 0 ? ' active' : ''}" aria-label="Review ${i + 1}"></button>`
+  const pages = _carouselTotalPages();
+  el.innerHTML = Array.from({ length: pages }, (_, i) =>
+    `<button class="carousel-dot${i === 0 ? ' active' : ''}" aria-label="Page ${i + 1}"></button>`
   ).join('');
   el.querySelectorAll('.carousel-dot').forEach((d, i) =>
     d.addEventListener('click', () => { _carouselGoTo(i); _carouselRestart(); })
@@ -862,25 +880,26 @@ function _carouselBuildDots() {
 }
 
 function _carouselStart() {
-  _carouselTimer = setInterval(() => { _carouselGoTo(_carouselIdx + 1); }, 6000);
+  _carouselTimer = setInterval(() => { _carouselGoTo(_carouselPage + 1); }, 6000);
 }
 
-function _carouselRestart() {
-  clearInterval(_carouselTimer);
-  _carouselStart();
-}
+function _carouselRestart() { clearInterval(_carouselTimer); _carouselStart(); }
 
 function initCarousel() {
   const track = document.querySelector('.carousel-track');
   if (!track) return;
   _carouselTotal = track.querySelectorAll('.testimonial-card').length;
   if (_carouselTotal < 2) return;
-  _carouselIdx = 0;
+  _carouselPage = 0;
   track.style.transform = 'translateX(0)';
   _carouselBuildDots();
   _carouselStart();
-  document.getElementById('carousel-prev')?.addEventListener('click', () => { _carouselGoTo(_carouselIdx - 1); _carouselRestart(); });
-  document.getElementById('carousel-next')?.addEventListener('click', () => { _carouselGoTo(_carouselIdx + 1); _carouselRestart(); });
+  document.getElementById('carousel-prev')
+    ?.addEventListener('click', () => { _carouselGoTo(_carouselPage - 1); _carouselRestart(); });
+  document.getElementById('carousel-next')
+    ?.addEventListener('click', () => { _carouselGoTo(_carouselPage + 1); _carouselRestart(); });
+  // Rebuild dots when viewport size crosses the 768px breakpoint
+  window.addEventListener('resize', () => { _carouselBuildDots(); _carouselGoTo(0); }, { passive: true });
 }
 
 function reinitCarousel() {
@@ -888,8 +907,8 @@ function reinitCarousel() {
   const track = document.querySelector('.carousel-track');
   if (!track) return;
   _carouselTotal = track.querySelectorAll('.testimonial-card').length;
-  _carouselIdx = 0;
-  if (track) track.style.transform = 'translateX(0)';
+  _carouselPage  = 0;
+  track.style.transform = 'translateX(0)';
   _carouselBuildDots();
   if (_carouselTotal >= 2) _carouselStart();
 }

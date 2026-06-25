@@ -1336,18 +1336,17 @@ body.has-announce .navbar {
   display: flex;
   align-items: center;
   gap: 1.25rem;
-  max-width: 780px;
-  margin: 0 auto 1.75rem;
+  margin-bottom: 1.75rem;
 }
 
 .carousel-viewport {
   flex: 1;
   overflow: hidden;
-  border-radius: var(--radius-lg);
 }
 
 .carousel-track {
   display: flex;
+  gap: 1.5rem;
   transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
   will-change: transform;
 }
@@ -1399,13 +1398,13 @@ body.has-announce .navbar {
   transform: scale(1.35);
 }
 
-/* Individual card */
+/* Individual card — 3 per page on desktop */
 .testimonial-card {
-  flex: 0 0 100%;
+  flex: 0 0 calc(33.333% - 1rem);
   background: #fff;
   border: 1px solid rgba(196, 168, 130, 0.18);
   border-radius: var(--radius-lg);
-  padding: 3rem 3.5rem;
+  padding: 2.5rem 2rem;
   text-align: center;
   box-shadow: 0 4px 28px rgba(0, 0, 0, 0.06);
   box-sizing: border-box;
@@ -1420,23 +1419,20 @@ body.has-announce .navbar {
 
 .testimonial-quote {
   font-family: Georgia, serif;
-  font-size: 4.5rem;
+  font-size: 3rem;
   line-height: 0.6;
-  color: rgba(184, 146, 74, 0.18);
-  margin-bottom: 1.25rem;
+  color: rgba(184, 146, 74, 0.2);
+  margin-bottom: 1rem;
   display: block;
 }
 
 .testimonial-text {
   font-family: var(--font-heading);
-  font-size: 1.13rem;
+  font-size: 1rem;
   color: var(--text-body);
   line-height: 1.85;
   font-style: italic;
   margin-bottom: 2rem;
-  max-width: 580px;
-  margin-left: auto;
-  margin-right: auto;
 }
 
 .testimonial-footer {
@@ -2981,7 +2977,7 @@ textarea.modal-input {
   .services-grid { grid-template-columns: 1fr; }
   .testimonials-carousel { gap: 0.6rem; }
   .carousel-arrow { width: 36px; height: 36px; font-size: 1.5rem; }
-  .testimonial-card { padding: 2.25rem 1.5rem; }
+  .testimonial-card { flex: 0 0 100%; padding: 2.25rem 1.5rem; }
 
   .process-steps { flex-direction: column; align-items: center; }
   .process-connector { flex-direction: column; }
