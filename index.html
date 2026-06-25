@@ -951,8 +951,42 @@
             <label>Intention for your session (optional)</label>
             <textarea id="booking-message" class="modal-input" rows="2" placeholder="Share anything you'd like us to know before your session…"></textarea>
           </div>
+
+          <!-- Bulk booking toggle -->
+          <div class="modal-form-group" style="background:rgba(184,146,74,0.07);border:1px solid rgba(184,146,74,0.25);border-radius:10px;padding:1rem 1.1rem;">
+            <label style="display:flex;align-items:center;gap:0.6rem;cursor:pointer;margin-bottom:0;">
+              <input type="checkbox" id="bulk-toggle" onchange="toggleBulkMode()" style="width:16px;height:16px;accent-color:var(--gold);flex-shrink:0;">
+              <span style="font-weight:600;color:var(--text);">Book a package of multiple sessions</span>
+            </label>
+            <div id="bulk-options" style="display:none;margin-top:0.85rem;">
+              <p style="font-size:0.82rem;color:var(--muted);margin:0 0 0.6rem;">How many sessions would you like to book? We'll find the next available slots for you.</p>
+              <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                <label class="bulk-count-opt"><input type="radio" name="bulk-count" value="5"> <span>5</span></label>
+                <label class="bulk-count-opt"><input type="radio" name="bulk-count" value="10" checked> <span>10</span></label>
+                <label class="bulk-count-opt"><input type="radio" name="bulk-count" value="15"> <span>15</span></label>
+                <label class="bulk-count-opt"><input type="radio" name="bulk-count" value="custom"> <span>Custom</span></label>
+              </div>
+              <input type="number" id="bulk-count-custom" min="2" max="50" placeholder="Enter number (2–50)" class="modal-input" style="display:none;margin-top:0.5rem;max-width:200px;" />
+            </div>
+          </div>
+
           <button type="submit" class="btn btn-gold btn-large modal-submit" id="booking-submit-btn">Confirm Booking →</button>
         </form>
+      </div>
+
+      <!-- Step 1b: Bulk preview — list of sessions before payment -->
+      <div id="modal-step-bulk-preview" style="display:none;">
+        <h3 style="font-family:var(--font-heading);margin:0 0 0.5rem;">Your Sessions</h3>
+        <p id="bulk-preview-summary" style="color:var(--muted);font-size:0.88rem;margin:0 0 1rem;"></p>
+        <div id="bulk-preview-list" style="max-height:260px;overflow-y:auto;border:1px solid var(--border);border-radius:8px;margin-bottom:1rem;"></div>
+        <div style="background:rgba(184,146,74,0.08);border-radius:8px;padding:0.75rem 1rem;margin-bottom:1rem;display:flex;justify-content:space-between;align-items:center;">
+          <span style="font-weight:600;">Total</span>
+          <strong id="bulk-preview-total" style="color:var(--gold);font-size:1.15rem;"></strong>
+        </div>
+        <div style="display:flex;gap:0.75rem;">
+          <button class="btn btn-outline" onclick="backToBulkForm()">← Back</button>
+          <button class="btn btn-gold btn-large" id="bulk-confirm-btn" onclick="confirmBulkBooking()" style="flex:1;">Pay &amp; Book All Sessions →</button>
+        </div>
       </div>
 
       <!-- Step 2: Payment -->

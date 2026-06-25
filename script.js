@@ -424,6 +424,31 @@ async function submitPayment() {
 
 async function _finishBookingConfirm(paymentIntentId) {
   try {
+    // Bulk payment confirmation
+    if (_pendingBooking.isBulk) {
+      const res  = await fetch('/api/bookings/bulk/confirm', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ bulk_booking_id: _pendingBooking.bulkBookingId, payment_intent_id: paymentIntentId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        showConfirmationStep({
+          bookingRef:   data.booking_ref,
+          service:      _pendingBooking.service,
+          slot:         _bulkPreviewSlots?.[0],
+          paid:         true,
+          isBulk:       true,
+          sessionCount: _pendingBooking.sessionCount,
+        });
+        fetch('/api/slots').then(r => r.json()).then(d => renderSlotsPublic(d.slots || []));
+      } else {
+        document.getElementById('payment-error').textContent = data.error || 'Confirmation failed.';
+        document.getElementById('payment-error').style.display = 'block';
+      }
+      return;
+    }
+
     const res  = await fetch('/api/bookings/confirm', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -453,9 +478,10 @@ async function _finishBookingConfirm(paymentIntentId) {
   }
 }
 
-function showConfirmationStep({ bookingRef, service, slot, paid }) {
+function showConfirmationStep({ bookingRef, service, slot, paid, isBulk, sessionCount }) {
   document.getElementById('modal-step-form').style.display    = 'none';
   document.getElementById('modal-step-payment').style.display = 'none';
+  document.getElementById('modal-step-bulk-preview') && (document.getElementById('modal-step-bulk-preview').style.display = 'none');
 
   const refDisplay = document.getElementById('booking-ref-display');
   const refCode    = document.getElementById('modal-booking-ref');
@@ -467,10 +493,16 @@ function showConfirmationStep({ bookingRef, service, slot, paid }) {
   }
 
   const msgEl = document.getElementById('modal-success-msg');
-  if (msgEl && slot) {
-    msgEl.innerHTML = `Your <strong>${service}</strong> session is confirmed for
-      <strong>${_fmtDateLong(slot.date)}</strong> at <strong>${formatTime12h(slot.time)}</strong>
-      (${slot.duration} min).<br/><br/>${paid ? 'Payment received. ' : ''}We'll be in touch shortly. ✦`;
+  if (msgEl) {
+    if (isBulk && sessionCount) {
+      const firstDate = slot ? ` starting <strong>${_fmtDateLong(slot.date)}</strong>` : '';
+      msgEl.innerHTML = `<strong>${sessionCount} sessions</strong> of <strong>${service}</strong> booked${firstDate}.<br/><br/>
+        ${paid ? 'Payment received. ' : ''}We'll send you a full schedule by email. ✦`;
+    } else if (slot) {
+      msgEl.innerHTML = `Your <strong>${service}</strong> session is confirmed for
+        <strong>${_fmtDateLong(slot.date)}</strong> at <strong>${formatTime12h(slot.time)}</strong>
+        (${slot.duration} min).<br/><br/>${paid ? 'Payment received. ' : ''}We'll be in touch shortly. ✦`;
+    }
   }
 
   document.getElementById('modal-success').style.display = 'block';
@@ -493,6 +525,145 @@ function openBookingForService(serviceName, servicePrice) {
         <span>✦ <strong style="color:var(--olive)">${serviceName}</strong>${priceStr} — choose your time slot below</span>
         <button onclick="_preselectedService=null;document.getElementById('service-preselect-banner').remove();" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:1.1rem;padding:0 0.25rem;">✕</button>
       </div>`);
+  }
+}
+
+// ── Bulk booking state & helpers ──────────────────────────────
+let _bulkPreviewSlots = null;
+
+function toggleBulkMode() {
+  const on = document.getElementById('bulk-toggle').checked;
+  document.getElementById('bulk-options').style.display = on ? 'block' : 'none';
+  document.getElementById('booking-submit-btn').textContent = on ? 'Preview Sessions →' : 'Confirm Booking →';
+  // Watch for custom count
+  document.querySelectorAll('input[name="bulk-count"]').forEach(r => {
+    r.onchange = () => {
+      document.getElementById('bulk-count-custom').style.display =
+        r.value === 'custom' && r.checked ? 'block' : 'none';
+    };
+  });
+}
+
+function getBulkCount() {
+  const sel = document.querySelector('input[name="bulk-count"]:checked');
+  if (!sel) return 10;
+  if (sel.value === 'custom') {
+    const n = parseInt(document.getElementById('bulk-count-custom').value);
+    return (n >= 2 && n <= 50) ? n : null;
+  }
+  return parseInt(sel.value);
+}
+
+function backToBulkForm() {
+  document.getElementById('modal-step-form').style.display = 'block';
+  document.getElementById('modal-step-bulk-preview').style.display = 'none';
+  _bulkPreviewSlots = null;
+}
+
+async function showBulkPreview(slotId, service, count) {
+  const btn = document.getElementById('booking-submit-btn');
+  btn.textContent = 'Finding sessions…';
+  btn.disabled = true;
+  try {
+    const res  = await fetch('/api/bookings/bulk/preview', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({ slot_id: parseInt(slotId), count, service }),
+    });
+    const data = await res.json();
+    if (!res.ok) { alert(data.error || 'Could not find enough slots.'); return; }
+
+    _bulkPreviewSlots = data.slots;
+
+    const sym = { GBP:'£', USD:'$', EUR:'€', INR:'₹', AUD:'A$' }[data.currency] || data.currency;
+    document.getElementById('bulk-preview-summary').textContent =
+      `${count} sessions of ${service} — ${sym}${data.session_price.toFixed(2)} each`;
+    document.getElementById('bulk-preview-total').textContent =
+      `${sym}${data.total_amount.toFixed(2)}`;
+
+    const list = document.getElementById('bulk-preview-list');
+    list.innerHTML = data.slots.map((s, i) => {
+      const d = new Date(s.date + 'T00:00:00').toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short', year:'numeric' });
+      const t = formatTime12h(s.time);
+      return `<div class="bulk-slot-row">
+        <div style="display:flex;align-items:center;">
+          <div class="slot-num">${i+1}</div>
+          <div><strong>${d}</strong> &nbsp;·&nbsp; ${t}</div>
+        </div>
+        <span style="color:var(--muted);font-size:0.8rem;">${s.duration} min</span>
+      </div>`;
+    }).join('');
+
+    document.getElementById('modal-step-form').style.display       = 'none';
+    document.getElementById('modal-step-bulk-preview').style.display = 'block';
+  } catch (err) {
+    alert('Could not connect to server. Please try again.');
+  } finally {
+    btn.textContent = 'Preview Sessions →';
+    btn.disabled = false;
+  }
+}
+
+async function confirmBulkBooking() {
+  if (!_bulkPreviewSlots) return;
+  const name    = document.getElementById('booking-name').value.trim();
+  const email   = document.getElementById('booking-email').value.trim();
+  const phone   = document.getElementById('booking-phone').value.trim();
+  const msg     = document.getElementById('booking-message').value.trim();
+  const service = document.getElementById('booking-service-hidden').value ||
+                  document.querySelector('input[name="modal-service"]:checked')?.value;
+
+  const btn = document.getElementById('bulk-confirm-btn');
+  btn.textContent = 'Processing…';
+  btn.disabled = true;
+  try {
+    const res  = await fetch('/api/bookings/bulk', {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify({
+        slot_ids: _bulkPreviewSlots.map(s => s.id),
+        service, customer_name: name, customer_email: email,
+        customer_phone: phone, message: msg,
+      }),
+    });
+    const data = await res.json();
+
+    if (data.payment_required) {
+      // Reuse the same payment step — just swap pending booking details
+      _pendingBooking = {
+        clientSecret:   data.client_secret,
+        bookingId:      null,
+        bulkBookingId:  data.bulk_booking_id,
+        bookingRef:     data.booking_ref,
+        amount:         data.amount,
+        service:        data.service,
+        isBulk:         true,
+        sessionCount:   data.session_count,
+      };
+      document.getElementById('modal-step-bulk-preview').style.display = 'none';
+      await showPaymentStep();
+      return;
+    }
+
+    if (data.success) {
+      document.getElementById('modal-step-bulk-preview').style.display = 'none';
+      showConfirmationStep({
+        bookingRef: data.booking_ref,
+        service:    data.service,
+        slot:       data.slots[0],
+        paid:       false,
+        isBulk:     true,
+        sessionCount: data.session_count,
+      });
+      fetch('/api/slots').then(r => r.json()).then(d => renderSlotsPublic(d.slots || []));
+    } else {
+      alert(data.error || 'Something went wrong.');
+    }
+  } catch (err) {
+    alert('Could not connect. Please try again.');
+  } finally {
+    btn.textContent = 'Pay & Book All Sessions →';
+    btn.disabled = false;
   }
 }
 
@@ -551,6 +722,10 @@ function closeBookingModal() {
   document.body.style.overflow = '';
   _currentSlotId = null;
   _pendingBooking = null;
+  _bulkPreviewSlots = null;
+  // Reset bulk toggle
+  const bulkToggle = document.getElementById('bulk-toggle');
+  if (bulkToggle) { bulkToggle.checked = false; toggleBulkMode(); }
   // Reset steps back to form
   const stepForm    = document.getElementById('modal-step-form');
   const stepPayment = document.getElementById('modal-step-payment');
@@ -558,6 +733,8 @@ function closeBookingModal() {
   if (stepForm)    stepForm.style.display    = 'block';
   if (stepPayment) stepPayment.style.display = 'none';
   if (stepSuccess) stepSuccess.style.display = 'none';
+  const stepBulkPreview = document.getElementById('modal-step-bulk-preview');
+  if (stepBulkPreview) stepBulkPreview.style.display = 'none';
   // Tear down Stripe elements
   if (_stripeElements) {
     try { _stripeElements.getElement('payment')?.unmount(); } catch(e) {}
@@ -591,6 +768,15 @@ async function submitBooking(e) {
 
   if (!slotId)  { alert('Please select a session slot first.'); return; }
   if (!service) { alert('Please choose a healing service for your session.'); return; }
+
+  // Bulk mode: show preview instead of confirming directly
+  if (document.getElementById('bulk-toggle')?.checked) {
+    if (!name || !email) { alert('Please enter your name and email first.'); return; }
+    const count = getBulkCount();
+    if (!count) { alert('Please enter a valid session count (2–50).'); return; }
+    await showBulkPreview(slotId, service, count);
+    return;
+  }
 
   const submitBtn = document.getElementById('booking-submit-btn');
   submitBtn.textContent = 'Booking…';

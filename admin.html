@@ -319,6 +319,7 @@
       <div class="nav-item active" onclick="showPage('dashboard')" id="nav-dashboard"><span class="nav-icon">◈</span><span>Dashboard</span></div>
       <div class="nav-item" onclick="showPage('slots')" id="nav-slots"><span class="nav-icon">📅</span><span>Manage Slots</span></div>
       <div class="nav-item" onclick="showPage('bookings')" id="nav-bookings"><span class="nav-icon">📋</span><span>Bookings</span></div>
+      <div class="nav-item" onclick="showPage('bulk-bookings')" id="nav-bulk-bookings"><span class="nav-icon">🗂</span><span>Bulk Bookings</span></div>
       <div class="nav-item" onclick="showPage('content')" id="nav-content"><span class="nav-icon">✍</span><span>Site Content</span></div>
       <div class="nav-item" onclick="showPage('faqs')" id="nav-faqs"><span class="nav-icon">❓</span><span>FAQ</span></div>
       <div class="nav-item" onclick="showPage('services')" id="nav-services"><span class="nav-icon">✨</span><span>Services</span></div>
@@ -491,6 +492,39 @@
         <div class="table-wrap" id="bookings-table"></div>
       </div>
     </div>
+    <!-- ── BULK BOOKINGS ── -->
+    <div class="page" id="page-bulk-bookings">
+      <div class="page-header">
+        <h1 class="page-title">Bulk <em>Bookings</em></h1>
+        <a href="/api/admin/bulk-bookings/export" id="bulk-export-link" class="btn-sm btn-outline" style="text-decoration:none;" target="_blank">Export CSV</a>
+      </div>
+      <div class="card">
+        <div class="card-title">Package Bookings</div>
+        <p style="color:var(--muted);font-size:0.82rem;margin-bottom:1.2rem;">Customers who booked multiple sessions. Click a row to expand and manage individual sessions.</p>
+        <div id="bulk-bookings-table"><div style="text-align:center;padding:2rem;color:var(--muted);">Loading…</div></div>
+      </div>
+
+      <!-- Rebook modal -->
+      <div id="rebook-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:none;align-items:center;justify-content:center;">
+        <div style="background:var(--card-bg);border-radius:12px;padding:2rem;max-width:460px;width:90%;max-height:80vh;overflow-y:auto;">
+          <h3 style="margin:0 0 1rem;font-family:var(--font-heading);">Rebook Session</h3>
+          <p style="color:var(--muted);font-size:0.85rem;margin-bottom:1rem;">Select a new available slot for this customer's released session.</p>
+          <input type="hidden" id="rebook-bulk-id" />
+          <input type="hidden" id="rebook-booking-id" />
+          <div class="form-group">
+            <label>Available Slots</label>
+            <select id="rebook-slot-select" class="form-control" style="max-height:200px;">
+              <option value="">Loading available slots…</option>
+            </select>
+          </div>
+          <div style="display:flex;gap:0.75rem;margin-top:1.5rem;">
+            <button class="btn-sm btn-outline" onclick="closeRebookModal()" style="flex:1;">Cancel</button>
+            <button class="btn-sm btn-primary" onclick="submitRebook()" style="flex:1;">Confirm Rebook</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ── CONTENT SETTINGS ── -->
     <div class="page" id="page-content">
       <div class="page-header">
@@ -1186,6 +1220,7 @@
     document.getElementById(`nav-${name}`).classList.add('active');
     if (name === 'slots') loadSlots();
     if (name === 'bookings') loadBookings();
+    if (name === 'bulk-bookings') loadBulkBookings();
     if (name === 'dashboard') refreshDashboard();
     if (name === 'theme') loadTheme();
     if (name === 'settings') loadSettings();
@@ -1502,6 +1537,160 @@
       picker.appendChild(btn);
     });
   })();
+
+  // ── BULK BOOKINGS ──
+  async function loadBulkBookings() {
+    document.getElementById('bulk-bookings-table').innerHTML =
+      '<div style="text-align:center;padding:2rem;color:var(--muted);"><span class="loading-spinner"></span> Loading…</div>';
+    try {
+      const data = await api('GET', '/api/admin/bulk-bookings');
+      const bulks = data.bulk_bookings || [];
+      if (!bulks.length) {
+        document.getElementById('bulk-bookings-table').innerHTML =
+          '<div class="empty-state"><div class="empty-icon">🗂</div><p>No bulk bookings yet</p></div>';
+        return;
+      }
+      const statusBadge = s => {
+        const map = { confirmed:'#3d6b4f', pending_payment:'#b8924a', partial:'#5c5b47', pending:'#888', cancelled:'#c0392b' };
+        return `<span style="background:${map[s]||'#888'};color:#fff;padding:0.15rem 0.55rem;border-radius:20px;font-size:0.72rem;font-weight:600;text-transform:uppercase;">${s}</span>`;
+      };
+      const sym = c => ({ GBP:'£', USD:'$', EUR:'€', INR:'₹' }[c] || c);
+      const fmtDate = d => new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
+      const fmtTime = t => { const [h,m] = t.split(':'); const hr = parseInt(h); return `${hr > 12 ? hr-12 : hr || 12}:${m} ${hr >= 12 ? 'PM' : 'AM'}`; };
+
+      let html = `<table><thead><tr>
+        <th></th><th>Ref</th><th>Customer</th><th>Service</th>
+        <th>Sessions</th><th>Total</th><th>Status</th><th>Booked On</th>
+      </tr></thead><tbody>`;
+
+      bulks.forEach(bb => {
+        const confirmedCount = (bb.bookings||[]).filter(b => b.status === 'confirmed').length;
+        const releasedCount  = (bb.bookings||[]).filter(b => b.status === 'released').length;
+        const rowId = `bulk-row-${bb.id}`;
+        html += `<tr style="cursor:pointer;" onclick="toggleBulkRow(${bb.id})">
+          <td style="color:var(--gold);font-size:1rem;" id="bulk-chevron-${bb.id}">▶</td>
+          <td><code style="font-size:0.75rem;">${bb.booking_ref||'—'}</code></td>
+          <td><strong>${bb.customer_name}</strong><br/><small style="color:var(--muted);">${bb.customer_email}</small></td>
+          <td><small>${bb.service}</small></td>
+          <td style="text-align:center;">
+            <strong>${confirmedCount}</strong><span style="color:var(--muted);font-size:0.8rem;">/${bb.session_count}</span>
+            ${releasedCount ? `<br/><span style="color:#c0392b;font-size:0.75rem;">${releasedCount} released</span>` : ''}
+          </td>
+          <td><strong>${sym(bb.currency)}${parseFloat(bb.total_amount).toFixed(2)}</strong></td>
+          <td>${statusBadge(bb.status)}</td>
+          <td><small>${new Date(bb.created_at).toLocaleDateString('en-GB')}</small></td>
+        </tr>
+        <tr id="${rowId}" style="display:none;">
+          <td colspan="8" style="padding:0;">
+            <div style="background:var(--surface);border-top:1px solid var(--border);padding:1rem 1.5rem;">
+              <table style="width:100%;font-size:0.82rem;border-collapse:collapse;">
+                <thead><tr style="color:var(--muted);">
+                  <th style="padding:0.4rem 0.6rem;text-align:left;">#</th>
+                  <th style="padding:0.4rem 0.6rem;text-align:left;">Date & Time</th>
+                  <th style="padding:0.4rem 0.6rem;text-align:left;">Duration</th>
+                  <th style="padding:0.4rem 0.6rem;text-align:left;">Status</th>
+                  <th style="padding:0.4rem 0.6rem;text-align:left;">Actions</th>
+                </tr></thead>
+                <tbody>`;
+
+        (bb.bookings||[]).forEach((b, i) => {
+          const isReleased  = b.status === 'released';
+          const isConfirmed = b.status === 'confirmed';
+          html += `<tr style="border-top:1px solid var(--border);">
+            <td style="padding:0.5rem 0.6rem;color:var(--muted);">${i+1}</td>
+            <td style="padding:0.5rem 0.6rem;"><strong>${fmtDate(b.date)}</strong> · ${fmtTime(b.time)}</td>
+            <td style="padding:0.5rem 0.6rem;">${b.duration} min</td>
+            <td style="padding:0.5rem 0.6rem;">${statusBadge(b.status)}</td>
+            <td style="padding:0.5rem 0.6rem;">
+              ${isConfirmed ? `<button class="btn-sm" style="background:rgba(192,57,43,0.1);color:#c0392b;border-color:#c0392b;" onclick="releaseSlot(${bb.id},${b.id})">Release Slot</button>` : ''}
+              ${isReleased  ? `<button class="btn-sm btn-primary" onclick="openRebookModal(${bb.id},${b.id})">Rebook</button>` : ''}
+            </td>
+          </tr>`;
+        });
+
+        html += `</tbody></table>
+              <p style="font-size:0.76rem;color:var(--muted);margin:0.75rem 0 0;">
+                💡 To change a session: click <strong>Release Slot</strong> (the slot becomes available again), then click <strong>Rebook</strong> to assign a new available slot.</p>
+            </div>
+          </td>
+        </tr>`;
+      });
+
+      html += '</tbody></table>';
+      document.getElementById('bulk-bookings-table').innerHTML = html;
+      // Make export button use authenticated fetch
+      document.getElementById('bulk-export-link').onclick = async e => {
+        e.preventDefault();
+        const res = await fetch('/api/admin/bulk-bookings/export', { headers: { 'x-admin-password': sessionStorage.getItem('adminPassword')||'' } });
+        const blob = await res.blob();
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+        a.download = `bulk-bookings-${new Date().toISOString().split('T')[0]}.csv`; a.click();
+      };
+    } catch(e) {
+      toast('Failed to load bulk bookings', 'error');
+    }
+  }
+
+  function toggleBulkRow(id) {
+    const row = document.getElementById(`bulk-row-${id}`);
+    const chev = document.getElementById(`bulk-chevron-${id}`);
+    const open = row.style.display !== 'none';
+    row.style.display = open ? 'none' : 'table-row';
+    chev.textContent  = open ? '▶' : '▼';
+  }
+
+  async function releaseSlot(bulkId, bookingId) {
+    if (!confirm('Release this session slot? The slot will become available for other customers to book. The customer can then be rebooked to a different slot.')) return;
+    try {
+      const res = await api('PATCH', `/api/admin/bulk-bookings/${bulkId}/release/${bookingId}`, {});
+      if (res.success) { toast('Slot released — customer can now be rebooked', 'success'); loadBulkBookings(); }
+      else toast(res.error || 'Failed', 'error');
+    } catch(e) { toast('Server error', 'error'); }
+  }
+
+  async function openRebookModal(bulkId, bookingId) {
+    document.getElementById('rebook-bulk-id').value    = bulkId;
+    document.getElementById('rebook-booking-id').value = bookingId;
+    document.getElementById('rebook-modal').style.display = 'flex';
+
+    const sel = document.getElementById('rebook-slot-select');
+    sel.innerHTML = '<option value="">Loading…</option>';
+    try {
+      const data = await api('GET', '/api/slots');
+      const slots = data.slots || [];
+      if (!slots.length) {
+        sel.innerHTML = '<option value="">No available slots</option>';
+        return;
+      }
+      const fmtDate = d => new Date(d + 'T00:00:00').toLocaleDateString('en-GB', { weekday:'short', day:'numeric', month:'short' });
+      const fmtTime = t => { const [h,m] = t.split(':'); const hr = parseInt(h); return `${hr > 12 ? hr-12 : hr || 12}:${m} ${hr >= 12 ? 'PM' : 'AM'}`; };
+      sel.innerHTML = '<option value="">— Select a slot —</option>' +
+        slots.map(s => `<option value="${s.id}">${fmtDate(s.date)} · ${fmtTime(s.time)} · ${s.duration}min</option>`).join('');
+    } catch(e) {
+      sel.innerHTML = '<option value="">Failed to load slots</option>';
+    }
+  }
+
+  function closeRebookModal() {
+    document.getElementById('rebook-modal').style.display = 'none';
+  }
+
+  async function submitRebook() {
+    const bulkId    = document.getElementById('rebook-bulk-id').value;
+    const bookingId = document.getElementById('rebook-booking-id').value;
+    const newSlotId = document.getElementById('rebook-slot-select').value;
+    if (!newSlotId) { toast('Please select a slot', 'error'); return; }
+    try {
+      const res = await api('POST', `/api/admin/bulk-bookings/${bulkId}/rebook/${bookingId}`, { new_slot_id: parseInt(newSlotId) });
+      if (res.success) {
+        toast('Session rebooked successfully!', 'success');
+        closeRebookModal();
+        loadBulkBookings();
+      } else {
+        toast(res.error || 'Failed to rebook', 'error');
+      }
+    } catch(e) { toast('Server error', 'error'); }
+  }
 </script>
 <script src="cms_admin.js"></script>
 </body>

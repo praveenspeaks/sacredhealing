@@ -104,6 +104,27 @@ async function initDatabase() {
   // Booking reference column (human-readable unique ID sent in confirmation emails)
   await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS booking_ref TEXT`);
   await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS bookings_ref_idx ON bookings(booking_ref) WHERE booking_ref IS NOT NULL`);
+
+  // ── Bulk bookings ────────────────────────────────────────────
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS bulk_bookings (
+      id              SERIAL PRIMARY KEY,
+      booking_ref     TEXT UNIQUE,
+      customer_name   TEXT NOT NULL,
+      customer_email  TEXT NOT NULL,
+      customer_phone  TEXT DEFAULT '',
+      service         TEXT NOT NULL,
+      session_count   INTEGER NOT NULL,
+      session_price   NUMERIC(10,2) NOT NULL,
+      currency        TEXT DEFAULT 'GBP',
+      total_amount    NUMERIC(10,2) NOT NULL,
+      message         TEXT DEFAULT '',
+      status          TEXT DEFAULT 'pending',
+      stripe_payment_intent TEXT,
+      created_at      TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
+  await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS bulk_booking_id INTEGER REFERENCES bulk_bookings(id)`);
 }
 
 // ════════════════════════════════════════════════════════════
@@ -819,6 +840,374 @@ app.get('/api/admin/stats', requireAdmin, async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ error: 'Failed to fetch stats' });
+  }
+});
+
+// ════════════════════════════════════════════════════════════
+// BULK BOOKING — CUSTOMER ENDPOINTS
+// ════════════════════════════════════════════════════════════
+
+// POST /api/bookings/bulk/preview
+// Returns the next N available slots starting from (and including) slot_id
+app.post('/api/bookings/bulk/preview', slotsLimiter, async (req, res) => {
+  try {
+    const { slot_id, count, service } = req.body;
+    if (!slot_id || !count || count < 2 || count > 50) {
+      return res.status(400).json({ error: 'slot_id and count (2–50) are required.' });
+    }
+
+    const startSlot = await pool.query(
+      'SELECT * FROM slots WHERE id = $1 AND is_booked = 0', [slot_id]
+    );
+    if (!startSlot.rows[0]) {
+      return res.status(409).json({ error: 'Selected slot is no longer available.' });
+    }
+    const s = startSlot.rows[0];
+
+    // Find the next `count` available slots starting from the selected one (same duration)
+    const result = await pool.query(`
+      SELECT id, date::text, time::text, duration, price, currency, note
+      FROM   slots
+      WHERE  is_booked = 0
+        AND  duration = $1
+        AND  (date > $2 OR (date = $2 AND time >= $3))
+      ORDER  BY date ASC, time ASC
+      LIMIT  $4
+    `, [s.duration, s.date, s.time, count]);
+
+    if (result.rows.length < count) {
+      return res.status(409).json({
+        error: `Only ${result.rows.length} available slot${result.rows.length === 1 ? '' : 's'} found. Please reduce the session count or ask admin to add more slots.`,
+        available: result.rows.length,
+      });
+    }
+
+    const svcPrice = service ? await getServicePrice(service.trim()) : 0;
+    const sessionPrice = svcPrice > 0 ? svcPrice : parseFloat(s.price || 0);
+    const totalAmount  = sessionPrice * count;
+
+    res.json({ slots: result.rows, session_price: sessionPrice, total_amount: totalAmount, currency: s.currency || 'GBP' });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to preview bulk slots' });
+  }
+});
+
+// POST /api/bookings/bulk — create bulk booking (paid or free)
+app.post('/api/bookings/bulk', bookingLimiter, async (req, res) => {
+  try {
+    const { slot_ids, service, customer_name, customer_email, customer_phone, message } = req.body;
+    if (!slot_ids?.length || slot_ids.length < 2 || !service || !customer_name || !customer_email) {
+      return res.status(400).json({ error: 'slot_ids (≥2), service, customer_name, and customer_email are required.' });
+    }
+    if (slot_ids.length > 50) return res.status(400).json({ error: 'Maximum 50 sessions per bulk booking.' });
+
+    // Verify all slots are available
+    const slotsResult = await pool.query(
+      'SELECT * FROM slots WHERE id = ANY($1) AND is_booked = 0 ORDER BY date ASC, time ASC',
+      [slot_ids]
+    );
+    if (slotsResult.rows.length !== slot_ids.length) {
+      return res.status(409).json({ error: 'One or more slots are no longer available. Please start over.' });
+    }
+
+    const firstSlot = slotsResult.rows[0];
+    const svcPrice  = await getServicePrice(service.trim());
+    const sessionPrice = svcPrice > 0 ? svcPrice : parseFloat(firstSlot.price || 0);
+    const totalAmount  = sessionPrice * slot_ids.length;
+    const bulkRef      = generateBookingRef();
+    const stripeKey    = process.env.STRIPE_SECRET_KEY || '';
+    const stripeActive = stripeKey.startsWith('sk_test_') || stripeKey.startsWith('sk_live_');
+
+    if (sessionPrice > 0 && stripeActive) {
+      // Create bulk_bookings record (pending_payment) — slots remain unlocked until payment confirmed
+      const bulkResult = await pool.query(`
+        INSERT INTO bulk_bookings
+          (booking_ref, customer_name, customer_email, customer_phone, service, session_count, session_price, currency, total_amount, message, status)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'pending_payment')
+        RETURNING id
+      `, [bulkRef, customer_name.trim(), customer_email.trim().toLowerCase(),
+          (customer_phone||'').trim(), service.trim(), slot_ids.length,
+          sessionPrice, firstSlot.currency||'GBP', totalAmount, (message||'').trim()]);
+      const bulkId = bulkResult.rows[0].id;
+
+      // Create individual bookings linked to bulk (pending_payment, slots NOT locked yet)
+      for (const [i, slotId] of slot_ids.entries()) {
+        const indRef = `${bulkRef}-${i+1}`;
+        await pool.query(`
+          INSERT INTO bookings (slot_id, service, customer_name, customer_email, customer_phone, message, status, booking_ref, bulk_booking_id)
+          VALUES ($1,$2,$3,$4,$5,$6,'pending_payment',$7,$8)
+        `, [slotId, service.trim(), customer_name.trim(), customer_email.trim().toLowerCase(),
+            (customer_phone||'').trim(), (message||'').trim(), indRef, bulkId]);
+      }
+
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount:      Math.round(totalAmount * 100),
+        currency:    (firstSlot.currency || 'GBP').toLowerCase(),
+        description: `${service.trim()} × ${slot_ids.length} sessions`,
+        metadata:    { bulk_booking_id: bulkId, booking_ref: bulkRef, session_count: slot_ids.length },
+      });
+
+      await pool.query('UPDATE bulk_bookings SET stripe_payment_intent = $1 WHERE id = $2',
+        [paymentIntent.id, bulkId]);
+
+      return res.status(201).json({
+        payment_required:  true,
+        client_secret:     paymentIntent.client_secret,
+        bulk_booking_id:   bulkId,
+        booking_ref:       bulkRef,
+        amount:            totalAmount,
+        session_count:     slot_ids.length,
+        service:           service.trim(),
+        slots:             slotsResult.rows,
+      });
+    }
+
+    // Free sessions — lock all slots atomically
+    const client = await pool.connect();
+    let bulkId;
+    try {
+      await client.query('BEGIN');
+      const bulkResult = await client.query(`
+        INSERT INTO bulk_bookings
+          (booking_ref, customer_name, customer_email, customer_phone, service, session_count, session_price, currency, total_amount, message, status)
+        VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,'confirmed')
+        RETURNING id
+      `, [bulkRef, customer_name.trim(), customer_email.trim().toLowerCase(),
+          (customer_phone||'').trim(), service.trim(), slot_ids.length,
+          sessionPrice, firstSlot.currency||'GBP', totalAmount, (message||'').trim()]);
+      bulkId = bulkResult.rows[0].id;
+
+      for (const [i, slotId] of slot_ids.entries()) {
+        const indRef = `${bulkRef}-${i+1}`;
+        await client.query(`
+          INSERT INTO bookings (slot_id, service, customer_name, customer_email, customer_phone, message, status, booking_ref, bulk_booking_id)
+          VALUES ($1,$2,$3,$4,$5,$6,'confirmed',$7,$8)
+        `, [slotId, service.trim(), customer_name.trim(), customer_email.trim().toLowerCase(),
+            (customer_phone||'').trim(), (message||'').trim(), indRef, bulkId]);
+        await client.query('UPDATE slots SET is_booked = 1 WHERE id = $1', [slotId]);
+      }
+      await client.query('COMMIT');
+    } catch (e) {
+      await client.query('ROLLBACK');
+      throw e;
+    } finally {
+      client.release();
+    }
+
+    res.status(201).json({ success: true, bulk_booking_id: bulkId, booking_ref: bulkRef,
+      session_count: slot_ids.length, slots: slotsResult.rows, service });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to create bulk booking' });
+  }
+});
+
+// POST /api/bookings/bulk/confirm — verify payment and lock all slots
+app.post('/api/bookings/bulk/confirm', async (req, res) => {
+  try {
+    const { bulk_booking_id, payment_intent_id } = req.body;
+    if (!bulk_booking_id || !payment_intent_id) {
+      return res.status(400).json({ error: 'bulk_booking_id and payment_intent_id are required.' });
+    }
+
+    const pi = await stripe.paymentIntents.retrieve(payment_intent_id);
+    if (pi.status !== 'succeeded') return res.status(402).json({ error: 'Payment not completed.' });
+    if (String(pi.metadata.bulk_booking_id) !== String(bulk_booking_id)) {
+      return res.status(400).json({ error: 'Payment does not match this bulk booking.' });
+    }
+
+    const bulkResult = await pool.query('SELECT * FROM bulk_bookings WHERE id = $1', [bulk_booking_id]);
+    const bulk = bulkResult.rows[0];
+    if (!bulk) return res.status(404).json({ error: 'Bulk booking not found.' });
+    if (bulk.status === 'confirmed') {
+      return res.json({ success: true, already_confirmed: true, booking_ref: bulk.booking_ref });
+    }
+
+    // Lock all slots atomically and confirm all bookings
+    const individualBookings = await pool.query(
+      "SELECT * FROM bookings WHERE bulk_booking_id = $1 AND status = 'pending_payment'", [bulk_booking_id]
+    );
+
+    const client = await pool.connect();
+    let lockedCount = 0;
+    try {
+      await client.query('BEGIN');
+      for (const b of individualBookings.rows) {
+        const lock = await client.query(
+          'UPDATE slots SET is_booked = 1 WHERE id = $1 AND is_booked = 0 RETURNING id', [b.slot_id]
+        );
+        if (lock.rowCount > 0) {
+          await client.query("UPDATE bookings SET status = 'confirmed' WHERE id = $1", [b.id]);
+          lockedCount++;
+        } else {
+          // Slot taken — mark this individual booking cancelled
+          await client.query("UPDATE bookings SET status = 'cancelled' WHERE id = $1", [b.id]);
+        }
+      }
+      const finalStatus = lockedCount === individualBookings.rows.length ? 'confirmed' : 'partial';
+      await client.query('UPDATE bulk_bookings SET status = $1 WHERE id = $2', [finalStatus, bulk_booking_id]);
+      await client.query('COMMIT');
+    } catch (e) {
+      await client.query('ROLLBACK');
+      throw e;
+    } finally {
+      client.release();
+    }
+
+    res.json({ success: true, booking_ref: bulk.booking_ref, confirmed: lockedCount, total: individualBookings.rows.length });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to confirm bulk booking' });
+  }
+});
+
+// ════════════════════════════════════════════════════════════
+// BULK BOOKING — ADMIN ENDPOINTS
+// ════════════════════════════════════════════════════════════
+
+// GET /api/admin/bulk-bookings
+app.get('/api/admin/bulk-bookings', requireAdmin, async (req, res) => {
+  try {
+    const bulkResult = await pool.query(`
+      SELECT bb.*,
+        COUNT(b.id) FILTER (WHERE b.status = 'confirmed') AS confirmed_count,
+        COUNT(b.id) FILTER (WHERE b.status = 'cancelled') AS released_count,
+        COUNT(b.id) AS total_count
+      FROM bulk_bookings bb
+      LEFT JOIN bookings b ON b.bulk_booking_id = bb.id
+      GROUP BY bb.id
+      ORDER BY bb.created_at DESC
+    `);
+
+    // Fetch individual bookings with slot info for each bulk
+    const bulks = await Promise.all(bulkResult.rows.map(async bb => {
+      const slots = await pool.query(`
+        SELECT b.id, b.status, b.booking_ref, s.id as slot_id,
+               s.date::text, s.time::text, s.duration, s.price, s.currency
+        FROM   bookings b JOIN slots s ON s.id = b.slot_id
+        WHERE  b.bulk_booking_id = $1
+        ORDER  BY s.date ASC, s.time ASC
+      `, [bb.id]);
+      return { ...bb, bookings: slots.rows };
+    }));
+
+    res.json({ bulk_bookings: bulks });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch bulk bookings' });
+  }
+});
+
+// PATCH /api/admin/bulk-bookings/:bulkId/release/:bookingId
+// Releases one session from a bulk booking back to available
+app.patch('/api/admin/bulk-bookings/:bulkId/release/:bookingId', requireAdmin, async (req, res) => {
+  try {
+    const { bulkId, bookingId } = req.params;
+    const bookingResult = await pool.query(
+      'SELECT * FROM bookings WHERE id = $1 AND bulk_booking_id = $2', [bookingId, bulkId]
+    );
+    const booking = bookingResult.rows[0];
+    if (!booking) return res.status(404).json({ error: 'Booking not found in this bulk.' });
+
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query("UPDATE bookings SET status = 'released' WHERE id = $1", [bookingId]);
+      await client.query('UPDATE slots SET is_booked = 0 WHERE id = $1', [booking.slot_id]);
+      // Update bulk status to 'partial' if was 'confirmed'
+      await client.query(`
+        UPDATE bulk_bookings SET status = 'partial' WHERE id = $1 AND status = 'confirmed'
+      `, [bulkId]);
+      await client.query('COMMIT');
+    } catch (e) {
+      await client.query('ROLLBACK');
+      throw e;
+    } finally {
+      client.release();
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to release slot' });
+  }
+});
+
+// POST /api/admin/bulk-bookings/:bulkId/rebook/:bookingId
+// Rebooks a released session to a different available slot
+app.post('/api/admin/bulk-bookings/:bulkId/rebook/:bookingId', requireAdmin, async (req, res) => {
+  try {
+    const { bulkId, bookingId } = req.params;
+    const { new_slot_id } = req.body;
+    if (!new_slot_id) return res.status(400).json({ error: 'new_slot_id is required.' });
+
+    const bookingResult = await pool.query(
+      "SELECT * FROM bookings WHERE id = $1 AND bulk_booking_id = $2 AND status = 'released'",
+      [bookingId, bulkId]
+    );
+    const booking = bookingResult.rows[0];
+    if (!booking) return res.status(404).json({ error: 'Released booking not found.' });
+
+    const newSlot = await pool.query('SELECT * FROM slots WHERE id = $1 AND is_booked = 0', [new_slot_id]);
+    if (!newSlot.rows[0]) return res.status(409).json({ error: 'New slot is not available.' });
+
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
+      await client.query('UPDATE slots SET is_booked = 1 WHERE id = $1', [new_slot_id]);
+      await client.query(
+        "UPDATE bookings SET slot_id = $1, status = 'confirmed' WHERE id = $2",
+        [new_slot_id, bookingId]
+      );
+      // If all bookings are confirmed again, restore bulk status
+      const remaining = await client.query(
+        "SELECT COUNT(*) as c FROM bookings WHERE bulk_booking_id = $1 AND status = 'released'", [bulkId]
+      );
+      if (parseInt(remaining.rows[0].c) === 0) {
+        await client.query("UPDATE bulk_bookings SET status = 'confirmed' WHERE id = $1", [bulkId]);
+      }
+      await client.query('COMMIT');
+    } catch (e) {
+      await client.query('ROLLBACK');
+      throw e;
+    } finally {
+      client.release();
+    }
+
+    res.json({ success: true, slot: newSlot.rows[0] });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to rebook slot' });
+  }
+});
+
+// GET /api/admin/bulk-bookings/export — CSV
+app.get('/api/admin/bulk-bookings/export', requireAdmin, async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT bb.booking_ref, bb.customer_name, bb.customer_email, bb.customer_phone,
+             bb.service, bb.session_count, bb.total_amount, bb.currency, bb.status, bb.created_at,
+             b.booking_ref as session_ref, b.status as session_status,
+             s.date::text, s.time::text, s.duration
+      FROM   bulk_bookings bb
+      JOIN   bookings b ON b.bulk_booking_id = bb.id
+      JOIN   slots s ON s.id = b.slot_id
+      ORDER  BY bb.created_at DESC, s.date ASC
+    `);
+    const headers = ['BulkRef','Name','Email','Phone','Service','TotalSessions','TotalAmount','Currency','BulkStatus','BookedAt','SessionRef','SessionStatus','Date','Time','Duration'];
+    const escape = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const rows = result.rows.map(r => [
+      r.booking_ref, r.customer_name, r.customer_email, r.customer_phone,
+      r.service, r.session_count, r.total_amount, r.currency, r.status, r.created_at,
+      r.session_ref, r.session_status, r.date, r.time, r.duration
+    ].map(escape).join(','));
+    const csv = [headers.join(','), ...rows].join('\r\n');
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', `attachment; filename="bulk-bookings-${new Date().toISOString().split('T')[0]}.csv"`);
+    res.send(csv);
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to export' });
   }
 });
 

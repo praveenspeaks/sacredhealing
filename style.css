@@ -2573,6 +2573,52 @@ textarea.modal-input {
   justify-content: center;
 }
 
+/* Bulk session count pills */
+.bulk-count-opt {
+  display: inline-flex;
+  cursor: pointer;
+}
+.bulk-count-opt input[type=radio] { display: none; }
+.bulk-count-opt span {
+  display: inline-block;
+  padding: 0.35rem 0.85rem;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+  transition: all 0.15s;
+}
+.bulk-count-opt input:checked + span {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: rgba(184,146,74,0.12);
+}
+/* Bulk preview slot rows */
+.bulk-slot-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.55rem 0.9rem;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.86rem;
+}
+.bulk-slot-row:last-child { border-bottom: none; }
+.bulk-slot-row .slot-num {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: var(--gold);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-right: 0.6rem;
+}
+
 /* ── Modal Success State ── */
 .modal-success {
   text-align: center;
