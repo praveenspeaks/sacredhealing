@@ -479,6 +479,12 @@ body.has-announce .navbar {
   position: relative;
 }
 
+/* All siblings after a section-bg-layer must sit above it */
+.section-bg-layer ~ * {
+  position: relative;
+  z-index: 1;
+}
+
 /* Rs card default SVG icon from assets/6R/ */
 .rs-icon-svg {
   width: 100%;
