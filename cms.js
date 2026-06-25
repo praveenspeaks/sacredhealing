@@ -132,13 +132,13 @@ module.exports = {
       );
     }
 
-    // healer_img now drives the HERO right-side photo; healer_img2 drives the About section.
-    // Correct any existing DB rows that still hold the old swapped values.
+    // healer_img → HERO right-side photo. healer_img2 → About section photo.
+    // Correct DB rows that still hold any known stock default (covers all prior migration states).
     await pool.query(
-      "UPDATE site_content SET value = 'assets/healer.jpg' WHERE key = 'healer_img' AND value = 'assets/RP_BLUE_1st.png'"
+      "UPDATE site_content SET value = 'assets/healer.jpg' WHERE key = 'healer_img' AND value IN ('assets/RP_BLUE_1st.png', 'assets/RP_Blue_2nd.png', 'assets/healer.jpg')"
     );
     await pool.query(
-      "UPDATE site_content SET value = 'assets/RP_BLUE_1st.png' WHERE key = 'healer_img2' AND value = 'assets/RP_Blue_2nd.png'"
+      "UPDATE site_content SET value = 'assets/RP_BLUE_1st.png' WHERE key = 'healer_img2' AND value IN ('assets/RP_Blue_2nd.png', 'assets/healer.jpg', 'assets/RP_BLUE_1st.png')"
     );
     // Remove the now-unused healer_hero_img key
     await pool.query("DELETE FROM site_content WHERE key = 'healer_hero_img'");
