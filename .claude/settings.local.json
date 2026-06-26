@@ -54,7 +54,11 @@
       "PowerShell(docker rm sacredhealing-test-db)",
       "PowerShell(New-Item -ItemType Directory -Force \"d:\\\\My Professional Projects\\\\sacredhealing\\\\assets\\\\uploads\")",
       "PowerShell(New-Item -ItemType File -Force \"d:\\\\My Professional Projects\\\\sacredhealing\\\\assets\\\\uploads\\\\.gitkeep\")",
-      "Bash(grep -E \"\\\\.js$|\\\\.json$\")"
+      "Bash(grep -E \"\\\\.js$|\\\\.json$\")",
+      "Skill(run)",
+      "Skill(run:*)",
+      "Bash(node -e \"const http = require\\('http'\\); http.get\\('http://localhost:3000/', r => console.log\\('Server running, status:', r.statusCode\\)\\).on\\('error', \\(\\) => console.log\\('Server not running'\\)\\)\")",
+      "Bash(npm start *)"
     ]
   }
 }

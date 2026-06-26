@@ -121,7 +121,7 @@ function renderServicesTable() {
                 <button class="btn-sm" onclick="moveService(${s.id},1)" ${isLast ? 'disabled' : ''} style="padding:0.15rem 0.45rem;font-size:1rem;line-height:1;" title="Move down">↓</button>
             </td>
             <td>${imgHtml}<strong>${s.title}</strong></td>
-            <td>£${s.price}</td>
+            <td>£${s.price}${s.package_price ? `<br><small style="color:var(--muted);">Pkg: £${s.package_price}/session</small>` : ''}</td>
             <td>${s.duration} min</td>
             <td style="max-width:200px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis" title="${fList}">${fList}</td>
             <td>
@@ -241,6 +241,7 @@ function editService(id) {
     editServiceOrderNum = s.order_num;
     document.getElementById('srv-title').value = s.title;
     document.getElementById('srv-price').value = s.price;
+    document.getElementById('srv-package-price').value = s.package_price != null ? s.package_price : '';
     document.getElementById('srv-duration').value = s.duration;
     document.getElementById('srv-desc').value = s.description;
     document.getElementById('srv-features').value = Array.isArray(s.features) ? s.features.join('\n') : s.features;
@@ -309,6 +310,7 @@ async function updateService() {
 
     const title = document.getElementById('srv-title').value.trim();
     const price = document.getElementById('srv-price').value.trim();
+    const package_price = document.getElementById('srv-package-price').value.trim();
     const duration = document.getElementById('srv-duration').value;
     const desc = document.getElementById('srv-desc').value.trim();
     const features = document.getElementById('srv-features').value.trim();
@@ -322,7 +324,7 @@ async function updateService() {
         const res = await fetch('/api/admin/services/' + editServiceId, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json', 'x-admin-password': adminToken },
-            body: JSON.stringify({ title, price, duration, description: desc, features, order_num: editServiceOrderNum, extra_details, image_url })
+            body: JSON.stringify({ title, price, package_price, duration, description: desc, features, order_num: editServiceOrderNum, extra_details, image_url })
         });
         if (res.ok) {
             toast('Service updated successfully', 'success');
@@ -339,6 +341,7 @@ async function updateService() {
 async function addService() {
     const title = document.getElementById('srv-title').value.trim();
     const price = document.getElementById('srv-price').value.trim();
+    const package_price = document.getElementById('srv-package-price').value.trim();
     const duration = document.getElementById('srv-duration').value;
     const desc = document.getElementById('srv-desc').value.trim();
     const features = document.getElementById('srv-features').value.trim();
@@ -352,7 +355,7 @@ async function addService() {
         const res = await fetch('/api/admin/services', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'x-admin-password': adminToken },
-            body: JSON.stringify({ title, price, duration, description: desc, features, order_num: servicesList.length + 1, extra_details, image_url })
+            body: JSON.stringify({ title, price, package_price, duration, description: desc, features, order_num: servicesList.length + 1, extra_details, image_url })
         });
         if (res.ok) {
             toast('Service added successfully', 'success');
@@ -371,6 +374,7 @@ function clearServiceForm() {
     editServiceOrderNum = null;
     document.getElementById('srv-title').value = '';
     document.getElementById('srv-price').value = '';
+    document.getElementById('srv-package-price').value = '';
     document.getElementById('srv-duration').value = '60';
     document.getElementById('srv-durationNote').value = '';
     document.getElementById('srv-desc').value = '';

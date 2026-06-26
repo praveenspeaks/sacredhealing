@@ -141,6 +141,8 @@ async function initDatabase() {
     )
   `);
   await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS bulk_booking_id INTEGER REFERENCES bulk_bookings(id)`);
+  // Package pricing: optional discounted per-session price for bulk bookings
+  await pool.query(`ALTER TABLE services ADD COLUMN IF NOT EXISTS package_price NUMERIC(10,2) DEFAULT NULL`);
 }
 
 // ════════════════════════════════════════════════════════════
@@ -170,6 +172,19 @@ async function getServicePrice(serviceName) {
         if (variant) return parseFloat(variant.price) || 0;
       } catch (e) {}
     }
+  }
+  return 0;
+}
+
+// For bulk/package bookings: returns package_price if configured, else regular price.
+async function getServiceBulkPrice(serviceName) {
+  const svcResult = await pool.query('SELECT price, package_price FROM services WHERE title = $1', [serviceName]);
+  if (svcResult.rows[0]) {
+    const pkgPrice = svcResult.rows[0].package_price;
+    if (pkgPrice !== null && pkgPrice !== undefined && parseFloat(pkgPrice) > 0) {
+      return parseFloat(pkgPrice);
+    }
+    return parseFloat(svcResult.rows[0].price) || 0;
   }
   return 0;
 }
@@ -906,8 +921,7 @@ app.post('/api/bookings/bulk/preview', slotsLimiter, async (req, res) => {
       });
     }
 
-    const svcPrice = service ? await getServicePrice(service.trim()) : 0;
-    const sessionPrice = svcPrice > 0 ? svcPrice : parseFloat(s.price || 0);
+    const sessionPrice = service ? await getServiceBulkPrice(service.trim()) : parseFloat(s.price || 0);
     const totalAmount  = sessionPrice * count;
 
     res.json({ slots: result.rows, session_price: sessionPrice, total_amount: totalAmount, currency: s.currency || 'GBP' });
@@ -939,8 +953,7 @@ app.post('/api/bookings/bulk', bookingLimiter, async (req, res) => {
     }
 
     const firstSlot = slotsResult.rows[0];
-    const svcPrice  = await getServicePrice(service.trim());
-    const sessionPrice = svcPrice > 0 ? svcPrice : parseFloat(firstSlot.price || 0);
+    const sessionPrice = await getServiceBulkPrice(service.trim()) || parseFloat(firstSlot.price || 0);
     const totalAmount  = sessionPrice * slot_ids.length;
     const bulkRef      = generateBookingRef();
     const stripeKey    = process.env.STRIPE_SECRET_KEY || '';

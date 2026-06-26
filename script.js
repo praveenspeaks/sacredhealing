@@ -536,7 +536,7 @@ let _pkgPreviewSlots   = null;
 let _pkgBookingData    = null;
 let _pkgStripeElements = null;
 
-function openBulkBooking(serviceName, servicePrice) {
+function openBulkBooking(serviceName, servicePrice, presetCount) {
   const modal = document.getElementById('pkg-modal');
   if (!modal) return;
   pkgShowStep('config');
@@ -544,6 +544,11 @@ function openBulkBooking(serviceName, servicePrice) {
   document.body.style.overflow = 'hidden';
   pkgLoadSlots();
   pkgLoadServices(serviceName);
+  // Pre-select count if provided (5, 10, 15 from package cards)
+  if (presetCount) {
+    const radio = document.querySelector(`input[name="pkg-count"][value="${presetCount}"]`);
+    if (radio) radio.checked = true;
+  }
   // Wire up "Custom" radio for count
   document.querySelectorAll('input[name="pkg-count"]').forEach(r => {
     r.onchange = () => {
@@ -589,8 +594,7 @@ async function pkgLoadSlots() {
         const d = new Date(s.date + 'T00:00:00').toLocaleDateString('en-GB',
           { weekday:'short', day:'numeric', month:'short', year:'numeric' });
         const t = formatTime12h(s.time);
-        const price = s.price > 0 ? ` · £${parseFloat(s.price).toFixed(2)}` : ' · Free';
-        return `<option value="${s.id}">${d} at ${t} (${s.duration}min${price})</option>`;
+        return `<option value="${s.id}">${d} at ${t} · ${s.duration} min</option>`;
       }).join('');
   } catch(e) {
     sel.innerHTML = '<option value="">Could not load slots</option>';
@@ -606,14 +610,38 @@ async function pkgLoadServices(preselect) {
     const svcs = data.services || [];
     if (svcs.length) {
       sel.innerHTML = '<option value="">Choose a service…</option>' +
-        svcs.map(s => `<option value="${escHtmlJs(s.title)}"${preselect === s.title ? ' selected' : ''}>${escHtmlJs(s.title)}</option>`).join('');
+        svcs.map(s => {
+          const pkgPrice = s.package_price != null && parseFloat(s.package_price) > 0 ? parseFloat(s.package_price) : null;
+          return `<option value="${escHtmlJs(s.title)}" data-price="${parseFloat(s.price)||0}" data-pkg-price="${pkgPrice !== null ? pkgPrice : ''}"${preselect === s.title ? ' selected' : ''}>${escHtmlJs(s.title)}</option>`;
+        }).join('');
     } else {
       sel.innerHTML = '<option value="">Spiritual Healing</option><option value="Psychic Reading">Psychic Reading</option><option value="Past Life Healing">Past Life Healing</option>';
       if (preselect) sel.value = preselect;
     }
+    pkgUpdateServicePriceHint();
   } catch(e) {
     sel.innerHTML = '<option value="">Could not load services</option>';
   }
+}
+
+function pkgUpdateServicePriceHint() {
+  const hint = document.getElementById('pkg-service-price-hint');
+  if (!hint) return;
+  const sel = document.getElementById('pkg-service');
+  const opt = sel && sel.options[sel.selectedIndex];
+  if (!opt || !opt.value) { hint.style.display = 'none'; return; }
+  const sessionPrice = parseFloat(opt.dataset.price || 0);
+  const pkgPrice     = opt.dataset.pkgPrice ? parseFloat(opt.dataset.pkgPrice) : null;
+  if (pkgPrice !== null && pkgPrice > 0) {
+    hint.innerHTML = `<span style="color:var(--olive);font-weight:600;">£${pkgPrice.toFixed(2)} per session</span> <span style="color:var(--text-muted);font-weight:400;font-size:0.78rem;">(package rate — saves £${(sessionPrice - pkgPrice).toFixed(2)} per session vs £${sessionPrice.toFixed(2)} individually)</span>`;
+  } else if (sessionPrice > 0) {
+    hint.innerHTML = `<span style="color:var(--olive);font-weight:600;">£${sessionPrice.toFixed(2)} per session</span>`;
+  } else {
+    hint.innerHTML = '';
+    hint.style.display = 'none';
+    return;
+  }
+  hint.style.display = 'block';
 }
 
 function escHtmlJs(str) {

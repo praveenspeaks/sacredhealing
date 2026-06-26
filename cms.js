@@ -338,7 +338,7 @@ module.exports = {
           description   = EXCLUDED.description,
           features      = EXCLUDED.features,
           duration      = EXCLUDED.duration,
-          price         = EXCLUDED.price,
+          price         = CASE WHEN services.price IS NULL OR services.price = 0 THEN EXCLUDED.price ELSE services.price END,
           order_num     = EXCLUDED.order_num,
           extra_details = EXCLUDED.extra_details,
           image_url     = COALESCE(services.image_url, EXCLUDED.image_url)
@@ -533,13 +533,14 @@ module.exports = {
     // Services Management
     app.post('/api/admin/services', requireAdmin, express.json(), async (req, res) => {
       try {
-        const { title, description, features, duration, price, order_num, extra_details, image_url } = req.body;
+        const { title, description, features, duration, price, package_price, order_num, extra_details, image_url } = req.body;
         if (!title || !description) return res.status(400).json({ error: 'title and description are required' });
         const featureStr = JSON.stringify(Array.isArray(features) ? features : (features || '').split('\\n').filter(Boolean));
         const extraStr = extra_details ? JSON.stringify(extra_details) : '{}';
+        const pkgPrice = (package_price !== undefined && package_price !== '' && parseFloat(package_price) > 0) ? parseFloat(package_price) : null;
         const result = await pool.query(
-          'INSERT INTO services (title, description, features, duration, price, order_num, extra_details, image_url) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING id',
-          [title, description, featureStr, duration || 60, price || 0, order_num || 0, extraStr, image_url || null]
+          'INSERT INTO services (title, description, features, duration, price, package_price, order_num, extra_details, image_url) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) RETURNING id',
+          [title, description, featureStr, duration || 60, price || 0, pkgPrice, order_num || 0, extraStr, image_url || null]
         );
         res.status(201).json({ success: true, id: result.rows[0].id });
       } catch (err) {
@@ -549,13 +550,14 @@ module.exports = {
 
     app.put('/api/admin/services/:id', requireAdmin, express.json(), async (req, res) => {
       try {
-        const { title, description, features, duration, price, order_num, extra_details, image_url } = req.body;
+        const { title, description, features, duration, price, package_price, order_num, extra_details, image_url } = req.body;
         if (!title || !description) return res.status(400).json({ error: 'title and description are required' });
         const featureStr = JSON.stringify(Array.isArray(features) ? features : (features || '').split('\\n').filter(Boolean));
         const extraStr = extra_details ? JSON.stringify(extra_details) : '{}';
+        const pkgPrice = (package_price !== undefined && package_price !== '' && parseFloat(package_price) > 0) ? parseFloat(package_price) : null;
         const result = await pool.query(
-          'UPDATE services SET title=$1, description=$2, features=$3, duration=$4, price=$5, order_num=$6, extra_details=$7, image_url=$8 WHERE id=$9',
-          [title, description, featureStr, duration || 60, price || 0, order_num || 0, extraStr, image_url || null, req.params.id]
+          'UPDATE services SET title=$1, description=$2, features=$3, duration=$4, price=$5, package_price=$6, order_num=$7, extra_details=$8, image_url=$9 WHERE id=$10',
+          [title, description, featureStr, duration || 60, price || 0, pkgPrice, order_num || 0, extraStr, image_url || null, req.params.id]
         );
         if (result.rowCount === 0) return res.status(404).json({ error: 'Service not found' });
         res.json({ success: true });
