@@ -145,6 +145,20 @@ async function initDatabase() {
   await pool.query(`ALTER TABLE services ADD COLUMN IF NOT EXISTS package_price NUMERIC(10,2) DEFAULT NULL`);
 }
 
+// Reads the session location from site_content (editable in Admin → Content).
+// Falls back to a safe default if not set.
+async function getSessionLocation() {
+  try {
+    const r = await pool.query("SELECT value FROM site_content WHERE key = 'session_location'");
+    if (r.rows[0]?.value) return r.rows[0].value;
+    // Fall back to contact_location if session_location not set
+    const r2 = await pool.query("SELECT value FROM site_content WHERE key = 'contact_location'");
+    return r2.rows[0]?.value ? `${r2.rows[0].value} (or Online if agreed)` : 'London (or Online if agreed)';
+  } catch (e) {
+    return 'London (or Online if agreed)';
+  }
+}
+
 // ════════════════════════════════════════════════════════════
 // CLEAN SEO URLS FOR SERVICES
 // ════════════════════════════════════════════════════════════
@@ -177,16 +191,35 @@ async function getServicePrice(serviceName) {
 }
 
 // For bulk/package bookings: returns package_price if configured, else regular price.
-async function getServiceBulkPrice(serviceName) {
-  const svcResult = await pool.query('SELECT price, package_price FROM services WHERE title = $1', [serviceName]);
-  if (svcResult.rows[0]) {
-    const pkgPrice = svcResult.rows[0].package_price;
-    if (pkgPrice !== null && pkgPrice !== undefined && parseFloat(pkgPrice) > 0) {
-      return parseFloat(pkgPrice);
-    }
-    return parseFloat(svcResult.rows[0].price) || 0;
+// Accepts optional `duration` (minutes) to match the correct pricing variant.
+async function getServiceBulkPrice(serviceName, duration) {
+  const svcResult = await pool.query(
+    'SELECT price, package_price, extra_details FROM services WHERE title = $1', [serviceName]
+  );
+  if (!svcResult.rows[0]) return 0;
+  const row = svcResult.rows[0];
+
+  // If a slot duration is known, try to find the matching pricing variant first
+  if (duration) {
+    try {
+      const details = JSON.parse(row.extra_details || '{}');
+      const variant = (details.variants || []).find(v => parseInt(v.duration) === parseInt(duration));
+      if (variant) {
+        // Prefer variant's package_price, fall back to variant's session price
+        if (variant.package_price != null && parseFloat(variant.package_price) > 0) {
+          return parseFloat(variant.package_price);
+        }
+        return parseFloat(variant.price) || 0;
+      }
+    } catch (e) {}
   }
-  return 0;
+
+  // No variant match — use service-level package_price or base price
+  const pkgPrice = row.package_price;
+  if (pkgPrice !== null && pkgPrice !== undefined && parseFloat(pkgPrice) > 0) {
+    return parseFloat(pkgPrice);
+  }
+  return parseFloat(row.price) || 0;
 }
 
 // Multi-page section routes (must be before /services/:slug)
@@ -352,16 +385,15 @@ app.get('/api/slots/date/:date', slotsLimiter, async (req, res) => {
 // GET /api/slots  — Available future slots (unbooked only)
 app.get('/api/slots', slotsLimiter, async (req, res) => {
   try {
-    const today = new Date().toISOString().split('T')[0];
     const { duration } = req.query;
 
     let query = `
       SELECT id, date, time, duration, price, currency, note
       FROM   slots
       WHERE  is_booked = 0
-        AND  date >= $1
+        AND  (date || ' ' || time)::timestamp > (NOW() AT TIME ZONE 'Europe/London')
     `;
-    const params = [today];
+    const params = [];
 
     if (duration === '90+') {
       query += ' AND duration >= 90';
@@ -393,6 +425,15 @@ app.post('/api/bookings', bookingLimiter, async (req, res) => {
     const slot = slotResult.rows[0];
     if (!slot) {
       return res.status(409).json({ error: 'This slot is no longer available. Please choose another time.' });
+    }
+
+    // Reject if slot is in the past (compare using London timezone)
+    const pastCheck = await pool.query(
+      "SELECT ($1 || ' ' || $2)::timestamp <= (NOW() AT TIME ZONE 'Europe/London') AS is_past",
+      [slot.date, slot.time]
+    );
+    if (pastCheck.rows[0]?.is_past) {
+      return res.status(400).json({ error: 'This slot has already passed and cannot be booked.' });
     }
 
     // Block double-booking: reject if a confirmed or pending_payment booking already exists for this slot
@@ -489,10 +530,12 @@ app.post('/api/bookings', bookingLimiter, async (req, res) => {
       client.release();
     }
 
-    sendBookingConfirmation({ customerName: customer_name, customerEmail: customer_email, service, slot, servicePrice, cancelUrl, bookingRef })
-      .catch(err => console.error('Confirmation email error:', err));
-    sendAdminAlert({ customerName: customer_name, customerEmail: customer_email, customerPhone: customer_phone, service, slot, servicePrice, message, cancelUrl, bookingRef })
-      .catch(err => console.error('Admin alert email error:', err));
+    getSessionLocation().then(location => {
+      sendBookingConfirmation({ customerName: customer_name, customerEmail: customer_email, service, slot, servicePrice, cancelUrl, bookingRef, location })
+        .catch(err => console.error('Confirmation email error:', err));
+      sendAdminAlert({ customerName: customer_name, customerEmail: customer_email, customerPhone: customer_phone, service, slot, servicePrice, message, cancelUrl, bookingRef, location })
+        .catch(err => console.error('Admin alert email error:', err));
+    });
 
     res.status(201).json({
       success:    true,
@@ -550,10 +593,12 @@ app.post('/api/bookings/confirm', async (req, res) => {
       const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
       const cancelUrl = booking.cancel_token ? `${baseUrl}/cancel?token=${booking.cancel_token}` : null;
       const servicePrice = await getServicePrice(booking.service);
-      sendBookingConfirmation({
-        customerName: booking.customer_name, customerEmail: booking.customer_email,
-        service: booking.service, slot: booking, servicePrice, cancelUrl, bookingRef: booking.booking_ref,
-      }).catch(err => console.error('Idempotent confirmation email error:', err));
+      getSessionLocation().then(location => {
+        sendBookingConfirmation({
+          customerName: booking.customer_name, customerEmail: booking.customer_email,
+          service: booking.service, slot: booking, servicePrice, cancelUrl, bookingRef: booking.booking_ref, location,
+        }).catch(err => console.error('Idempotent confirmation email error:', err));
+      });
       return res.json({ success: true, booking_ref: booking.booking_ref, already_confirmed: true,
         service: booking.service, slot: { date: booking.date, time: booking.time, duration: booking.duration } });
     }
@@ -585,15 +630,17 @@ app.post('/api/bookings/confirm', async (req, res) => {
     const cancelUrl = booking.cancel_token ? `${baseUrl}/cancel?token=${booking.cancel_token}` : null;
     const servicePrice = await getServicePrice(booking.service);
 
-    sendBookingConfirmation({
-      customerName: booking.customer_name, customerEmail: booking.customer_email,
-      service: booking.service, slot: booking, servicePrice, cancelUrl, bookingRef: booking.booking_ref,
-    }).catch(err => console.error('Confirmation email error:', err));
-    sendAdminAlert({
-      customerName: booking.customer_name, customerEmail: booking.customer_email,
-      customerPhone: booking.customer_phone, service: booking.service,
-      slot: booking, servicePrice, message: booking.message, cancelUrl, bookingRef: booking.booking_ref,
-    }).catch(err => console.error('Admin alert email error:', err));
+    getSessionLocation().then(location => {
+      sendBookingConfirmation({
+        customerName: booking.customer_name, customerEmail: booking.customer_email,
+        service: booking.service, slot: booking, servicePrice, cancelUrl, bookingRef: booking.booking_ref, location,
+      }).catch(err => console.error('Confirmation email error:', err));
+      sendAdminAlert({
+        customerName: booking.customer_name, customerEmail: booking.customer_email,
+        customerPhone: booking.customer_phone, service: booking.service,
+        slot: booking, servicePrice, message: booking.message, cancelUrl, bookingRef: booking.booking_ref, location,
+      }).catch(err => console.error('Admin alert email error:', err));
+    });
 
     res.json({
       success:     true,
@@ -651,15 +698,17 @@ app.get('/api/bookings/success', async (req, res) => {
       const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
       const cancelUrl = booking.cancel_token ? `${baseUrl}/cancel?token=${booking.cancel_token}` : null;
 
-      sendBookingConfirmation({
-        customerName: booking.customer_name, customerEmail: booking.customer_email,
-        service: booking.service, slot: booking, servicePrice, cancelUrl
-      }).catch(err => console.error('Confirmation email error:', err));
-      sendAdminAlert({
-        customerName: booking.customer_name, customerEmail: booking.customer_email,
-        customerPhone: booking.customer_phone, service: booking.service,
-        slot: booking, servicePrice, message: booking.message, cancelUrl
-      }).catch(err => console.error('Admin alert email error:', err));
+      getSessionLocation().then(location => {
+        sendBookingConfirmation({
+          customerName: booking.customer_name, customerEmail: booking.customer_email,
+          service: booking.service, slot: booking, servicePrice, cancelUrl, location,
+        }).catch(err => console.error('Confirmation email error:', err));
+        sendAdminAlert({
+          customerName: booking.customer_name, customerEmail: booking.customer_email,
+          customerPhone: booking.customer_phone, service: booking.service,
+          slot: booking, servicePrice, message: booking.message, cancelUrl, location,
+        }).catch(err => console.error('Admin alert email error:', err));
+      });
     }
 
     res.redirect(`/?booking=success&booking_id=${bookingId}`);
@@ -903,12 +952,22 @@ app.post('/api/bookings/bulk/preview', slotsLimiter, async (req, res) => {
     }
     const s = startSlot.rows[0];
 
-    // Find the next `count` available slots starting from the selected one (same duration)
+    // Reject if start slot is in the past
+    const pastCheck = await pool.query(
+      "SELECT ($1 || ' ' || $2)::timestamp <= (NOW() AT TIME ZONE 'Europe/London') AS is_past",
+      [s.date, s.time]
+    );
+    if (pastCheck.rows[0]?.is_past) {
+      return res.status(400).json({ error: 'The selected slot has already passed. Please choose a future slot.' });
+    }
+
+    // Find the next `count` available slots starting from the selected one (same duration, future only)
     const result = await pool.query(`
       SELECT id, date::text, time::text, duration, price, currency, note
       FROM   slots
       WHERE  is_booked = 0
         AND  duration = $1
+        AND  (date || ' ' || time)::timestamp > (NOW() AT TIME ZONE 'Europe/London')
         AND  (date > $2 OR (date = $2 AND time >= $3))
       ORDER  BY date ASC, time ASC
       LIMIT  $4
@@ -921,7 +980,7 @@ app.post('/api/bookings/bulk/preview', slotsLimiter, async (req, res) => {
       });
     }
 
-    const sessionPrice = service ? await getServiceBulkPrice(service.trim()) : parseFloat(s.price || 0);
+    const sessionPrice = service ? await getServiceBulkPrice(service.trim(), s.duration) : parseFloat(s.price || 0);
     const totalAmount  = sessionPrice * count;
 
     res.json({ slots: result.rows, session_price: sessionPrice, total_amount: totalAmount, currency: s.currency || 'GBP' });
@@ -943,17 +1002,19 @@ app.post('/api/bookings/bulk', bookingLimiter, async (req, res) => {
       return res.status(400).json({ error: 'Invalid slot IDs.' });
     }
 
-    // Verify all slots are available
+    // Verify all slots are available and in the future
     const slotsResult = await pool.query(
-      'SELECT * FROM slots WHERE id = ANY($1) AND is_booked = 0 ORDER BY date ASC, time ASC',
+      `SELECT * FROM slots WHERE id = ANY($1) AND is_booked = 0
+         AND (date || ' ' || time)::timestamp > (NOW() AT TIME ZONE 'Europe/London')
+       ORDER BY date ASC, time ASC`,
       [slot_ids]
     );
     if (slotsResult.rows.length !== slot_ids.length) {
-      return res.status(409).json({ error: 'One or more slots are no longer available. Please start over.' });
+      return res.status(409).json({ error: 'One or more slots are no longer available or have already passed. Please start over.' });
     }
 
     const firstSlot = slotsResult.rows[0];
-    const sessionPrice = await getServiceBulkPrice(service.trim()) || parseFloat(firstSlot.price || 0);
+    const sessionPrice = await getServiceBulkPrice(service.trim(), firstSlot.duration) || parseFloat(firstSlot.price || 0);
     const totalAmount  = sessionPrice * slot_ids.length;
     const bulkRef      = generateBookingRef();
     const stripeKey    = process.env.STRIPE_SECRET_KEY || '';
@@ -1036,17 +1097,19 @@ app.post('/api/bookings/bulk', bookingLimiter, async (req, res) => {
     }
 
     const baseUrl = process.env.BASE_URL || `${req.protocol}://${req.get('host')}`;
-    sendBookingConfirmation({
-      customerName: customer_name.trim(), customerEmail: customer_email.trim().toLowerCase(),
-      service, slot: slotsResult.rows[0], servicePrice: 0, cancelUrl: null, bookingRef: bulkRef,
-      isBulk: true, sessionCount: slot_ids.length,
-    }).catch(err => console.error('Bulk confirmation email error:', err));
-    sendAdminAlert({
-      customerName: customer_name.trim(), customerEmail: customer_email.trim().toLowerCase(),
-      customerPhone: (customer_phone||'').trim(), service, slot: slotsResult.rows[0],
-      servicePrice: 0, message: (message||''), cancelUrl: null, bookingRef: bulkRef,
-      isBulk: true, sessionCount: slot_ids.length,
-    }).catch(err => console.error('Bulk admin alert error:', err));
+    getSessionLocation().then(location => {
+      sendBookingConfirmation({
+        customerName: customer_name.trim(), customerEmail: customer_email.trim().toLowerCase(),
+        service, slots: slotsResult.rows, servicePrice: sessionPrice, totalAmount,
+        cancelUrl: null, bookingRef: bulkRef, isBulk: true, sessionCount: slot_ids.length, location,
+      }).catch(err => console.error('Bulk confirmation email error:', err));
+      sendAdminAlert({
+        customerName: customer_name.trim(), customerEmail: customer_email.trim().toLowerCase(),
+        customerPhone: (customer_phone||'').trim(), service, slots: slotsResult.rows,
+        servicePrice: sessionPrice, totalAmount, message: (message||''),
+        cancelUrl: null, bookingRef: bulkRef, isBulk: true, sessionCount: slot_ids.length, location,
+      }).catch(err => console.error('Bulk admin alert error:', err));
+    });
 
     res.status(201).json({ success: true, bulk_booking_id: bulkId, booking_ref: bulkRef,
       session_count: slot_ids.length, slots: slotsResult.rows, service });
@@ -1120,22 +1183,28 @@ app.post('/api/bookings/bulk/confirm', confirmLimiter, async (req, res) => {
       client.release();
     }
 
-    // Send confirmation emails
+    // Send confirmation emails with full session list
     if (confirmed) {
-      const firstSlot = individualBookings.rows[0];
-      sendBookingConfirmation({
-        customerName: bulk.customer_name, customerEmail: bulk.customer_email,
-        service: bulk.service, slot: firstSlot, servicePrice: parseFloat(bulk.session_price),
-        cancelUrl: null, bookingRef: bulk.booking_ref,
-        isBulk: true, sessionCount: individualBookings.rows.length,
-      }).catch(err => console.error('Bulk confirmation email error:', err));
-      sendAdminAlert({
-        customerName: bulk.customer_name, customerEmail: bulk.customer_email,
-        customerPhone: bulk.customer_phone, service: bulk.service, slot: firstSlot,
-        servicePrice: parseFloat(bulk.session_price), message: bulk.message,
-        cancelUrl: null, bookingRef: bulk.booking_ref,
-        isBulk: true, sessionCount: individualBookings.rows.length,
-      }).catch(err => console.error('Bulk admin alert error:', err));
+      const sessionPrice = parseFloat(bulk.session_price);
+      const totalAmount  = parseFloat(bulk.total_amount);
+      // Attach currency to each slot row so mailer can format prices correctly
+      const slotsWithCurrency = individualBookings.rows.map(r => ({ ...r, currency: bulk.currency || 'GBP' }));
+      getSessionLocation().then(location => {
+        sendBookingConfirmation({
+          customerName: bulk.customer_name, customerEmail: bulk.customer_email,
+          service: bulk.service, slots: slotsWithCurrency,
+          servicePrice: sessionPrice, totalAmount,
+          cancelUrl: null, bookingRef: bulk.booking_ref,
+          isBulk: true, sessionCount: individualBookings.rows.length, location,
+        }).catch(err => console.error('Bulk confirmation email error:', err));
+        sendAdminAlert({
+          customerName: bulk.customer_name, customerEmail: bulk.customer_email,
+          customerPhone: bulk.customer_phone, service: bulk.service,
+          slots: slotsWithCurrency, servicePrice: sessionPrice, totalAmount,
+          message: bulk.message, cancelUrl: null, bookingRef: bulk.booking_ref,
+          isBulk: true, sessionCount: individualBookings.rows.length, location,
+        }).catch(err => console.error('Bulk admin alert error:', err));
+      });
     }
 
     res.json({ success: true, booking_ref: bulk.booking_ref, confirmed: individualBookings.rows.length, total: individualBookings.rows.length });

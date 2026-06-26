@@ -185,10 +185,10 @@ async function moveService(id, dir) {
 let editServiceId = null;
 let editServiceOrderNum = null;
 
-function addVariantRow(label, duration, price) {
+function addVariantRow(label, duration, price, packagePrice) {
     const row = document.createElement('div');
     row.className = 'variant-row';
-    row.style.cssText = 'display:grid;grid-template-columns:1fr 90px 70px 28px;gap:0.35rem;align-items:center;';
+    row.style.cssText = 'display:grid;grid-template-columns:1fr 90px 68px 68px 28px;gap:0.35rem;align-items:center;margin-bottom:0.35rem;';
     row.innerHTML = `
         <input type="text" class="form-control variant-label" placeholder="e.g. Remote / In-Person / 30 min" style="font-size:0.82rem;padding:0.4rem 0.6rem;" value="${label||''}" />
         <select class="form-control variant-dur" style="font-size:0.82rem;padding:0.4rem 0.3rem;">
@@ -198,7 +198,8 @@ function addVariantRow(label, duration, price) {
             <option value="120"${duration==120?' selected':''}>120 min</option>
             <option value="0"${duration==0?' selected':''}>Variable</option>
         </select>
-        <input type="number" class="form-control variant-price" placeholder="£" style="font-size:0.82rem;padding:0.4rem 0.4rem;" value="${price||''}" />
+        <input type="number" class="form-control variant-price" placeholder="£ price" style="font-size:0.82rem;padding:0.4rem 0.4rem;" value="${price||''}" title="Session price for this variant" />
+        <input type="number" class="form-control variant-pkg-price" placeholder="£ pkg" style="font-size:0.82rem;padding:0.4rem 0.4rem;" value="${packagePrice != null && packagePrice !== '' ? packagePrice : ''}" title="Package price per session (optional — blank = same as session price)" />
         <button type="button" onclick="this.closest('.variant-row').remove()" style="background:#dc2626;color:#fff;border:none;border-radius:4px;padding:0.3rem 0.5rem;cursor:pointer;font-size:0.75rem;">✕</button>
     `;
     document.getElementById('srv-variants-list').appendChild(row);
@@ -225,10 +226,16 @@ function getServiceFormData() {
 
     const variants = [];
     document.querySelectorAll('#srv-variants-list .variant-row').forEach(row => {
-        const lbl = row.querySelector('.variant-label').value.trim();
-        const dur = parseInt(row.querySelector('.variant-dur').value);
-        const prc = parseFloat(row.querySelector('.variant-price').value);
-        if (lbl || !isNaN(prc)) variants.push({ label: lbl, duration: dur, price: isNaN(prc) ? 0 : prc });
+        const lbl    = row.querySelector('.variant-label').value.trim();
+        const dur    = parseInt(row.querySelector('.variant-dur').value);
+        const prc    = parseFloat(row.querySelector('.variant-price').value);
+        const pkgRaw = row.querySelector('.variant-pkg-price').value.trim();
+        const pkgPrc = pkgRaw !== '' ? parseFloat(pkgRaw) : null;
+        if (lbl || !isNaN(prc)) {
+            const v = { label: lbl, duration: dur, price: isNaN(prc) ? 0 : prc };
+            if (pkgPrc !== null && !isNaN(pkgPrc) && pkgPrc > 0) v.package_price = pkgPrc;
+            variants.push(v);
+        }
     });
 
     return { icon, tag, sessionType, bestFor, durationNote, longDescription, expect, variants };
@@ -280,7 +287,7 @@ function editService(id) {
     const variantList = document.getElementById('srv-variants-list');
     variantList.innerHTML = '';
     if (details.variants && details.variants.length) {
-        details.variants.forEach(v => addVariantRow(v.label, v.duration, v.price));
+        details.variants.forEach(v => addVariantRow(v.label, v.duration, v.price, v.package_price ?? ''));
     }
 
     // Load image

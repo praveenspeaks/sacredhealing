@@ -848,9 +848,9 @@
           </div>
           <div class="form-row">
             <div class="form-group" style="flex:1;">
-              <label>Package Price per Session (£) <small style="color:var(--muted);font-weight:400;">— optional, for multi-session packages</small></label>
+              <label>Base Package Price per Session (£) <small style="color:var(--muted);font-weight:400;">— fallback when no variant matches</small></label>
               <input type="number" id="srv-package-price" class="form-control" step="0.01" placeholder="Leave blank = use base price" />
-              <small style="color:var(--muted);display:block;margin-top:0.3rem;">If set, customers booking a package (multiple sessions) are charged this rate per session instead of the base price. Great for offering a discount on bulk bookings.</small>
+              <small style="color:var(--muted);display:block;margin-top:0.3rem;">Used when the service has no variants, or no variant's Pkg £ is set. If the service has pricing variants, set the package rate per variant using the <strong>Pkg £</strong> column below.</small>
             </div>
           </div>
           <div class="form-group" style="margin-bottom:1rem;">
@@ -861,9 +861,16 @@
           <!-- Pricing Variants -->
           <div class="form-group" style="margin-bottom:1.25rem;border:1px solid var(--border);border-radius:10px;padding:0.85rem;">
             <label style="display:block;margin-bottom:0.6rem;">Pricing Variants <small style="color:var(--muted);font-weight:400;">— for multiple durations or remote vs in-person pricing</small></label>
-            <div id="srv-variants-list" style="display:flex;flex-direction:column;gap:0.45rem;margin-bottom:0.55rem;"></div>
+            <div style="display:grid;grid-template-columns:1fr 90px 68px 68px 28px;gap:0.35rem;margin-bottom:0.25rem;padding:0 0.1rem;">
+              <span style="font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;">Label</span>
+              <span style="font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;">Duration</span>
+              <span style="font-size:0.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:0.06em;">Price £</span>
+              <span style="font-size:0.68rem;color:var(--gold);text-transform:uppercase;letter-spacing:0.06em;">Pkg £</span>
+              <span></span>
+            </div>
+            <div id="srv-variants-list" style="display:flex;flex-direction:column;margin-bottom:0.55rem;"></div>
             <button type="button" onclick="addVariantRow()" style="width:100%;font-size:0.82rem;background:none;border:1px dashed var(--border);color:var(--muted);padding:0.45rem 0.75rem;border-radius:6px;cursor:pointer;transition:border-color 0.15s;" onmouseover="this.style.borderColor='var(--gold)'" onmouseout="this.style.borderColor='var(--border)'">+ Add Pricing Variant</button>
-            <p style="font-size:0.7rem;color:var(--muted);margin-top:0.4rem;line-height:1.5;">Example: <em>Remote | 60 min | £100</em> and <em>In-Person | 60 min | £135</em>. When variants exist they replace the base price on the public page.</p>
+            <p style="font-size:0.7rem;color:var(--muted);margin-top:0.4rem;line-height:1.5;">Example: <em>Remote | 60 min | £100 | pkg £80</em>. <span style="color:var(--gold);">Pkg £</span> = discounted per-session rate for multi-session packages (leave blank to use session price).</p>
           </div>
 
           <!-- Icon + Tag + Session Type -->
