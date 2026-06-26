@@ -7,6 +7,9 @@ const AUTH      = { 'x-admin-password': ADMIN_PWD, 'Content-Type': 'application/
 // Far-future dates to avoid clashing with real slots
 const TEST_DATE  = '2099-12-30';
 const TEST_DATE2 = '2099-12-31';
+const TEST_DATE3 = '2099-11-30'; // bulk preview test slots
+const TEST_DATE4 = '2099-10-31'; // bulk create test slots
+const PAST_DATE  = '2020-01-01'; // past-slot rejection tests
 
 let app;
 let testSlotId;
@@ -19,13 +22,23 @@ let testReviewId;
 
 beforeAll(async () => {
   app = await init();
-  await pool.query('DELETE FROM bookings WHERE slot_id IN (SELECT id FROM slots WHERE date = $1)', [TEST_DATE]);
-  await pool.query('DELETE FROM slots WHERE date = $1 OR date = $2', [TEST_DATE, TEST_DATE2]);
+  for (const d of [TEST_DATE, TEST_DATE4, PAST_DATE]) {
+    await pool.query('DELETE FROM bookings WHERE slot_id IN (SELECT id FROM slots WHERE date = $1)', [d]);
+  }
+  await pool.query(
+    'DELETE FROM slots WHERE date = $1 OR date = $2 OR date = $3 OR date = $4 OR date = $5',
+    [TEST_DATE, TEST_DATE2, TEST_DATE3, TEST_DATE4, PAST_DATE]
+  );
 });
 
 afterAll(async () => {
-  await pool.query('DELETE FROM bookings WHERE slot_id IN (SELECT id FROM slots WHERE date = $1)', [TEST_DATE]);
-  await pool.query('DELETE FROM slots WHERE date = $1 OR date = $2', [TEST_DATE, TEST_DATE2]);
+  for (const d of [TEST_DATE, TEST_DATE4, PAST_DATE]) {
+    await pool.query('DELETE FROM bookings WHERE slot_id IN (SELECT id FROM slots WHERE date = $1)', [d]);
+  }
+  await pool.query(
+    'DELETE FROM slots WHERE date = $1 OR date = $2 OR date = $3 OR date = $4 OR date = $5',
+    [TEST_DATE, TEST_DATE2, TEST_DATE3, TEST_DATE4, PAST_DATE]
+  );
   if (testServiceId) await pool.query('DELETE FROM services WHERE id = $1', [testServiceId]);
   if (testFaqId)     await pool.query('DELETE FROM faqs    WHERE id = $1', [testFaqId]);
   if (testReviewId)  await pool.query('DELETE FROM reviews WHERE id = $1', [testReviewId]);
@@ -741,5 +754,302 @@ describe('POST /api/bookings/confirm', () => {
       .set('Content-Type', 'application/json')
       .send({});
     expect(res.status).toBe(400);
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// 18. SERVICES — package_price FIELD
+// ════════════════════════════════════════════════════════════════════════════
+
+describe('Services — package_price field', () => {
+  let pkgServiceId;
+  let variantServiceId;
+
+  afterAll(async () => {
+    if (pkgServiceId)     await pool.query('DELETE FROM services WHERE id = $1', [pkgServiceId]);
+    if (variantServiceId) await pool.query('DELETE FROM services WHERE id = $1', [variantServiceId]);
+  });
+
+  it('POST /api/admin/services — creates service with package_price', async () => {
+    const res = await adminReq('post', '/api/admin/services')
+      .send({
+        title: 'Jest Pkg Price Service',
+        description: 'Package price test service',
+        features: ['Feature A'],
+        duration: 60,
+        price: 100,
+        package_price: 80,
+        order_num: 99,
+      });
+    expect(res.status).toBe(201);
+    expect(res.body.id).toBeDefined();
+    pkgServiceId = res.body.id;
+  });
+
+  it('GET /api/content — service exposes package_price field', async () => {
+    const res = await request(app).get('/api/content');
+    const svc = res.body.services.find(s => s.id === pkgServiceId);
+    expect(svc).toBeDefined();
+    expect(parseFloat(svc.package_price)).toBe(80);
+  });
+
+  it('PUT /api/admin/services/:id — updates package_price', async () => {
+    const res = await adminReq('put', `/api/admin/services/${pkgServiceId}`)
+      .send({
+        title: 'Jest Pkg Price Service',
+        description: 'Updated description',
+        features: ['Feature A'],
+        duration: 60,
+        price: 100,
+        package_price: 70,
+        order_num: 99,
+      });
+    expect(res.status).toBe(200);
+    const content = await request(app).get('/api/content');
+    const svc = content.body.services.find(s => s.id === pkgServiceId);
+    expect(parseFloat(svc.package_price)).toBe(70);
+  });
+
+  it('POST /api/admin/services — stores variant package_price inside extra_details', async () => {
+    const res = await adminReq('post', '/api/admin/services')
+      .send({
+        title: 'Jest Variant Pkg Service',
+        description: 'Variant package price service',
+        features: [],
+        duration: 60,
+        price: 100,
+        order_num: 99,
+        extra_details: {
+          variants: [
+            { label: '60 min', duration: 60, price: 100, package_price: 80 },
+            { label: '90 min', duration: 90, price: 150, package_price: 120 },
+          ],
+        },
+      });
+    expect(res.status).toBe(201);
+    variantServiceId = res.body.id;
+    const content = await request(app).get('/api/content');
+    const svc = content.body.services.find(s => s.id === variantServiceId);
+    expect(svc).toBeDefined();
+    const details = typeof svc.extra_details === 'string'
+      ? JSON.parse(svc.extra_details)
+      : (svc.extra_details || {});
+    expect(Array.isArray(details.variants)).toBe(true);
+    expect(parseFloat(details.variants[0].package_price)).toBe(80);
+    expect(parseFloat(details.variants[1].package_price)).toBe(120);
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// 19. PAST SLOT REJECTION
+// ════════════════════════════════════════════════════════════════════════════
+
+describe('Past slot rejection', () => {
+  let pastSlotId;
+
+  afterAll(async () => {
+    if (pastSlotId) await pool.query('DELETE FROM slots WHERE id = $1', [pastSlotId]);
+  });
+
+  it('admin can create a slot in the past (no date validation on admin create)', async () => {
+    const res = await adminReq('post', '/api/admin/slots')
+      .send({ date: PAST_DATE, time: '10:00', duration: 60 });
+    expect(res.status).toBe(201);
+    pastSlotId = res.body.id;
+  });
+
+  it('POST /api/bookings — past slot returns 400 with "already passed" error', async () => {
+    const res = await request(app).post('/api/bookings')
+      .set('Content-Type', 'application/json')
+      .send({
+        slot_id: pastSlotId,
+        service: 'Guided Meditation',
+        customer_name: 'Past Booker',
+        customer_email: 'past@example.com',
+      });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/already passed/i);
+  });
+
+  it('GET /api/slots — past slot does not appear in the public listing', async () => {
+    const res = await request(app).get('/api/slots');
+    expect(res.status).toBe(200);
+    const found = res.body.slots.find(s => s.id === pastSlotId);
+    expect(found).toBeUndefined();
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// 20. BULK BOOKING PREVIEW
+// ════════════════════════════════════════════════════════════════════════════
+
+describe('Bulk booking preview', () => {
+  let previewSlotIds = [];
+
+  beforeAll(async () => {
+    await pool.query('DELETE FROM slots WHERE date = $1', [TEST_DATE3]);
+    for (const time of ['08:00', '09:00', '10:00', '11:00', '12:00']) {
+      const r = await pool.query(
+        "INSERT INTO slots (date, time, duration, price, currency, is_booked) VALUES ($1, $2, 60, 0, 'GBP', 0) RETURNING id",
+        [TEST_DATE3, time]
+      );
+      previewSlotIds.push(r.rows[0].id);
+    }
+  });
+
+  afterAll(async () => {
+    await pool.query('DELETE FROM slots WHERE date = $1', [TEST_DATE3]);
+    previewSlotIds = [];
+  });
+
+  it('POST /api/bookings/bulk/preview — returns slots and pricing for valid request', async () => {
+    const res = await request(app).post('/api/bookings/bulk/preview')
+      .set('Content-Type', 'application/json')
+      .send({ slot_id: previewSlotIds[0], count: 3, service: 'Guided Meditation' });
+    expect(res.status).toBe(200);
+    expect(Array.isArray(res.body.slots)).toBe(true);
+    expect(res.body.slots.length).toBe(3);
+    expect(typeof res.body.session_price).toBe('number');
+    expect(typeof res.body.total_amount).toBe('number');
+    expect(res.body.currency).toBeDefined();
+  });
+
+  it('POST /api/bookings/bulk/preview — missing slot_id returns 400', async () => {
+    const res = await request(app).post('/api/bookings/bulk/preview')
+      .set('Content-Type', 'application/json')
+      .send({ count: 3, service: 'Guided Meditation' });
+    expect(res.status).toBe(400);
+  });
+
+  it('POST /api/bookings/bulk/preview — missing count returns 400', async () => {
+    const res = await request(app).post('/api/bookings/bulk/preview')
+      .set('Content-Type', 'application/json')
+      .send({ slot_id: previewSlotIds[0], service: 'Guided Meditation' });
+    expect(res.status).toBe(400);
+  });
+
+  it('POST /api/bookings/bulk/preview — count < 2 returns 400', async () => {
+    const res = await request(app).post('/api/bookings/bulk/preview')
+      .set('Content-Type', 'application/json')
+      .send({ slot_id: previewSlotIds[0], count: 1, service: 'Guided Meditation' });
+    expect(res.status).toBe(400);
+  });
+
+  it('POST /api/bookings/bulk/preview — non-existent slot_id returns 409', async () => {
+    const res = await request(app).post('/api/bookings/bulk/preview')
+      .set('Content-Type', 'application/json')
+      .send({ slot_id: 99999999, count: 3, service: 'Guided Meditation' });
+    expect(res.status).toBe(409);
+  });
+
+  it('POST /api/bookings/bulk/preview — count exceeds available slots returns 409', async () => {
+    const res = await request(app).post('/api/bookings/bulk/preview')
+      .set('Content-Type', 'application/json')
+      .send({ slot_id: previewSlotIds[0], count: 50, service: 'Guided Meditation' });
+    expect(res.status).toBe(409);
+  });
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// 21. BULK BOOKING CREATE
+// ════════════════════════════════════════════════════════════════════════════
+
+describe('Bulk booking create', () => {
+  let bulkSlotIds = [];
+  let testBulkId;
+
+  beforeAll(async () => {
+    await pool.query('DELETE FROM bookings WHERE slot_id IN (SELECT id FROM slots WHERE date = $1)', [TEST_DATE4]);
+    await pool.query('DELETE FROM slots WHERE date = $1', [TEST_DATE4]);
+    for (const time of ['08:00', '09:00', '10:00']) {
+      const r = await pool.query(
+        "INSERT INTO slots (date, time, duration, price, currency, is_booked) VALUES ($1, $2, 60, 0, 'GBP', 0) RETURNING id",
+        [TEST_DATE4, time]
+      );
+      bulkSlotIds.push(r.rows[0].id);
+    }
+  });
+
+  afterAll(async () => {
+    if (testBulkId) {
+      await pool.query('DELETE FROM bookings WHERE bulk_booking_id = $1', [testBulkId]);
+      await pool.query('DELETE FROM bulk_bookings WHERE id = $1', [testBulkId]);
+    }
+    await pool.query('UPDATE slots SET is_booked = 0 WHERE date = $1', [TEST_DATE4]);
+    await pool.query('DELETE FROM slots WHERE date = $1', [TEST_DATE4]);
+    bulkSlotIds = [];
+  });
+
+  it('POST /api/bookings/bulk — missing slot_ids returns 400', async () => {
+    const res = await request(app).post('/api/bookings/bulk')
+      .set('Content-Type', 'application/json')
+      .send({ service: 'Guided Meditation', customer_name: 'Test', customer_email: 'test@example.com' });
+    expect(res.status).toBe(400);
+  });
+
+  it('POST /api/bookings/bulk — single slot_id (< 2) returns 400', async () => {
+    const res = await request(app).post('/api/bookings/bulk')
+      .set('Content-Type', 'application/json')
+      .send({ slot_ids: [bulkSlotIds[0]], service: 'Guided Meditation', customer_name: 'Test', customer_email: 'test@example.com' });
+    expect(res.status).toBe(400);
+  });
+
+  it('POST /api/bookings/bulk — missing service returns 400', async () => {
+    const res = await request(app).post('/api/bookings/bulk')
+      .set('Content-Type', 'application/json')
+      .send({ slot_ids: bulkSlotIds, customer_name: 'Test', customer_email: 'test@example.com' });
+    expect(res.status).toBe(400);
+  });
+
+  it('POST /api/bookings/bulk — missing customer_name returns 400', async () => {
+    const res = await request(app).post('/api/bookings/bulk')
+      .set('Content-Type', 'application/json')
+      .send({ slot_ids: bulkSlotIds, service: 'Guided Meditation', customer_email: 'test@example.com' });
+    expect(res.status).toBe(400);
+  });
+
+  it('POST /api/bookings/bulk — invalid slot IDs (non-positive integers) returns 400', async () => {
+    const res = await request(app).post('/api/bookings/bulk')
+      .set('Content-Type', 'application/json')
+      .send({ slot_ids: [-1, 0], service: 'Guided Meditation', customer_name: 'Test', customer_email: 'test@example.com' });
+    expect(res.status).toBe(400);
+  });
+
+  it('POST /api/bookings/bulk — non-existent slot IDs returns 409', async () => {
+    const res = await request(app).post('/api/bookings/bulk')
+      .set('Content-Type', 'application/json')
+      .send({ slot_ids: [99999998, 99999999], service: 'Guided Meditation', customer_name: 'Test', customer_email: 'test@example.com' });
+    expect(res.status).toBe(409);
+  });
+
+  it('POST /api/bookings/bulk — valid free slots creates bulk booking (201)', async () => {
+    const res = await request(app).post('/api/bookings/bulk')
+      .set('Content-Type', 'application/json')
+      .send({
+        slot_ids: bulkSlotIds,
+        service: 'Guided Meditation',
+        customer_name: 'Bulk Tester',
+        customer_email: 'bulk@example.com',
+        customer_phone: '',
+        message: 'Bulk test booking',
+      });
+    expect(res.status).toBe(201);
+    expect(res.body.success).toBe(true);
+    expect(res.body.bulk_booking_id).toBeDefined();
+    expect(res.body.booking_ref).toMatch(/^SH-[A-Z0-9]{8}$/);
+    expect(res.body.session_count).toBe(bulkSlotIds.length);
+    testBulkId = res.body.bulk_booking_id;
+  });
+
+  it('POST /api/bookings/bulk — booking already-booked slots returns 409', async () => {
+    const res = await request(app).post('/api/bookings/bulk')
+      .set('Content-Type', 'application/json')
+      .send({
+        slot_ids: bulkSlotIds,
+        service: 'Guided Meditation',
+        customer_name: 'Another Tester',
+        customer_email: 'another@example.com',
+      });
+    expect(res.status).toBe(409);
   });
 });

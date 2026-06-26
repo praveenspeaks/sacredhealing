@@ -1173,6 +1173,7 @@
           <div class="guide-step"><span class="step-num">2</span><div><strong>Repeat / bulk create</strong> — Tick <em>Repeat this slot</em> before clicking Add Slot. Choose how many weeks ahead to repeat and which days of the week. Useful for setting up a whole month of Tuesdays at once.</div></div>
           <div class="guide-step"><span class="step-num">3</span><div><strong>Delete a slot</strong> — Click the ✕ button on any row in the slots table. Booked slots cannot be deleted — cancel the booking first.</div></div>
           <div class="guide-step"><span class="step-num">4</span><div><strong>Move slots</strong> — Use the ↑ ↓ arrow buttons to reorder how slots appear on the public booking calendar.</div></div>
+          <div class="guide-step"><span class="step-num">5</span><div><strong>Past slots are automatically blocked</strong> — Customers cannot book a slot that has already passed. The public slot listing only shows future slots, and any attempt to book a past slot is rejected by the server — even if someone somehow sends a direct API request.</div></div>
         </div>
 
         <div class="guide-tip">
@@ -1214,14 +1215,16 @@
             <div class="guide-where">Admin → Bulk Bookings &nbsp;|&nbsp; Public site → "Book a Package" button</div>
           </div>
         </div>
-        <p class="guide-intro">Customers can book 5, 10, 15, or a custom number of sessions in one go and pay once. All slots are locked simultaneously.</p>
+        <p class="guide-intro">Customers can book 5, 10, 15, or a custom number of sessions in one go and pay once. All slots are locked simultaneously. The price per session is taken from the service's package rate, not the slot price.</p>
 
         <div class="guide-steps">
           <div class="guide-step"><span class="step-num">1</span><div><strong>How customers book a package</strong> — On the homepage, click <em>Book a Package ›</em> in the hero or next to any service. Or open the booking modal by clicking any time slot, then tick <em>"Book a package of multiple sessions"</em>. Choose 5 / 10 / 15 / Custom, fill in details, then pay.</div></div>
-          <div class="guide-step"><span class="step-num">2</span><div><strong>View all packages</strong> — Go to <strong>Admin → Bulk Bookings</strong>. Each row shows the customer name, session count, total amount, and status. Click a row to expand and see every individual slot included.</div></div>
-          <div class="guide-step"><span class="step-num">3</span><div><strong>Release a slot</strong> — If a customer wants to change one of their booked times, click <strong>Release</strong> next to that slot. The slot becomes free on the calendar. The bulk booking status changes to <em>partial</em>.</div></div>
-          <div class="guide-step"><span class="step-num">4</span><div><strong>Rebook a slot</strong> — After releasing, click <strong>Rebook</strong> on the same row. A panel appears with a dropdown of all available future slots. Select the customer's preferred new time and click <strong>Confirm Rebook</strong>.</div></div>
-          <div class="guide-step"><span class="step-num">5</span><div><strong>Refunds</strong> — If payment was taken but all slots become unavailable, the system automatically issues a full Stripe refund and marks the booking as <em>refunded</em>. Manual refunds for partial changes must be processed in your Stripe dashboard.</div></div>
+          <div class="guide-step"><span class="step-num">2</span><div><strong>Package pricing hierarchy</strong> — When calculating the package price per session, the system uses this order of priority: (1) the <strong>Pkg £</strong> column on the matching pricing variant (by duration), (2) the service's <strong>Base Package Price per Session</strong> fallback, (3) the variant's regular per-session price. Set package prices under <strong>Admin → Services</strong>.</div></div>
+          <div class="guide-step"><span class="step-num">3</span><div><strong>Confirmation emails show the full schedule</strong> — After a package is booked, both the customer and admin receive an email listing every session in the package (date, time, duration) with the per-session price and the total amount paid. A single calendar invite with all session dates is attached.</div></div>
+          <div class="guide-step"><span class="step-num">4</span><div><strong>View all packages</strong> — Go to <strong>Admin → Bulk Bookings</strong>. Each row shows the customer name, session count, total amount, and status. Click a row to expand and see every individual slot included.</div></div>
+          <div class="guide-step"><span class="step-num">5</span><div><strong>Release a slot</strong> — If a customer wants to change one of their booked times, click <strong>Release</strong> next to that slot. The slot becomes free on the calendar. The bulk booking status changes to <em>partial</em>.</div></div>
+          <div class="guide-step"><span class="step-num">6</span><div><strong>Rebook a slot</strong> — After releasing, click <strong>Rebook</strong> on the same row. A panel appears with a dropdown of all available future slots. Select the customer's preferred new time and click <strong>Confirm Rebook</strong>.</div></div>
+          <div class="guide-step"><span class="step-num">7</span><div><strong>Refunds</strong> — If payment was taken but all slots become unavailable, the system automatically issues a full Stripe refund and marks the booking as <em>refunded</em>. Manual refunds for partial changes must be processed in your Stripe dashboard.</div></div>
         </div>
       </div>
 
@@ -1243,6 +1246,7 @@
           <div class="guide-step"><span class="step-num">4</span><div><strong>Contact &amp; Footer Info</strong> — Update your email address, phone number, location, Instagram URL, WhatsApp link, footer tagline, and copyright text. These appear in the footer and contact sections on every page.</div></div>
           <div class="guide-step"><span class="step-num">5</span><div><strong>6 R's of Sacred Healing™</strong> — Edit the title, pull-quote, and description for each of the 6 cards (Recognise, Release, Restore, Realign, Reclaim, Radiate). These appear on the homepage, Philosophy page, and About page.</div></div>
           <div class="guide-step"><span class="step-num">6</span><div><strong>How It Works</strong> — Edit the three journey steps and the "Not Sure?" guidance section and its button label.</div></div>
+          <div class="guide-step"><span class="step-num">7</span><div><strong>Session location in emails &amp; calendar invites</strong> — The <em>Location</em> field (key: <code>contact_location</code>) in the Contact &amp; Footer Info section controls the location shown in booking confirmation emails and attached calendar invites. Update it to your current practice address (e.g. "Bromley, London") and all future booking emails and calendar files will use that address automatically.</div></div>
         </div>
 
         <div class="guide-tip">
@@ -1293,7 +1297,9 @@
           <div class="guide-step"><span class="step-num">3</span><div><strong>Reorder services</strong> — Use the <strong>↑ Up</strong> and <strong>↓ Down</strong> buttons to change the order services appear on the homepage and services page. The order saves automatically.</div></div>
           <div class="guide-step"><span class="step-num">4</span><div><strong>Add an emoji icon</strong> — Click the smiley face button next to the Icon field to open the icon picker. Select any emoji to use as the service card icon.</div></div>
           <div class="guide-step"><span class="step-num">5</span><div><strong>Service detail page</strong> — Each service automatically gets its own URL at <code>/services/service-title</code>. Customers can visit it directly or be linked there from the service card "Learn More" button.</div></div>
-          <div class="guide-step"><span class="step-num">6</span><div><strong>Delete a service</strong> — Click the <strong>✕ Delete</strong> button. This removes the service from the database and the public website immediately. This action cannot be undone.</div></div>
+          <div class="guide-step"><span class="step-num">6</span><div><strong>Package price per pricing variant</strong> — If a service has multiple pricing variants (e.g. 60 min at £100, 90 min at £150), each variant row in the form has a <strong>Pkg £</strong> column. Enter the discounted per-session price for package customers booking that duration. Leave blank to fall back to the variant's regular session price.</div></div>
+          <div class="guide-step"><span class="step-num">7</span><div><strong>Base Package Price per Session (fallback)</strong> — The <em>Base Package Price per Session (£)</em> field at the top of the pricing section applies to any duration that does not have a <strong>Pkg £</strong> set on its variant row. If both this and the variant Pkg £ are blank, the system uses the regular session price for that duration.</div></div>
+          <div class="guide-step"><span class="step-num">8</span><div><strong>Delete a service</strong> — Click the <strong>✕ Delete</strong> button. This removes the service from the database and the public website immediately. This action cannot be undone.</div></div>
         </div>
       </div>
 
