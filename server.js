@@ -4,7 +4,7 @@ const path = require('path');
 require('dotenv').config();
 
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder');
-const { sendBookingConfirmation, sendAdminAlert, sendContactEnquiry } = require('./mailer');
+const { sendBookingConfirmation, sendAdminAlert, sendCancellationNotification, sendCancellationAdminAlert, sendContactEnquiry } = require('./mailer');
 
 const crypto    = require('crypto');
 const pool      = require('./db');
@@ -141,6 +141,12 @@ async function initDatabase() {
     )
   `);
   await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS bulk_booking_id INTEGER REFERENCES bulk_bookings(id)`);
+  await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS timezone TEXT`);
+  await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS session_reason TEXT`);
+  await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS pre_session_notes TEXT`);
+  await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS referral_source TEXT`);
+  await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS prior_healing TEXT`);
+  await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS session_type TEXT`);
   // Package pricing: optional discounted per-session price for bulk bookings
   await pool.query(`ALTER TABLE services ADD COLUMN IF NOT EXISTS package_price NUMERIC(10,2) DEFAULT NULL`);
 }
@@ -415,7 +421,8 @@ app.get('/api/slots', slotsLimiter, async (req, res) => {
 // POST /api/bookings  — Customer books a slot
 app.post('/api/bookings', bookingLimiter, async (req, res) => {
   try {
-    const { slot_id, service, customer_name, customer_email, customer_phone, message } = req.body;
+    const { slot_id, service, customer_name, customer_email, customer_phone, message,
+            timezone, session_reason, pre_session_notes, referral_source, prior_healing, session_type } = req.body;
 
     if (!slot_id || !service || !customer_name || !customer_email) {
       return res.status(400).json({ error: 'slot_id, service, customer_name, and customer_email are required.' });
@@ -463,8 +470,8 @@ app.post('/api/bookings', bookingLimiter, async (req, res) => {
       const bookingRef = generateBookingRef();
       try {
         const bookingResult = await pool.query(`
-          INSERT INTO bookings (slot_id, service, customer_name, customer_email, customer_phone, message, status, cancel_token, booking_ref)
-          VALUES ($1, $2, $3, $4, $5, $6, 'pending_payment', $7, $8)
+          INSERT INTO bookings (slot_id, service, customer_name, customer_email, customer_phone, message, status, cancel_token, booking_ref, timezone, session_reason, pre_session_notes, referral_source, prior_healing, session_type)
+          VALUES ($1, $2, $3, $4, $5, $6, 'pending_payment', $7, $8, $9, $10, $11, $12, $13, $14)
           RETURNING id
         `, [
           slot_id,
@@ -474,7 +481,13 @@ app.post('/api/bookings', bookingLimiter, async (req, res) => {
           (customer_phone || '').trim(),
           (message || '').trim(),
           cancelToken,
-          bookingRef
+          bookingRef,
+          (timezone || '').trim() || null,
+          (session_reason || '').trim() || null,
+          (pre_session_notes || '').trim() || null,
+          (referral_source || '').trim() || null,
+          (prior_healing || '').trim() || null,
+          (session_type || '').trim() || null,
         ]);
         bookingId = bookingResult.rows[0].id;
 
@@ -507,8 +520,8 @@ app.post('/api/bookings', bookingLimiter, async (req, res) => {
     try {
       await client.query('BEGIN');
       const bookingResult = await client.query(`
-        INSERT INTO bookings (slot_id, service, customer_name, customer_email, customer_phone, message, cancel_token, booking_ref)
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+        INSERT INTO bookings (slot_id, service, customer_name, customer_email, customer_phone, message, cancel_token, booking_ref, timezone, session_reason, pre_session_notes, referral_source, prior_healing, session_type)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
         RETURNING id
       `, [
         slot_id,
@@ -518,7 +531,13 @@ app.post('/api/bookings', bookingLimiter, async (req, res) => {
         (customer_phone || '').trim(),
         (message || '').trim(),
         cancelToken,
-        bookingRef
+        bookingRef,
+        (timezone || '').trim() || null,
+        (session_reason || '').trim() || null,
+        (pre_session_notes || '').trim() || null,
+        (referral_source || '').trim() || null,
+        (prior_healing || '').trim() || null,
+        (session_type || '').trim() || null,
       ]);
       bookingId = bookingResult.rows[0].id;
       await client.query('UPDATE slots SET is_booked = 1 WHERE id = $1', [slot_id]);
@@ -887,13 +906,35 @@ app.patch('/api/admin/bookings/:id', requireAdmin, async (req, res) => {
     if (!['pending', 'pending_payment', 'confirmed', 'cancelled'].includes(status)) {
       return res.status(400).json({ error: 'Invalid status.' });
     }
+
+    // Fetch full booking + slot info before updating (needed for cancellation email)
+    const bookingResult = await pool.query(
+      `SELECT b.*, s.date, s.time, s.duration FROM bookings b
+       LEFT JOIN slots s ON s.id = b.slot_id WHERE b.id = $1`, [id]
+    );
+    if (bookingResult.rowCount === 0) return res.status(404).json({ error: 'Booking not found' });
+    const booking = bookingResult.rows[0];
+    const prevStatus = booking.status;
+
     const result = await pool.query('UPDATE bookings SET status = $1 WHERE id = $2', [status, id]);
     if (result.rowCount === 0) return res.status(404).json({ error: 'Booking not found' });
 
     if (status === 'cancelled') {
-      const bookingResult = await pool.query('SELECT slot_id FROM bookings WHERE id = $1', [id]);
-      const booking = bookingResult.rows[0];
-      if (booking) await pool.query('UPDATE slots SET is_booked = 0 WHERE id = $1', [booking.slot_id]);
+      if (booking.slot_id) {
+        await pool.query('UPDATE slots SET is_booked = 0 WHERE id = $1', [booking.slot_id]);
+      }
+      // Send cancellation emails only when transitioning from confirmed (not pending/pending_payment)
+      if (prevStatus === 'confirmed') {
+        const slot = booking.date ? { date: booking.date, time: booking.time, duration: booking.duration } : null;
+        sendCancellationNotification({
+          customerName: booking.customer_name, customerEmail: booking.customer_email,
+          service: booking.service, slot, bookingRef: booking.booking_ref,
+        }).catch(err => console.error('Cancellation email error:', err));
+        sendCancellationAdminAlert({
+          customerName: booking.customer_name, customerEmail: booking.customer_email,
+          customerPhone: booking.customer_phone, service: booking.service, slot, bookingRef: booking.booking_ref,
+        }).catch(err => console.error('Cancellation admin alert error:', err));
+      }
     }
     res.json({ success: true });
   } catch (err) {
@@ -961,15 +1002,19 @@ app.post('/api/bookings/bulk/preview', slotsLimiter, async (req, res) => {
       return res.status(400).json({ error: 'The selected slot has already passed. Please choose a future slot.' });
     }
 
-    // Find the next `count` available slots starting from the selected one (same duration, future only)
+    // Find the next `count` available slots, one per day, starting from the selected one (same duration, future only)
     const result = await pool.query(`
       SELECT id, date::text, time::text, duration, price, currency, note
-      FROM   slots
-      WHERE  is_booked = 0
-        AND  duration = $1
-        AND  (date || ' ' || time)::timestamp > (NOW() AT TIME ZONE 'Europe/London')
-        AND  (date > $2 OR (date = $2 AND time >= $3))
-      ORDER  BY date ASC, time ASC
+      FROM (
+        SELECT DISTINCT ON (date) id, date, time, duration, price, currency, note
+        FROM   slots
+        WHERE  is_booked = 0
+          AND  duration = $1
+          AND  (date || ' ' || time)::timestamp > (NOW() AT TIME ZONE 'Europe/London')
+          AND  (date > $2 OR (date = $2 AND time >= $3))
+        ORDER  BY date ASC, time ASC
+      ) sub
+      ORDER  BY date ASC
       LIMIT  $4
     `, [s.duration, s.date, s.time, count]);
 
@@ -1334,6 +1379,22 @@ app.post('/api/admin/bulk-bookings/:bulkId/rebook/:bookingId', requireAdmin, asy
   }
 });
 
+// DELETE /api/admin/bulk-bookings/:bulkId — Cancel a pending_payment bulk booking and release all its slots
+app.delete('/api/admin/bulk-bookings/:bulkId', requireAdmin, async (req, res) => {
+  try {
+    const { bulkId } = req.params;
+    const bulkResult = await pool.query("SELECT * FROM bulk_bookings WHERE id = $1 AND status = 'pending_payment'", [bulkId]);
+    if (!bulkResult.rows[0]) return res.status(404).json({ error: 'Pending bulk booking not found.' });
+
+    await pool.query("UPDATE bookings SET status = 'cancelled' WHERE bulk_booking_id = $1", [bulkId]);
+    await pool.query("UPDATE bulk_bookings SET status = 'cancelled' WHERE id = $1", [bulkId]);
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to cancel bulk booking' });
+  }
+});
+
 // GET /api/admin/bulk-bookings/export — CSV
 app.get('/api/admin/bulk-bookings/export', requireAdmin, async (req, res) => {
   try {
@@ -1436,8 +1497,31 @@ async function init() {
   return app;
 }
 
+async function cleanupAbandonedBookings() {
+  try {
+    // Cancel individual pending_payment bookings older than 30 minutes (slots were never locked)
+    await pool.query(
+      "UPDATE bookings SET status = 'cancelled' WHERE status = 'pending_payment' AND bulk_booking_id IS NULL AND created_at < NOW() - INTERVAL '30 minutes'"
+    );
+    // Cancel pending_payment bulk bookings and all their individual bookings older than 30 minutes
+    const expiredBulks = await pool.query(
+      "UPDATE bulk_bookings SET status = 'cancelled' WHERE status = 'pending_payment' AND created_at < NOW() - INTERVAL '30 minutes' RETURNING id"
+    );
+    if (expiredBulks.rowCount > 0) {
+      const ids = expiredBulks.rows.map(r => r.id);
+      await pool.query("UPDATE bookings SET status = 'cancelled' WHERE bulk_booking_id = ANY($1)", [ids]);
+      console.log(`⏱  Auto-cancelled ${expiredBulks.rowCount} abandoned bulk booking(s): IDs ${ids.join(', ')}`);
+    }
+  } catch (err) {
+    console.error('Cleanup job error:', err);
+  }
+}
+
 async function start() {
   await init();
+  // Run cleanup on startup and every 10 minutes
+  cleanupAbandonedBookings();
+  setInterval(cleanupAbandonedBookings, 10 * 60 * 1000);
   app.listen(PORT, () => {
     console.log(`\n✦ Sacred Healing Server running at http://localhost:${PORT}`);
     console.log(`✦ Admin Panel: http://localhost:${PORT}/admin`);

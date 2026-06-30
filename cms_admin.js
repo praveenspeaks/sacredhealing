@@ -587,7 +587,11 @@ function renderReviewsTable() {
         let badgeClass = r.status === 'pending' ? 'badge-warning' : r.status === 'approved' ? 'badge-success' : 'badge-danger';
         return `
         <tr>
-            <td><strong>${r.author}</strong></td>
+            <td>
+              <strong>${r.author}</strong>
+              ${r.country ? `<br/><small style="color:var(--muted);">🌍 ${r.country}</small>` : ''}
+              ${r.service_name ? `<br/><small style="color:var(--muted);">✦ ${r.service_name}</small>` : ''}
+            </td>
             <td style="max-width:300px; overflow:hidden; text-overflow:ellipsis">"${r.comment}"</td>
             <td><span class="badge ${badgeClass}">${r.status}</span></td>
             <td>

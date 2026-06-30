@@ -262,6 +262,59 @@ async function sendAdminAlert({
   });
 }
 
+async function sendCancellationNotification({ customerName, customerEmail, service, slot, bookingRef }) {
+  if (!transporter) return;
+  const dateStr = slot ? formatDate(slot.date) : '';
+  const timeStr = slot ? formatTime(slot.time) : '';
+  await transporter.sendMail({
+    from:    FROM,
+    replyTo: REPLY_TO,
+    to:      customerEmail,
+    subject: `Your Sacred Healing session has been cancelled — ${service}`,
+    html: `
+      <div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;background:#0a0a0a;color:#FDFCF8;padding:2.5rem;border-radius:12px;">
+        <h1 style="color:#DAB467;font-size:1.6rem;margin-bottom:0.5rem;">Sacred Healing</h1>
+        <p style="color:#A1A1AA;font-size:0.85rem;margin-bottom:2rem;">SoulBody Healing</p>
+        <h2 style="font-size:1.2rem;margin-bottom:1.5rem;">Your session has been cancelled, ${customerName}</h2>
+        <table style="width:100%;border-collapse:collapse;margin-bottom:2rem;">
+          <tr><td style="padding:0.6rem 0;color:#A1A1AA;width:40%">Service</td><td style="color:#FDFCF8;font-weight:600">${service}</td></tr>
+          ${dateStr ? `<tr><td style="padding:0.6rem 0;color:#A1A1AA">Date</td><td style="color:#FDFCF8">${dateStr}</td></tr>` : ''}
+          ${timeStr ? `<tr><td style="padding:0.6rem 0;color:#A1A1AA">Time</td><td style="color:#FDFCF8">${timeStr}</td></tr>` : ''}
+          ${bookingRef ? `<tr><td style="padding:0.6rem 0;color:#A1A1AA">Booking Ref</td><td style="color:#FDFCF8;font-family:monospace">${bookingRef}</td></tr>` : ''}
+        </table>
+        <p style="color:#A1A1AA;font-size:0.9rem;line-height:1.7;">We're sorry your session was cancelled. If you'd like to rebook or have any questions, please reply to this email or reach out to us at <a href="mailto:${ADMIN_EMAIL}" style="color:#DAB467;">${ADMIN_EMAIL}</a>.</p>
+        <p style="margin-top:2rem;color:#DAB467;font-size:1rem;">✦ With light &amp; love, Reena</p>
+      </div>
+    `,
+  });
+}
+
+async function sendCancellationAdminAlert({ customerName, customerEmail, customerPhone, service, slot, bookingRef }) {
+  if (!transporter || !ADMIN_EMAIL) return;
+  const dateStr = slot ? formatDate(slot.date) : '';
+  const timeStr = slot ? formatTime(slot.time) : '';
+  await transporter.sendMail({
+    from:    FROM,
+    to:      ADMIN_EMAIL,
+    subject: `Booking cancelled: ${service} — ${customerName}`,
+    html: `
+      <div style="font-family:sans-serif;max-width:520px;margin:0 auto;">
+        <h2 style="color:#A57C27;">Booking Cancelled</h2>
+        <table style="width:100%;border-collapse:collapse;">
+          <tr><td style="padding:0.5rem 0;color:#555;width:40%">Customer</td><td><strong>${customerName}</strong></td></tr>
+          <tr><td style="padding:0.5rem 0;color:#555">Email</td><td><a href="mailto:${customerEmail}">${customerEmail}</a></td></tr>
+          <tr><td style="padding:0.5rem 0;color:#555">Phone</td><td>${customerPhone || '—'}</td></tr>
+          <tr><td style="padding:0.5rem 0;color:#555">Service</td><td>${service}</td></tr>
+          ${dateStr ? `<tr><td style="padding:0.5rem 0;color:#555">Date</td><td>${dateStr}</td></tr>` : ''}
+          ${timeStr ? `<tr><td style="padding:0.5rem 0;color:#555">Time</td><td>${timeStr}</td></tr>` : ''}
+          ${bookingRef ? `<tr><td style="padding:0.5rem 0;color:#555">Booking Ref</td><td><strong style="letter-spacing:0.08em">${bookingRef}</strong></td></tr>` : ''}
+        </table>
+        <p style="color:#888;font-size:0.85rem;margin-top:1rem;">The slot has been released and is available for new bookings.</p>
+      </div>
+    `,
+  });
+}
+
 async function sendTestEmail(to) {
   if (!transporter) {
     throw new Error('SMTP is not configured. Set SMTP_HOST, SMTP_USER, and SMTP_PASS in your .env file.');
@@ -310,4 +363,4 @@ async function sendContactEnquiry({ name, email, message }) {
   });
 }
 
-module.exports = { sendBookingConfirmation, sendAdminAlert, sendTestEmail, sendContactEnquiry };
+module.exports = { sendBookingConfirmation, sendAdminAlert, sendCancellationNotification, sendCancellationAdminAlert, sendTestEmail, sendContactEnquiry };

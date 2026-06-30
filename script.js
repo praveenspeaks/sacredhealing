@@ -276,6 +276,8 @@ function durTag(min) {
 function buildSlotCard(slot) {
   const dateStr = new Date(slot.date + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
   const timeStr = formatTime12h(slot.time);
+  const remoteNote = slot.duration <= 30
+    ? `<div style="font-size:0.72rem;color:var(--olive);font-weight:600;margin-top:0.2rem;">📱 Remote session only</div>` : '';
   return `
     <div class="slot-card" onclick="openBookingModal(${slot.id}, '${slot.date}', '${slot.time}', ${slot.duration})">
       <div class="slot-card-top">
@@ -284,6 +286,7 @@ function buildSlotCard(slot) {
       <div class="slot-date">${dateStr}</div>
       <div class="slot-time">${timeStr}</div>
       <div class="slot-duration">Session length: ${slot.duration} minutes</div>
+      ${remoteNote}
       <button class="slot-book-btn">Reserve This Slot →</button>
     </div>`;
 }
@@ -594,7 +597,8 @@ async function pkgLoadSlots() {
         const d = new Date(s.date + 'T00:00:00').toLocaleDateString('en-GB',
           { weekday:'short', day:'numeric', month:'short', year:'numeric' });
         const t = formatTime12h(s.time);
-        return `<option value="${s.id}">${d} at ${t} · ${s.duration} min</option>`;
+        const remoteLabel = s.duration <= 30 ? ' · 📱 Remote only' : '';
+        return `<option value="${s.id}">${d} at ${t} · ${s.duration} min${remoteLabel}</option>`;
       }).join('');
   } catch(e) {
     sel.innerHTML = '<option value="">Could not load slots</option>';
@@ -889,6 +893,11 @@ async function confirmBulkBooking() {
   const email   = document.getElementById('booking-email').value.trim();
   const phone   = document.getElementById('booking-phone').value.trim();
   const msg     = document.getElementById('booking-message').value.trim();
+  const timezone          = document.getElementById('booking-timezone')?.value.trim() || '';
+  const session_reason    = document.getElementById('booking-session-reason')?.value.trim() || '';
+  const pre_session_notes = document.getElementById('booking-pre-session-notes')?.value.trim() || '';
+  const referral_source   = document.getElementById('booking-referral')?.value.trim() || '';
+  const prior_healing     = document.getElementById('booking-prior-healing')?.value || '';
   const service = document.getElementById('booking-service-hidden').value ||
                   document.querySelector('input[name="modal-service"]:checked')?.value;
 
@@ -903,6 +912,7 @@ async function confirmBulkBooking() {
         slot_ids: _bulkPreviewSlots.map(s => s.id),
         service, customer_name: name, customer_email: email,
         customer_phone: phone, message: msg,
+        timezone, session_reason, pre_session_notes, referral_source, prior_healing,
       }),
     });
     const data = await res.json();
@@ -978,17 +988,30 @@ function openBookingModal(slotId, date, time, duration) {
     document.getElementById('service-badge-group').style.display = 'block';
     document.getElementById('service-selector-group').style.display = 'none';
     document.getElementById('booking-service-hidden').value = _preselectedService.name;
+    const remoteTag30 = duration <= 30 ? `<span style="color:var(--olive);font-weight:600;">📱 Remote only</span>` : '';
     slotInfo.innerHTML = `
       <span>${dateStr}</span><span>·</span><span>${formatTime12h(time)}</span>
-      <span>·</span><span>${duration} min</span><span>·</span><strong>${priceStr}</strong>`;
+      <span>·</span><span>${duration} min</span><span>·</span><strong>${priceStr}</strong>${remoteTag30 ? '<br/>' + remoteTag30 : ''}`;
   } else {
     // Show service picker for generic slot booking
     document.getElementById('service-badge-group').style.display = 'none';
     document.getElementById('service-selector-group').style.display = 'block';
     document.getElementById('booking-service-hidden').value = '';
+    const remoteTag30b = duration <= 30 ? `<span style="color:var(--olive);font-weight:600;">📱 Remote only</span>` : '';
     slotInfo.innerHTML = `
       <span>${dateStr}</span><span>·</span><span>${formatTime12h(time)}</span>
-      <span>·</span><span>${duration} min</span>`;
+      <span>·</span><span>${duration} min</span>${remoteTag30b ? '<br/>' + remoteTag30b : ''}`;
+  }
+
+  // For 30-min slots, lock session type to Remote
+  const sessionTypeSel = document.getElementById('booking-session-type');
+  if (sessionTypeSel) {
+    if (duration <= 30) {
+      sessionTypeSel.value    = 'Remote';
+      sessionTypeSel.disabled = true;
+    } else {
+      sessionTypeSel.disabled = false;
+    }
   }
 
   modal.classList.add('open');
@@ -1051,10 +1074,18 @@ async function submitBooking(e) {
   const name    = document.getElementById('booking-name').value.trim();
   const email   = document.getElementById('booking-email').value.trim();
   const phone   = document.getElementById('booking-phone').value.trim();
-  const msg     = document.getElementById('booking-message').value.trim();
+  const timezone       = document.getElementById('booking-timezone')?.value.trim() || '';
+  const session_reason = document.getElementById('booking-session-reason')?.value.trim() || '';
+  const session_type   = document.getElementById('booking-session-type')?.value || 'Remote';
+  const msg            = document.getElementById('booking-message').value.trim();
+  const pre_session_notes = document.getElementById('booking-pre-session-notes')?.value.trim() || '';
+  const referral_source   = document.getElementById('booking-referral')?.value.trim() || '';
+  const prior_healing     = document.getElementById('booking-prior-healing')?.value || '';
 
   if (!slotId)  { alert('Please select a session slot first.'); return; }
   if (!service) { alert('Please choose a healing service for your session.'); return; }
+  if (!timezone) { alert('Please enter your country / time zone so Reena can prepare for your session.'); return; }
+  if (!session_reason) { alert('Please share what brings you to this session.'); return; }
 
   // Bulk mode: show preview instead of confirming directly
   if (document.getElementById('bulk-toggle')?.checked) {
@@ -1073,7 +1104,7 @@ async function submitBooking(e) {
     const res  = await fetch('/api/bookings', {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ slot_id: parseInt(slotId), service, customer_name: name, customer_email: email, customer_phone: phone, message: msg }),
+      body:    JSON.stringify({ slot_id: parseInt(slotId), service, customer_name: name, customer_email: email, customer_phone: phone, message: msg, timezone, session_reason, pre_session_notes, referral_source, prior_healing, session_type }),
     });
     const data = await res.json();
 

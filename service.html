@@ -752,6 +752,11 @@
               </ul>
             </div>
 
+            <div class="sidebar-card" style="background:rgba(92,91,71,0.04);border-color:rgba(92,91,71,0.2);">
+              <div class="sidebar-card-title" style="font-size:0.78rem;letter-spacing:0.06em;">🔒 Confidential</div>
+              <p style="font-size:0.82rem;color:var(--text-body);line-height:1.65;margin:0;">Your session, your story, and your journey remain fully confidential — always.</p>
+            </div>
+
             <div class="sidebar-card">
               <div class="sidebar-card-title">Other Services</div>
               <div id="related-services" style="display:flex;flex-direction:column;gap:0.75rem;"></div>
@@ -873,11 +878,56 @@
           <input type="tel" id="b-phone" class="modal-input" placeholder="+44 7700 000000" />
         </div>
         <div class="modal-form-group">
+          <label>Country / Time Zone *</label>
+          <input type="text" id="b-timezone" class="modal-input" placeholder="e.g. United Kingdom (GMT+1), India (IST), USA Eastern (EST)" />
+        </div>
+        <div class="modal-form-group">
+          <label>Session Format *</label>
+          <select id="b-session-type" class="modal-input">
+            <option value="Remote">🌐 Remote / Online</option>
+            <option value="In Person">📍 In Person (Croydon, London)</option>
+          </select>
+        </div>
+        <div class="modal-form-group">
+          <label>What brings you to this session today? *</label>
+          <textarea id="b-session-reason" class="modal-input" rows="2" placeholder="Share what you're hoping to explore or experience…"></textarea>
+        </div>
+        <div class="modal-form-group">
           <label>Your Intention (optional)</label>
-          <textarea id="b-msg" class="modal-input" rows="3" placeholder="Share anything you'd like Reena to know before your session…"></textarea>
+          <textarea id="b-msg" class="modal-input" rows="2" placeholder="Share anything you'd like Reena to know before your session…"></textarea>
+        </div>
+        <div class="modal-form-group">
+          <label>Is there anything you'd like me to know before we meet? (optional)</label>
+          <textarea id="b-pre-session-notes" class="modal-input" rows="2" placeholder="Any context, concerns, or intentions you'd like to share…"></textarea>
+        </div>
+        <div style="display:flex;gap:0.75rem;flex-wrap:wrap;">
+          <div class="modal-form-group" style="flex:1;min-width:150px;">
+            <label>How did you hear about me? (optional)</label>
+            <input type="text" id="b-referral" class="modal-input" placeholder="e.g. Google, friend…" />
+          </div>
+          <div class="modal-form-group" style="flex:1;min-width:150px;">
+            <label>Experienced energy healing before? (optional)</label>
+            <select id="b-prior-healing" class="modal-input">
+              <option value="">Prefer not to say</option>
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
+              <option value="Not sure">Not sure</option>
+            </select>
+          </div>
         </div>
         <button class="modal-submit" id="modal-submit-btn" onclick="submitBooking()">Confirm Booking ✦</button>
       </div>
+
+      <!-- ── Payment Step ── -->
+      <div id="svc-payment-wrap" style="display:none;">
+        <h2 class="modal-title">Complete <em>Payment</em></h2>
+        <div id="svc-payment-summary" style="background:rgba(92,91,71,0.06);border:1px solid rgba(92,91,71,0.15);border-radius:10px;padding:0.85rem 1rem;font-size:0.88rem;color:var(--text-body);margin-bottom:1.25rem;line-height:1.7;"></div>
+        <div id="svc-stripe-element" style="margin-bottom:1.25rem;"></div>
+        <div id="svc-payment-error" style="display:none;color:#dc2626;font-size:0.85rem;margin-bottom:0.75rem;padding:0.6rem 0.85rem;background:rgba(220,38,38,0.07);border-radius:8px;"></div>
+        <button class="modal-submit" id="svc-pay-btn" onclick="submitServicePayment()">Pay Now →</button>
+        <button class="btn btn-outline" style="width:100%;margin-top:0.6rem;" onclick="backToServiceForm()">← Back</button>
+      </div>
+
       <div class="modal-success" id="booking-success" style="display:none;">
         <div class="success-icon">✦</div>
         <h3>You're Booked!</h3>
@@ -887,6 +937,7 @@
     </div>
   </div>
 
+  <script src="https://js.stripe.com/v3/"></script>
   <script src="/script.js"></script>
   <script>
     // ── Helpers ──
@@ -1044,7 +1095,7 @@
         `).join('');
 
         const relEl = document.getElementById('related-services');
-        const others = allServices.filter(s => s.id !== service.id).slice(0, 4);
+        const others = allServices.filter(s => s.id !== service.id);
         relEl.innerHTML = others.map(s => `
           <a href="/services/${s.slug}" style="display:flex;align-items:center;justify-content:space-between;text-decoration:none;color:var(--text-body);font-size:0.9rem;padding:0.6rem 0;border-bottom:1px solid var(--border);transition:color 0.2s;"
              onmouseover="this.style.color='var(--olive)'" onmouseout="this.style.color='var(--text-body)'">
@@ -1168,11 +1219,12 @@
             : (currentService ? parseFloat(currentService.price) : 0);
           const price = svcP > 0 ? `£${svcP}` : (slot.price > 0 ? `£${slot.price}` : 'Free');
           const durMins = slot.duration;
+          const remoteNote = slot.duration <= 30 ? `<span style="display:block;font-size:0.62rem;color:var(--olive);font-weight:600;">📱 Remote only</span>` : '';
           return `
             <button class="cal-slot-btn"
               ${isBooked ? 'disabled title="Already booked"' : `onclick="calSelectSlot(${slot.id}, '${dateStr}', '${timeStr}', '${price}', ${durMins})"`}
               data-slot-id="${slot.id}">
-              ${timeStr}<small>${price}${isBooked ? ' · Booked' : ''}</small>
+              ${timeStr}<small>${price}${isBooked ? ' · Booked' : ''}</small>${remoteNote}
             </button>
           `;
         }).join('');
@@ -1209,7 +1261,15 @@
       document.getElementById('b-phone').value = '';
       document.getElementById('b-msg').value = '';
       document.getElementById('booking-form-wrap').style.display = 'block';
-      document.getElementById('booking-success').style.display = 'none';
+      document.getElementById('svc-payment-wrap').style.display  = 'none';
+      document.getElementById('booking-success').style.display   = 'none';
+
+      // Lock session type to Remote for 30-min slots
+      const sessionTypeSel = document.getElementById('b-session-type');
+      if (sessionTypeSel) {
+        if (duration <= 30) { sessionTypeSel.value = 'Remote'; sessionTypeSel.disabled = true; }
+        else { sessionTypeSel.disabled = false; }
+      }
 
       const btn = document.getElementById('modal-submit-btn');
       btn.disabled = false;
@@ -1243,10 +1303,18 @@
       const name = document.getElementById('b-name').value.trim();
       const email = document.getElementById('b-email').value.trim();
       const phone = document.getElementById('b-phone').value.trim();
-      const msg = document.getElementById('b-msg').value.trim();
+      const timezone          = document.getElementById('b-timezone')?.value.trim() || '';
+      const session_reason    = document.getElementById('b-session-reason')?.value.trim() || '';
+      const session_type      = document.getElementById('b-session-type')?.value || 'Remote';
+      const msg               = document.getElementById('b-msg').value.trim();
+      const pre_session_notes = document.getElementById('b-pre-session-notes')?.value.trim() || '';
+      const referral_source   = document.getElementById('b-referral')?.value.trim() || '';
+      const prior_healing     = document.getElementById('b-prior-healing')?.value || '';
       const slotId = document.getElementById('b-slot-id').value;
 
       if (!name || !email) { alert('Please enter your name and email address.'); return; }
+      if (!timezone) { alert('Please enter your country / time zone so Reena can prepare for your session.'); return; }
+      if (!session_reason) { alert('Please share what brings you to this session.'); return; }
 
       const btn = document.getElementById('modal-submit-btn');
       btn.disabled = true;
@@ -1259,7 +1327,8 @@
           customer_name: name,
           customer_email: email,
           customer_phone: phone,
-          message: msg
+          message: msg,
+          timezone, session_reason, pre_session_notes, referral_source, prior_healing, session_type,
         };
 
         const res = await fetch('/api/bookings', {
@@ -1272,14 +1341,18 @@
 
         if (!res.ok) throw new Error(data.error || 'Booking failed');
 
-        if (data.checkout_url) {
-          window.location.href = data.checkout_url;
-          return;
-        }
-
         if (data.payment_required) {
-          alert('Payment is required for this session. Please contact us directly to complete your booking.');
-          closeBooking();
+          _svcPendingBooking = {
+            clientSecret: data.client_secret,
+            bookingId:    data.booking_id,
+            bookingRef:   data.booking_ref,
+            amount:       data.amount,
+            service:      data.service,
+            slot:         data.slot,
+          };
+          await showServicePaymentStep();
+          btn.disabled = false;
+          btn.textContent = 'Confirm Booking ✦';
           return;
         }
 
@@ -1291,9 +1364,111 @@
         await loadCalMonth();
 
       } catch(e) {
-        alert('Something went wrong. Please try again or contact us directly.');
+        alert(e.message || 'Something went wrong. Please try again or contact us directly.');
         btn.disabled = false;
         btn.textContent = 'Confirm Booking ✦';
+      }
+    }
+
+    // ── Stripe payment for service.html ──
+    let _svcPendingBooking = null;
+    let _svcStripeInstance = null;
+    let _svcStripeElements = null;
+
+    async function initServiceStripe() {
+      if (_svcStripeInstance) return;
+      try {
+        const res  = await fetch('/api/stripe-key');
+        const data = await res.json();
+        if (data.publishableKey && typeof Stripe !== 'undefined') {
+          _svcStripeInstance = Stripe(data.publishableKey);
+        }
+      } catch(e) { console.error('Stripe init error:', e); }
+    }
+
+    async function showServicePaymentStep() {
+      await initServiceStripe();
+      document.getElementById('booking-form-wrap').style.display = 'none';
+      document.getElementById('svc-payment-wrap').style.display  = 'block';
+      document.getElementById('booking-success').style.display   = 'none';
+
+      const { amount, service, slot } = _svcPendingBooking;
+      const dateStr = slot ? new Date(slot.date + 'T00:00:00').toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long' }) : '';
+      const [h, m] = (slot?.time || '').split(':');
+      const hr = parseInt(h);
+      const timeStr = slot ? `${hr % 12 || 12}:${m} ${hr >= 12 ? 'PM' : 'AM'}` : '';
+      document.getElementById('svc-payment-summary').innerHTML =
+        `<strong style="color:var(--olive)">${service}</strong><br/>${dateStr}${timeStr ? ' at ' + timeStr : ''}${slot?.duration ? ' · ' + slot.duration + ' min' : ''}<br/><strong>Total: £${parseFloat(amount).toFixed(2)}</strong>`;
+
+      document.getElementById('svc-payment-error').style.display = 'none';
+      const payBtn = document.getElementById('svc-pay-btn');
+      payBtn.textContent = 'Pay Now →';
+      payBtn.disabled    = false;
+
+      if (!_svcStripeInstance) {
+        document.getElementById('svc-payment-error').textContent = 'Payment system unavailable. Please refresh and try again.';
+        document.getElementById('svc-payment-error').style.display = 'block';
+        return;
+      }
+      _svcStripeElements = _svcStripeInstance.elements({
+        clientSecret: _svcPendingBooking.clientSecret,
+        appearance: { theme:'flat', variables:{ colorPrimary:'#5c5b47', colorBackground:'#f9f8f4', colorText:'#1a1a18', fontFamily:'Georgia, serif', borderRadius:'6px' } },
+      });
+      document.getElementById('svc-stripe-element').innerHTML = '';
+      _svcStripeElements.create('payment').mount('#svc-stripe-element');
+    }
+
+    function backToServiceForm() {
+      document.getElementById('svc-payment-wrap').style.display  = 'none';
+      document.getElementById('booking-form-wrap').style.display = 'block';
+    }
+
+    async function submitServicePayment() {
+      const payBtn = document.getElementById('svc-pay-btn');
+      payBtn.textContent = 'Processing…';
+      payBtn.disabled    = true;
+      document.getElementById('svc-payment-error').style.display = 'none';
+      try {
+        const { error, paymentIntent } = await _svcStripeInstance.confirmPayment({
+          elements: _svcStripeElements,
+          redirect: 'if_required',
+        });
+        if (error) {
+          document.getElementById('svc-payment-error').textContent   = error.message;
+          document.getElementById('svc-payment-error').style.display = 'block';
+          payBtn.textContent = 'Pay Now →';
+          payBtn.disabled    = false;
+          return;
+        }
+        if (paymentIntent && paymentIntent.status === 'succeeded') {
+          const res  = await fetch('/api/bookings/confirm', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ booking_id: _svcPendingBooking.bookingId, payment_intent_id: paymentIntent.id }),
+          });
+          const data = await res.json();
+          if (data.success) {
+            document.getElementById('svc-payment-wrap').style.display = 'none';
+            document.getElementById('booking-success').style.display  = 'block';
+            if (calSelectedDate) await calSelectDate(calSelectedDate);
+            await loadCalMonth();
+          } else {
+            document.getElementById('svc-payment-error').textContent   = data.error || 'Confirmation failed. Please contact us.';
+            document.getElementById('svc-payment-error').style.display = 'block';
+            payBtn.textContent = 'Pay Now →';
+            payBtn.disabled    = false;
+          }
+        } else {
+          document.getElementById('svc-payment-error').textContent   = 'Payment could not be completed. Please try again.';
+          document.getElementById('svc-payment-error').style.display = 'block';
+          payBtn.textContent = 'Pay Now →';
+          payBtn.disabled    = false;
+        }
+      } catch(e) {
+        document.getElementById('svc-payment-error').textContent   = 'An unexpected error occurred. Please try again.';
+        document.getElementById('svc-payment-error').style.display = 'block';
+        payBtn.textContent = 'Pay Now →';
+        payBtn.disabled    = false;
       }
     }
 

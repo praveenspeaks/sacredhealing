@@ -648,7 +648,7 @@
 
       <div class="review-cta">
         <p class="review-cta-text">Your healing story could be the light that guides someone else's path.</p>
-        <button class="review-cta-btn" onclick="openReviewModal()">Share Your Journey ›</button>
+        <button class="review-cta-btn" onclick="openReviewModal()">Your Experience Matters Here – Share Your Reflection ›</button>
       </div>
 
     </div>
@@ -1067,6 +1067,11 @@
         <button class="btn btn-gold" onclick="closePkgModal()">Done ✓</button>
       </div>
 
+      <!-- Persistent help note -->
+      <div style="margin-top:1.25rem;padding:0.65rem 1rem;background:rgba(92,91,71,0.07);border:1px solid rgba(92,91,71,0.15);border-radius:8px;font-size:0.78rem;color:var(--text-muted);text-align:center;line-height:1.6;">
+        Having trouble or need to change a booking? Contact Reena at <span id="contact_email" style="color:var(--olive);">hello@soulbody.healing.com</span> and she'll be happy to help.
+      </div>
+
     </div>
   </div>
 
@@ -1132,8 +1137,42 @@
             <input type="tel" id="booking-phone" class="modal-input" placeholder="+44 7700 000000" />
           </div>
           <div class="modal-form-group">
-            <label>Intention for your session (optional)</label>
+            <label>Country / Time Zone <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(required)</span></label>
+            <input type="text" id="booking-timezone" class="modal-input" placeholder="e.g. United Kingdom (GMT+1), India (IST), USA Eastern (EST)" />
+          </div>
+          <div class="modal-form-group">
+            <label>Session Format <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(required)</span></label>
+            <select id="booking-session-type" class="modal-input">
+              <option value="Remote">🌐 Remote / Online</option>
+              <option value="In Person">📍 In Person (Croydon, London)</option>
+            </select>
+          </div>
+          <div class="modal-form-group">
+            <label>What brings you to this session today? <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(required)</span></label>
+            <textarea id="booking-session-reason" class="modal-input" rows="2" placeholder="Share what you're hoping to explore or experience in this session…"></textarea>
+          </div>
+          <div class="modal-form-group">
+            <label>Intention for your session <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(optional)</span></label>
             <textarea id="booking-message" class="modal-input" rows="2" placeholder="Share anything you'd like us to know before your session…"></textarea>
+          </div>
+          <div class="modal-form-group">
+            <label>Is there anything you'd like me to know before we meet? <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(optional)</span></label>
+            <textarea id="booking-pre-session-notes" class="modal-input" rows="2" placeholder="Any context, concerns, or intentions you'd like to share…"></textarea>
+          </div>
+          <div class="modal-form-group" style="display:flex;gap:1rem;flex-wrap:wrap;">
+            <div style="flex:1;min-width:180px;">
+              <label>How did you hear about me? <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(optional)</span></label>
+              <input type="text" id="booking-referral" class="modal-input" placeholder="e.g. Google, friend, Instagram…" />
+            </div>
+            <div style="flex:1;min-width:180px;">
+              <label>Have you experienced energy healing before? <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(optional)</span></label>
+              <select id="booking-prior-healing" class="modal-input">
+                <option value="">Prefer not to say</option>
+                <option value="Yes">Yes</option>
+                <option value="No">No</option>
+                <option value="Not sure">Not sure</option>
+              </select>
+            </div>
           </div>
 
           <!-- Bulk booking toggle -->

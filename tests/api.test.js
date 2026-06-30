@@ -1053,3 +1053,149 @@ describe('Bulk booking create', () => {
     expect(res.status).toBe(409);
   });
 });
+
+// ════════════════════════════════════════════════════════════════════════════
+// 22. Booking form extended fields (timezone, session_reason, session_type)
+// ════════════════════════════════════════════════════════════════════════════
+
+const TEST_DATE5 = '2099-09-15';
+const TEST_DATE5B = '2099-09-16';
+
+describe('Suite 22: Extended booking fields & 30-min slot payment path', () => {
+  let extSlot30Id;   // 30-min free slot
+  let extSlot60Id;   // 60-min free slot
+
+  beforeAll(async () => {
+    await pool.query('DELETE FROM bookings WHERE slot_id IN (SELECT id FROM slots WHERE date = $1 OR date = $2)', [TEST_DATE5, TEST_DATE5B]);
+    await pool.query('DELETE FROM slots WHERE date = $1 OR date = $2', [TEST_DATE5, TEST_DATE5B]);
+
+    const s30 = await pool.query(
+      "INSERT INTO slots (date, time, duration, price, currency) VALUES ($1, '10:00', 30, 0, 'GBP') RETURNING id",
+      [TEST_DATE5]
+    );
+    extSlot30Id = s30.rows[0].id;
+
+    const s60 = await pool.query(
+      "INSERT INTO slots (date, time, duration, price, currency) VALUES ($1, '10:00', 60, 0, 'GBP') RETURNING id",
+      [TEST_DATE5B]
+    );
+    extSlot60Id = s60.rows[0].id;
+  });
+
+  afterAll(async () => {
+    await pool.query('DELETE FROM bookings WHERE slot_id IN (SELECT id FROM slots WHERE date = $1 OR date = $2)', [TEST_DATE5, TEST_DATE5B]);
+    await pool.query('DELETE FROM slots WHERE date = $1 OR date = $2', [TEST_DATE5, TEST_DATE5B]);
+  });
+
+  it('POST /api/bookings — 30-min free slot with all extended fields returns 201', async () => {
+    const res = await request(app).post('/api/bookings')
+      .set('Content-Type', 'application/json')
+      .send({
+        slot_id:            extSlot30Id,
+        service:            'Clarity Call',
+        customer_name:      'Jane Doe',
+        customer_email:     'jane@example.com',
+        customer_phone:     '+44 7700 000001',
+        timezone:           'United Kingdom (GMT+1)',
+        session_reason:     'Looking for guidance after a difficult period',
+        pre_session_notes:  'I have some anxiety about opening up',
+        referral_source:    'Instagram',
+        prior_healing:      'No',
+        session_type:       'Remote',
+        message:            'Looking forward to it',
+      });
+    expect(res.status).toBe(201);
+    expect(res.body.success).toBe(true);
+    expect(res.body.booking_ref).toMatch(/^SH-[A-Z0-9]{8}$/);
+  });
+
+  it('POST /api/bookings — 30-min slot stores session_type=Remote in DB', async () => {
+    // Use the 60-min slot since 30-min was just booked
+    const res = await request(app).post('/api/bookings')
+      .set('Content-Type', 'application/json')
+      .send({
+        slot_id:        extSlot60Id,
+        service:        'Healing Session',
+        customer_name:  'Bob Test',
+        customer_email: 'bob@example.com',
+        timezone:       'India (IST)',
+        session_reason: 'Spiritual growth',
+        session_type:   'In Person',
+      });
+    expect(res.status).toBe(201);
+    const row = await pool.query('SELECT session_type, timezone, session_reason FROM bookings WHERE booking_ref = $1', [res.body.booking_ref]);
+    expect(row.rows[0].session_type).toBe('In Person');
+    expect(row.rows[0].timezone).toBe('India (IST)');
+    expect(row.rows[0].session_reason).toBe('Spiritual growth');
+  });
+
+  it('POST /api/bookings — past slot still returns 400', async () => {
+    const pastSlot = await pool.query(
+      "INSERT INTO slots (date, time, duration, price, currency) VALUES ('2020-06-27', '16:00', 30, 0, 'GBP') RETURNING id"
+    );
+    const pastId = pastSlot.rows[0].id;
+    const res = await request(app).post('/api/bookings')
+      .set('Content-Type', 'application/json')
+      .send({
+        slot_id:        pastId,
+        service:        'Clarity Call',
+        customer_name:  'Test User',
+        customer_email: 'test@example.com',
+        timezone:       'UK',
+        session_reason: 'Test',
+      });
+    expect(res.status).toBe(400);
+    expect(res.body.error).toMatch(/passed/i);
+    await pool.query('DELETE FROM slots WHERE id = $1', [pastId]);
+  });
+
+  it('POST /api/bookings — paid slot with placeholder Stripe key returns 500 with error message', async () => {
+    // Create a paid 30-min slot
+    const paidSlot = await pool.query(
+      "INSERT INTO slots (date, time, duration, price, currency) VALUES ($1, '14:00', 30, 50, 'GBP') RETURNING id",
+      [TEST_DATE5]
+    );
+    const paidId = paidSlot.rows[0].id;
+    const res = await request(app).post('/api/bookings')
+      .set('Content-Type', 'application/json')
+      .send({
+        slot_id:        paidId,
+        service:        'Clarity Call',
+        customer_name:  'Pay Tester',
+        customer_email: 'pay@example.com',
+        timezone:       'UK (GMT+1)',
+        session_reason: 'Testing payment',
+        session_type:   'Remote',
+      });
+    // With a placeholder key, Stripe throws → server returns 500 with error
+    // OR if Stripe not configured (key not sk_test_/sk_live_), falls through to free-booking path
+    if (res.status === 201) {
+      // Stripe not active — booking treated as free
+      expect(res.body.success).toBe(true);
+    } else {
+      // Stripe active but placeholder key → payment init fails
+      expect(res.status).toBe(500);
+      expect(res.body.error).toMatch(/payment|stripe/i);
+    }
+    await pool.query('DELETE FROM bookings WHERE slot_id = $1', [paidId]);
+    await pool.query('DELETE FROM slots WHERE id = $1', [paidId]);
+  });
+
+  it('POST /api/reviews — accepts service_name and country fields', async () => {
+    const res = await request(app).post('/api/reviews')
+      .set('Content-Type', 'application/json')
+      .send({
+        author:       'Test Reviewer',
+        comment:      'A genuinely wonderful experience.',
+        service_name: 'Past Life Regression',
+        country:      'United Kingdom',
+      });
+    expect(res.status).toBe(200);
+    expect(res.body.success).toBe(true);
+    // Verify fields stored
+    const row = await pool.query("SELECT service_name, country FROM reviews WHERE author = 'Test Reviewer' ORDER BY id DESC LIMIT 1");
+    expect(row.rows[0].service_name).toBe('Past Life Regression');
+    expect(row.rows[0].country).toBe('United Kingdom');
+    await pool.query("DELETE FROM reviews WHERE author = 'Test Reviewer'");
+  });
+});

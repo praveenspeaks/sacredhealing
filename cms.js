@@ -46,6 +46,8 @@ module.exports = {
 
     await pool.query(`ALTER TABLE services ADD COLUMN IF NOT EXISTS extra_details TEXT DEFAULT '{}'`);
     await pool.query(`ALTER TABLE services ADD COLUMN IF NOT EXISTS image_url TEXT`);
+    await pool.query(`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS service_name TEXT`);
+    await pool.query(`ALTER TABLE reviews ADD COLUMN IF NOT EXISTS country TEXT`);
 
     // Migration: fix logo path if still pointing to old file
     await pool.query(
@@ -131,6 +133,16 @@ module.exports = {
         [key, val]
       );
     }
+
+    // Force-update the "Not Sure" CTA text so admin edits from older seed take effect
+    await pool.query(
+      "UPDATE site_content SET value = $1 WHERE key = 'process_cta_desc'",
+      ["If you're feeling unsure about what kind of support you need, or where to begin, this space is here for you. We can gently explore what's coming up for you right now and whether working together feels supportive for your next step. There is no expectation—just a grounded conversation to help you find clarity."]
+    );
+    await pool.query(
+      "UPDATE site_content SET value = $1 WHERE key = 'process_cta_btn'",
+      ["Not Sure Where to Begin? Schedule a 30-Minute Conversation →"]
+    );
 
     // healer_img → HERO right-side photo. healer_img2 → About section photo.
     // Correct DB rows that still hold any known stock default (covers all prior migration states).
@@ -456,11 +468,11 @@ module.exports = {
 
     app.post('/api/reviews', express.json(), async (req, res) => {
       try {
-        const { author, comment } = req.body;
+        const { author, comment, service_name, country } = req.body;
         if (!author || !comment) return res.status(400).json({ error: 'Missing fields' });
         await pool.query(
-          'INSERT INTO reviews (author, comment, status) VALUES ($1, $2, $3)',
-          [author, comment, 'pending']
+          'INSERT INTO reviews (author, comment, status, service_name, country) VALUES ($1, $2, $3, $4, $5)',
+          [author, comment, 'pending', (service_name||'').trim() || null, (country||'').trim() || null]
         );
         res.json({ success: true });
       } catch (err) {

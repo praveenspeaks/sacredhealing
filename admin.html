@@ -1740,32 +1740,55 @@
 
   // ── BOOKINGS ──
   function buildBookingsTable(bookings, compact = false) {
+    const rows = bookings.map(b => {
+      const hasExtra = b.timezone || b.session_reason || b.pre_session_notes || b.referral_source || b.prior_healing;
+      return `
+        <tr>
+          <td>${fmtDate(b.date)}<br/><small>${fmtTime(b.time)}</small></td>
+          <td>${durBadge(b.duration)}</td>
+          <td><small>${b.service || '—'}</small></td>
+          <td>
+            <strong>${b.customer_name}</strong><br/>
+            <small style="color:var(--muted)">${b.customer_email}</small>
+            ${b.customer_phone ? `<br/><small style="color:var(--muted)">${b.customer_phone}</small>` : ''}
+            ${b.timezone ? `<br/><small style="color:var(--olive);">🌍 ${b.timezone}</small>` : ''}
+            ${b.session_type ? `<br/><small style="color:var(--muted);">${b.session_type === 'In Person' ? '📍' : '🌐'} ${b.session_type}</small>` : ''}
+          </td>
+          ${!compact ? `<td style="max-width:180px;word-break:break-word;font-size:0.8rem;">
+            ${b.session_reason ? `<em style="color:var(--text);">"${b.session_reason}"</em><br/>` : ''}
+            ${b.message ? `<span style="color:var(--muted);">${b.message}</span>` : (b.session_reason ? '' : '—')}
+            ${hasExtra && !b.session_reason && !b.message ? '—' : ''}
+            ${b.pre_session_notes || b.referral_source || b.prior_healing ? `<button class="btn-sm" style="margin-top:0.25rem;font-size:0.7rem;" onclick="toggleBookingExtra(${b.id})">More ▾</button>
+            <div id="bextra-${b.id}" style="display:none;margin-top:0.35rem;font-size:0.77rem;color:var(--muted);">
+              ${b.pre_session_notes ? `<div><strong>Before we meet:</strong> ${b.pre_session_notes}</div>` : ''}
+              ${b.referral_source ? `<div><strong>Heard about:</strong> ${b.referral_source}</div>` : ''}
+              ${b.prior_healing ? `<div><strong>Prior healing:</strong> ${b.prior_healing}</div>` : ''}
+            </div>` : ''}
+          </td>` : ''}
+          <td>${statusBadge(b.status)}</td>
+          <td style="font-size:0.78rem;color:var(--muted)">${fmtDateTime(b.created_at)}</td>
+          <td>
+            <div class="td-actions">
+              ${b.status !== 'confirmed' ? `<button class="btn-sm btn-success" onclick="updateBooking(${b.id},'confirmed')">✓</button>` : ''}
+              ${b.status !== 'cancelled' ? `<button class="btn-sm btn-danger" onclick="updateBooking(${b.id},'cancelled')">✕</button>` : ''}
+            </div>
+          </td>
+        </tr>`;
+    }).join('');
     return `
       <table>
         <thead><tr>
           <th>Date & Time</th><th>Duration</th><th>Service</th><th>Customer</th>
-          ${!compact ? '<th>Message</th>' : ''}
+          ${!compact ? '<th>Notes</th>' : ''}
           <th>Status</th><th>Booked On</th><th>Actions</th>
         </tr></thead>
-        <tbody>
-          ${bookings.map(b => `
-            <tr>
-              <td>${fmtDate(b.date)}<br/><small>${fmtTime(b.time)}</small></td>
-              <td>${durBadge(b.duration)}</td>
-              <td><small>${b.service || '—'}</small></td>
-              <td><strong>${b.customer_name}</strong><br/><small style="color:var(--muted)">${b.customer_email}</small></td>
-              ${!compact ? `<td style="max-width:160px;word-break:break-word;font-size:0.8rem;">${b.message || '—'}</td>` : ''}
-              <td>${statusBadge(b.status)}</td>
-              <td style="font-size:0.78rem;color:var(--muted)">${fmtDateTime(b.created_at)}</td>
-              <td>
-                <div class="td-actions">
-                  ${b.status !== 'confirmed' ? `<button class="btn-sm btn-success" onclick="updateBooking(${b.id},'confirmed')">✓</button>` : ''}
-                  ${b.status !== 'cancelled' ? `<button class="btn-sm btn-danger" onclick="updateBooking(${b.id},'cancelled')">✕</button>` : ''}
-                </div>
-              </td>
-            </tr>`).join('')}
-        </tbody>
+        <tbody>${rows}</tbody>
       </table>`;
+  }
+
+  function toggleBookingExtra(id) {
+    const el = document.getElementById('bextra-' + id);
+    if (el) el.style.display = el.style.display === 'none' ? 'block' : 'none';
   }
 
   async function loadBookings() {
@@ -1962,8 +1985,11 @@
         });
 
         html += `</tbody></table>
-              <p style="font-size:0.76rem;color:var(--muted);margin:0.75rem 0 0;">
-                💡 To change a session: click <strong>Release Slot</strong> (the slot becomes available again), then click <strong>Rebook</strong> to assign a new available slot.</p>
+              <div style="margin-top:0.75rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+                <p style="font-size:0.76rem;color:var(--muted);margin:0;">
+                  💡 To change a session: click <strong>Release Slot</strong> (the slot becomes available again), then click <strong>Rebook</strong> to assign a new available slot.</p>
+                ${bb.status === 'pending_payment' ? `<button class="btn-sm" style="background:rgba(192,57,43,0.12);color:#c0392b;border-color:#c0392b;flex-shrink:0;" onclick="cancelBulkBooking(${bb.id})">✕ Cancel & Release All (Abandoned)</button>` : ''}
+              </div>
             </div>
           </td>
         </tr>`;
@@ -1990,6 +2016,17 @@
     const open = row.style.display !== 'none';
     row.style.display = open ? 'none' : 'table-row';
     chev.textContent  = open ? '▶' : '▼';
+  }
+
+  async function cancelBulkBooking(bulkId) {
+    if (!confirm('Cancel this entire pending bulk booking and release all held slots? This cannot be undone.')) return;
+    try {
+      await api('DELETE', `/api/admin/bulk-bookings/${bulkId}`);
+      toast('Bulk booking cancelled and all slots released', 'success');
+      loadBulkBookings();
+    } catch(e) {
+      toast('Failed to cancel bulk booking', 'error');
+    }
   }
 
   async function releaseSlot(bulkId, bookingId) {

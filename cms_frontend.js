@@ -357,8 +357,10 @@ function openReviewModal() {
                 <div class="modal-box" style="max-width:480px;text-align:left;">
                     <button class="modal-close" onclick="closeReviewModal()" aria-label="Close">&times;</button>
                     <h2 class="modal-title" style="margin-bottom:1.5rem;text-align:center">Write a Review</h2>
-                    <input type="text" id="review-author" class="modal-input" placeholder="Your Name" style="margin-bottom:1rem;" />
-                    <textarea id="review-comment" class="modal-input" placeholder="Your Experience" style="height:120px;margin-bottom:1.5rem;resize:vertical;"></textarea>
+                    <input type="text" id="review-author" class="modal-input" placeholder="Your Name *" style="margin-bottom:1rem;" />
+                    <textarea id="review-comment" class="modal-input" placeholder="Your Experience *" style="height:120px;margin-bottom:1rem;resize:vertical;"></textarea>
+                    <input type="text" id="review-service" class="modal-input" placeholder="Which service did you experience? (optional)" style="margin-bottom:1rem;" />
+                    <input type="text" id="review-country" class="modal-input" placeholder="Your country (optional, e.g. United Kingdom)" style="margin-bottom:1.5rem;" />
                     <button class="btn btn-gold" style="width:100%" onclick="submitReview()">Submit Review</button>
                     <div id="review-msg" style="margin-top:1rem;color:var(--olive);text-align:center;height:20px;"></div>
                 </div>
@@ -375,26 +377,30 @@ function closeReviewModal() {
 }
 
 async function submitReview() {
-    const author  = document.getElementById('review-author').value.trim();
-    const comment = document.getElementById('review-comment').value.trim();
-    const msgEl   = document.getElementById('review-msg');
+    const author       = document.getElementById('review-author').value.trim();
+    const comment      = document.getElementById('review-comment').value.trim();
+    const service_name = document.getElementById('review-service')?.value.trim() || '';
+    const country      = document.getElementById('review-country')?.value.trim() || '';
+    const msgEl        = document.getElementById('review-msg');
 
-    if (!author || !comment) { msgEl.innerText = 'Please fill all fields.'; return; }
+    if (!author || !comment) { msgEl.innerText = 'Please enter your name and review.'; return; }
 
     msgEl.innerText = 'Submitting...';
     try {
         const res = await fetch('/api/reviews', {
             method: 'POST',
             headers:{'Content-Type':'application/json'},
-            body: JSON.stringify({author, comment})
+            body: JSON.stringify({author, comment, service_name, country})
         });
 
         if (res.ok) {
             msgEl.innerText = 'Thank you! Your review is pending approval.';
             setTimeout(() => {
                 closeReviewModal();
-                document.getElementById('review-author').value  = '';
-                document.getElementById('review-comment').value = '';
+                ['review-author','review-comment','review-service','review-country'].forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.value = '';
+                });
                 msgEl.innerText = '';
             }, 3000);
         } else {
