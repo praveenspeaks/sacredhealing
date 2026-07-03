@@ -136,7 +136,7 @@ function buildNav(content) {
   const onHome = location.pathname === '/' || location.pathname === '/index.html';
 
   const headerItems = Object.entries(cfg)
-    .filter(([, c]) => c.header)
+    .filter(([, c]) => c.header && c.location !== 'hidden')
     .sort(([, a], [, b]) => a.order - b.order);
 
   const homeLink = '<li><a href="' + (onHome ? '#home' : '/') + '" class="nav-link' + (onHome && location.hash === '' ? ' active' : '') + '">Home</a></li>';
@@ -173,7 +173,7 @@ function buildNav(content) {
     footerUl.innerHTML = '<li><a href="' + (onHome ? '#home' : '/') + '">Home</a></li>';
     const allItems = Object.entries(cfg).sort(([, a], [, b]) => a.order - b.order);
     allItems.forEach(([key, c]) => {
-      if (!c.footer) return;
+      if (!c.footer || c.location === 'hidden') return;
       const href = navHref(key, c, onHome, cfg);
       footerUl.innerHTML += `<li><a href="${escHtml(href)}">${escHtml(c.label)}</a></li>`;
     });
@@ -189,7 +189,7 @@ function applySectionVisibility(content) {
   allSections.forEach(el => {
     const key = el.dataset.pageSection;
     const c = cfg[key];
-    el.style.display = (c && c.location === 'page') ? 'none' : '';
+    el.style.display = (c && (c.location === 'page' || c.location === 'hidden')) ? 'none' : '';
   });
 
   // Reorder sections on the home page based on admin-configured order

@@ -732,148 +732,16 @@
   <div data-page-section="clarity-call">
   <section class="clarity-section" id="clarity-call">
     <div class="container">
-      <div class="clarity-grid">
-
-        <!-- LEFT: Description -->
-        <div class="clarity-text">
-          <div class="section-tag">✦ Free 15-Minute Session</div>
-          <h2 class="section-title">Book a Free <em>Clarity Call</em></h2>
-          <p style="color:var(--text-body);line-height:1.8;margin-bottom:0.5rem;">During our Clarity Call, we'll get to know each other, and may discuss:</p>
-          <ul class="clarity-bullets">
-            <li><span class="cb-dot">✦</span> What you're struggling with</li>
-            <li><span class="cb-dot">✦</span> What you're looking for</li>
-            <li><span class="cb-dot">✦</span> If my offerings are in alignment with your goals</li>
-          </ul>
-          <p style="color:var(--text-body);line-height:1.8;">I'm looking forward to learning about your journey and connecting with you.</p>
-        </div>
-
-        <!-- RIGHT: Enquiry Form -->
-        <div class="cc-booking-panel" id="cc-panel">
-
-          <div class="cc-form-row">
-            <div>
-              <label class="cc-services-label">First Name <span style="color:#c0392b">*</span></label>
-              <input type="text" id="cc-fname" class="cc-input" autocomplete="given-name" />
-            </div>
-            <div>
-              <label class="cc-services-label">Last Name <span style="color:#c0392b">*</span></label>
-              <input type="text" id="cc-lname" class="cc-input" autocomplete="family-name" />
-            </div>
-          </div>
-
-          <label class="cc-services-label">Email <span style="color:#c0392b">*</span></label>
-          <input type="email" id="cc-email" class="cc-input" autocomplete="email" style="margin-bottom:1rem;" />
-
-          <label class="cc-services-label">Phone</label>
-          <input type="tel" id="cc-phone" class="cc-input" autocomplete="tel" style="margin-bottom:1rem;" />
-
-          <label class="cc-services-label">Which program are you interested in? <span style="color:#c0392b">*</span></label>
-          <div class="cc-radio-list" id="cc-services-list">
-            <!-- populated from CMS -->
-          </div>
-
-          <label class="cc-services-label">Which areas of your life are you looking to transform? <span style="color:#c0392b">*</span></label>
-          <input type="text" id="cc-transform" class="cc-input" style="margin-bottom:1rem;" />
-
-          <label class="cc-services-label">Any question or information you would like to share with me? <span style="color:#c0392b">*</span></label>
-          <textarea id="cc-message" class="cc-input" rows="3" style="resize:vertical;margin-bottom:1rem;"></textarea>
-
-          <div class="cc-msg-row" id="cc-msg"></div>
-          <button id="cc-submit-btn" class="btn btn-gold" style="width:100%;" onclick="submitClarityCall()">Request a Free Clarity Call ✦</button>
-
-        </div>
+      <div style="display:flex;flex-direction:column;align-items:center;text-align:center;gap:1.75rem;">
+        <div class="section-tag">✦ Free 15-Minute Session</div>
+        <h2 class="section-title" style="margin-bottom:0;">Book a Free <em>Clarity Call</em></h2>
+        <p style="color:var(--text-body);line-height:1.8;max-width:580px;margin:0;">
+          During our Clarity Call, we'll get to know each other. We may discuss what you're struggling with, what you're looking for, and whether my offerings are in alignment with your goals. I'm looking forward to connecting with you.
+        </p>
+        <button class="btn btn-gold btn-large" onclick="openClarityModal()">Request a Free Clarity Call ✦</button>
       </div>
     </div>
   </section>
-
-  <script>
-  (function () {
-    function esc(str) {
-      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    }
-
-    function ccPopulateServices() {
-      fetch('/api/content').then(function(r){ return r.json(); }).then(function(data){
-        var list = document.getElementById('cc-services-list');
-        if (!list || !data.services) return;
-        var html = data.services.map(function(s){
-          return '<label><input type="radio" name="cc-service" value="' + esc(s.title) + '" /> ' + esc(s.title) + '</label>';
-        }).join('');
-        html += '<label><input type="radio" name="cc-service" value="Other / Not Sure" /> Other / Not Sure</label>';
-        list.innerHTML = html;
-      }).catch(function(){});
-    }
-
-    window.submitClarityCall = async function() {
-      var fname    = document.getElementById('cc-fname').value.trim();
-      var lname    = document.getElementById('cc-lname').value.trim();
-      var email    = document.getElementById('cc-email').value.trim();
-      var phone    = document.getElementById('cc-phone').value.trim();
-      var svcEl    = document.querySelector('input[name="cc-service"]:checked');
-      var service  = svcEl ? svcEl.value : '';
-      var transform = document.getElementById('cc-transform').value.trim();
-      var msgVal   = document.getElementById('cc-message').value.trim();
-      var msgEl    = document.getElementById('cc-msg');
-
-      if (!fname || !lname || !email) {
-        msgEl.textContent = 'Please fill in your first name, last name, and email.';
-        msgEl.className = 'cc-msg-row';
-        return;
-      }
-      if (!email.includes('@')) {
-        msgEl.textContent = 'Please enter a valid email address.';
-        msgEl.className = 'cc-msg-row';
-        return;
-      }
-
-      var btn = document.getElementById('cc-submit-btn');
-      btn.disabled = true;
-      btn.textContent = 'Sending…';
-      msgEl.textContent = '';
-
-      var message = [
-        'FREE CLARITY CALL REQUEST',
-        phone      ? 'Phone: ' + phone                   : '',
-        service    ? 'Interested in: ' + service         : '',
-        transform  ? 'Areas to transform: ' + transform  : '',
-        msgVal     ? 'Message: ' + msgVal                : ''
-      ].filter(Boolean).join('\n');
-
-      try {
-        var res = await fetch('/api/contact', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name:    fname + ' ' + lname,
-            email:   email,
-            phone:   phone,
-            message: message
-          })
-        });
-        var data = await res.json();
-        if (!res.ok) throw new Error(data.error || 'Failed to send');
-
-        document.getElementById('cc-panel').innerHTML =
-          '<div style="text-align:center;padding:3rem 1rem;">' +
-            '<div style="font-size:2.5rem;margin-bottom:0.75rem;color:#2a8c7c;">✦</div>' +
-            '<h3 style="font-family:var(--font-heading);font-weight:400;color:var(--charcoal);font-size:1.7rem;margin-bottom:0.6rem;">Thank You!</h3>' +
-            '<p style="color:var(--text-body);font-size:0.92rem;line-height:1.8;max-width:340px;margin:0 auto;">Your request has been received. Reena will be in touch with you shortly to confirm a time for your free 15-minute clarity call.</p>' +
-          '</div>';
-      } catch(err) {
-        msgEl.textContent = err.message || 'Something went wrong. Please try again.';
-        msgEl.className = 'cc-msg-row';
-        btn.disabled = false;
-        btn.textContent = 'Request a Free Clarity Call ✦';
-      }
-    };
-
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', ccPopulateServices);
-    } else {
-      ccPopulateServices();
-    }
-  })();
-  </script>
   </div><!-- /data-page-section="clarity-call" -->
 
   <!-- ============ BOOKING SECTION ============ -->

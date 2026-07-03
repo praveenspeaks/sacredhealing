@@ -551,33 +551,30 @@
     <div class="page" id="page-content">
       <div class="page-header">
         <h1 class="page-title">Site <em>Content</em></h1>
-        <button class="btn-add" onclick="saveContent()">💾 Save Changes</button>
       </div>
-      
+
       <div class="cards-grid">
         <div class="card">
-          <div class="card-title">Logo &amp; Navbar</div>
-          <div class="form-group" style="margin-bottom:1.5rem">
+          <div class="card-title">Logo, Navbar &amp; Homepage</div>
+          <p style="font-size:0.75rem;font-weight:600;color:var(--gold);text-transform:uppercase;letter-spacing:.06em;margin-bottom:0.75rem;">Logo &amp; Navbar</p>
+          <div class="form-group" style="margin-bottom:1.25rem">
             <label>Logo Heading (next to logo)</label>
             <input type="text" id="cms-logo_main_text" class="form-control" placeholder="e.g. Sacred Healing" />
           </div>
-          <div class="form-group">
+          <div class="form-group" style="margin-bottom:1.5rem">
             <label>Logo Subtext (Sanskrit / tagline below heading)</label>
             <input type="text" id="cms-logo_slogan" class="form-control" placeholder="e.g. सफलम् जन्मम् प्रवासम्" />
           </div>
-        </div>
-
-        <div class="card">
-          <div class="card-title">Homepage Texts</div>
-          <div class="form-group" style="margin-bottom:1.5rem">
+          <p style="font-size:0.75rem;font-weight:600;color:var(--gold);text-transform:uppercase;letter-spacing:.06em;margin-bottom:0.75rem;">Homepage Hero</p>
+          <div class="form-group" style="margin-bottom:1.25rem">
             <label>Hero Title</label>
             <input type="text" id="cms-hero_title" class="form-control" />
           </div>
-          <div class="form-group" style="margin-bottom:1.5rem">
+          <div class="form-group" style="margin-bottom:1.25rem">
             <label>Hero Subtitle</label>
             <input type="text" id="cms-hero_subtitle" class="form-control" />
           </div>
-          <div class="form-group" style="margin-bottom:1.5rem">
+          <div class="form-group" style="margin-bottom:1.25rem">
             <label>Primary Button (Begin Journey)</label>
             <input type="text" id="cms-hero_button_text" class="form-control" />
           </div>
@@ -585,6 +582,7 @@
             <label>Secondary Button (Explore)</label>
             <input type="text" id="cms-explore_button_text" class="form-control" />
           </div>
+          <div style="text-align:right;"><button class="btn-sm btn-primary" onclick="saveContentSection(this.closest('.card'))">💾 Save</button></div>
         </div>
         
         <div class="card">
@@ -601,6 +599,7 @@
             <label>Paragraph 2</label>
             <textarea id="cms-about_paragraph2" class="form-control" style="height:115px; resize:vertical;"></textarea>
           </div>
+          <div style="text-align:right;"><button class="btn-sm btn-primary" onclick="saveContentSection(this.closest('.card'))">💾 Save</button></div>
         </div>
 
         <div class="card">
@@ -628,6 +627,7 @@
             <input type="file" id="upload-story_image" class="form-control" accept="image/*" style="margin-bottom:0.5rem;" />
             <button class="btn-sm btn-primary" style="width:100%;" onclick="uploadImage('story_image')">Upload Story Image</button>
           </div>
+          <div style="text-align:right;margin-top:1rem;"><button class="btn-sm btn-primary" onclick="saveContentSection(this.closest('.card'))">💾 Save Text</button></div>
         </div>
       </div>
 
@@ -642,14 +642,15 @@
             <label>Page Subtitle</label>
             <input type="text" id="cms-contact_page_subtitle" class="form-control" placeholder="Every healing journey begins with a single step." />
           </div>
-          <div class="form-group">
+          <div class="form-group" style="margin-bottom:1.5rem">
             <label>Intro Paragraph</label>
             <textarea id="cms-contact_page_intro" class="form-control" rows="3" placeholder="Sessions available in person in Croydon, London or online worldwide."></textarea>
           </div>
+          <div style="text-align:right;"><button class="btn-sm btn-primary" onclick="saveContentSection(this.closest('.card'))">💾 Save</button></div>
         </div>
 
         <div class="card">
-          <div class="card-title">Contact & Footer Info</div>
+          <div class="card-title">Contact &amp; Footer Info</div>
           <div class="form-row">
             <div class="form-group">
               <label>Contact Email</label>
@@ -686,10 +687,11 @@
             <label>Copyright Text</label>
             <input type="text" id="cms-footer_copyright" class="form-control" placeholder="© 2026 SoulBody Healing · Reena. All rights reserved." />
           </div>
-          <div class="form-group" style="margin-top:1rem;">
+          <div class="form-group" style="margin-top:1rem;margin-bottom:1.5rem;">
             <label>Footer Developer Credit <span style="color:var(--muted);font-weight:400;font-size:0.78rem;">(HTML allowed, e.g. include a link)</span></label>
             <input type="text" id="cms-footer_credit" class="form-control" placeholder='Site designed by <a href="https://...">Company Name</a>' />
           </div>
+          <div style="text-align:right;"><button class="btn-sm btn-primary" onclick="saveContentSection(this.closest('.card'))">💾 Save</button></div>
         </div>
 
         <div class="card">
@@ -813,6 +815,7 @@
             <div class="form-group"><label>Description</label><textarea id="cms-rs_6_desc" class="form-control" style="height:70px;resize:vertical;"></textarea></div>
           </div>
         </div>
+        <div style="text-align:right;margin-top:1.5rem;"><button class="btn-sm btn-primary" onclick="saveContentSection(this.closest('.card'))">💾 Save</button></div>
       </div>
 
       <!-- How It Works + CTA -->
@@ -847,6 +850,7 @@
             <input type="text" id="cms-process_cta_btn" class="form-control" />
           </div>
         </div>
+        <div style="text-align:right;margin-top:1.5rem;"><button class="btn-sm btn-primary" onclick="saveContentSection(this.closest('.card'))">💾 Save</button></div>
       </div>
 
     </div>
@@ -1064,7 +1068,8 @@
       <p style="margin-top:1rem;font-size:0.8rem;color:var(--text-muted);">
         <strong>Home</strong> — section stays on the home page (scrolls to anchor).<br />
         <strong>Own Page</strong> — section gets its own URL (e.g. <code>/about</code>, <code>/services</code>).<br />
-        Order controls position in nav menus (lower number = further left/up). Set 0 to exclude from ordered position.
+        <strong>Hidden</strong> — section is removed from the home page and all nav menus entirely.<br />
+        Order controls position in nav menus (lower number = further left/up).
       </p>
     </div>
 

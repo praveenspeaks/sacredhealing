@@ -53,7 +53,7 @@ async function saveContent() {
         const k = el.id.replace(/^cms-/, '');
         updates[k] = el.value;
     });
-    
+
     try {
         const res = await fetch('/api/admin/content', {
             method: 'PUT',
@@ -64,6 +64,31 @@ async function saveContent() {
         else toast('Failed to update content', 'error');
     } catch(err) {
         toast('Error saving content', 'error');
+    }
+}
+
+async function saveContentSection(cardEl) {
+    const updates = {};
+    cardEl.querySelectorAll('[id^="cms-"]').forEach(el => {
+        const k = el.id.replace(/^cms-/, '');
+        updates[k] = el.value;
+    });
+    if (!Object.keys(updates).length) return;
+    const btn = cardEl.querySelector('button[onclick*="saveContentSection"]');
+    const origText = btn ? btn.textContent : '';
+    if (btn) { btn.disabled = true; btn.textContent = 'Saving…'; }
+    try {
+        const res = await fetch('/api/admin/content', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'x-admin-password': adminToken },
+            body: JSON.stringify({ content: updates })
+        });
+        if (res.ok) toast('Saved!', 'success');
+        else toast('Failed to save', 'error');
+    } catch(err) {
+        toast('Error saving', 'error');
+    } finally {
+        if (btn) { btn.disabled = false; btn.textContent = origText; }
     }
 }
 
@@ -847,13 +872,14 @@ function renderNavConfigRows() {
     const keys = navSortedKeys();
     tbody.innerHTML = keys.map(key => {
         const c = navConfigState[key] || { location: HOME_ONLY_SECTIONS.has(key) ? 'home' : 'page', label: key, header: false, footer: false, order: 99 };
-        const isHome = c.location === 'home';
+        const loc = c.location || 'home';
         const homeOnly = HOME_ONLY_SECTIONS.has(key);
         const locationCell = homeOnly
             ? `<span style="font-size:0.78rem;color:var(--text-muted);font-style:italic;">Home only</span>`
             : `<select id="nav-location-${key}" style="padding:0.4rem 0.6rem;border-radius:4px;border:1px solid var(--border);background:var(--indigo);color:var(--cream);font-size:0.82rem;cursor:pointer;">
-                 <option value="home" ${isHome ? 'selected' : ''}>Home Section</option>
-                 <option value="page" ${!isHome ? 'selected' : ''}>Own Page</option>
+                 <option value="home"   ${loc === 'home'   ? 'selected' : ''}>Home Section</option>
+                 <option value="page"   ${loc === 'page'   ? 'selected' : ''}>Own Page</option>
+                 <option value="hidden" ${loc === 'hidden' ? 'selected' : ''}>Hidden</option>
                </select>`;
         return `
         <tr draggable="true" data-key="${key}"
