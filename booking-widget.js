@@ -102,8 +102,42 @@
               <input type="tel" id="gbm-phone" class="gbm-input" placeholder="+44 7700 000000" />
             </div>
             <div class="gbm-field">
-              <label class="gbm-lbl">Message for Reena (optional)</label>
-              <textarea id="gbm-msg" class="gbm-input" rows="3" placeholder="Share anything you'd like Reena to know…"></textarea>
+              <label class="gbm-lbl">Country / Time Zone *</label>
+              <input type="text" id="gbm-timezone" class="gbm-input" placeholder="e.g. United Kingdom (GMT+1), India (IST), USA Eastern (EST)" />
+            </div>
+            <div class="gbm-field">
+              <label class="gbm-lbl">Session Format *</label>
+              <select id="gbm-session-type" class="gbm-input">
+                <option value="Remote">🌐 Remote / Online</option>
+                <option value="In Person">📍 In Person (Croydon, London)</option>
+              </select>
+            </div>
+            <div class="gbm-field">
+              <label class="gbm-lbl">What brings you to this session today? *</label>
+              <textarea id="gbm-session-reason" class="gbm-input" rows="2" placeholder="Share what you're hoping to explore or experience…"></textarea>
+            </div>
+            <div class="gbm-field">
+              <label class="gbm-lbl">Intention for your session <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></label>
+              <textarea id="gbm-msg" class="gbm-input" rows="2" placeholder="Share anything you'd like Reena to know before your session…"></textarea>
+            </div>
+            <div class="gbm-field">
+              <label class="gbm-lbl">Is there anything you'd like me to know before we meet? <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></label>
+              <textarea id="gbm-pre-session-notes" class="gbm-input" rows="2" placeholder="Any context, concerns, or intentions you'd like to share…"></textarea>
+            </div>
+            <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+              <div class="gbm-field" style="flex:1;min-width:150px;">
+                <label class="gbm-lbl">How did you hear about me? <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></label>
+                <input type="text" id="gbm-referral" class="gbm-input" placeholder="e.g. Google, friend, Instagram…" />
+              </div>
+              <div class="gbm-field" style="flex:1;min-width:150px;">
+                <label class="gbm-lbl">Experienced energy healing before? <span style="font-weight:400;text-transform:none;letter-spacing:0;">(optional)</span></label>
+                <select id="gbm-prior-healing" class="gbm-input">
+                  <option value="">Prefer not to say</option>
+                  <option value="Yes">Yes</option>
+                  <option value="No">No</option>
+                  <option value="Not sure">Not sure</option>
+                </select>
+              </div>
             </div>
             <div class="gbm-btns">
               <button class="gbm-btn-outline" onclick="window._gbmGoStep(1)">← Back</button>
@@ -312,10 +346,14 @@
     gbmBookingId = null;
     gbmSlotMap  = {};
     // Reset form
-    ['gbm-name','gbm-email','gbm-phone','gbm-msg'].forEach(id => {
+    ['gbm-name','gbm-email','gbm-phone','gbm-timezone','gbm-session-reason','gbm-msg','gbm-pre-session-notes','gbm-referral'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.value = '';
     });
+    const stEl = document.getElementById('gbm-session-type');
+    if (stEl) { stEl.value = 'Remote'; stEl.disabled = false; }
+    const phEl = document.getElementById('gbm-prior-healing');
+    if (phEl) phEl.value = '';
     const submitBtn = document.getElementById('gbm-submit-btn');
     if (submitBtn) { submitBtn.disabled = false; submitBtn.textContent = 'Confirm Booking ✦'; }
 
@@ -452,6 +490,15 @@
     document.querySelectorAll('.gbm-slot-btn').forEach(b =>
       b.classList.toggle('selected', b.dataset.slotId == slotId)
     );
+    // Lock session type to Remote for short (≤30 min) slots
+    const stEl = document.getElementById('gbm-session-type');
+    if (stEl) {
+      if (gbmSelSlot && gbmSelSlot.duration <= 30) {
+        stEl.value = 'Remote'; stEl.disabled = true;
+      } else {
+        stEl.disabled = false;
+      }
+    }
     _gbmGoStep(2);
   };
 
@@ -505,12 +552,20 @@
 
   // ── Submit ────────────────────────────────────────────────────────────────
   window._gbmSubmit = async function () {
-    const name  = document.getElementById('gbm-name').value.trim();
-    const email = document.getElementById('gbm-email').value.trim();
-    const phone = document.getElementById('gbm-phone').value.trim();
-    const msg   = document.getElementById('gbm-msg').value.trim();
+    const name              = document.getElementById('gbm-name').value.trim();
+    const email             = document.getElementById('gbm-email').value.trim();
+    const phone             = document.getElementById('gbm-phone').value.trim();
+    const timezone          = document.getElementById('gbm-timezone')?.value.trim() || '';
+    const session_type      = document.getElementById('gbm-session-type')?.value || 'Remote';
+    const session_reason    = document.getElementById('gbm-session-reason')?.value.trim() || '';
+    const msg               = document.getElementById('gbm-msg')?.value.trim() || '';
+    const pre_session_notes = document.getElementById('gbm-pre-session-notes')?.value.trim() || '';
+    const referral_source   = document.getElementById('gbm-referral')?.value.trim() || '';
+    const prior_healing     = document.getElementById('gbm-prior-healing')?.value || '';
 
     if (!name || !email) { alert('Please enter your name and email address.'); return; }
+    if (!timezone) { alert('Please enter your country / time zone so Reena can prepare for your session.'); return; }
+    if (!session_reason) { alert('Please share what brings you to this session today.'); return; }
     if (!gbmSelSlot) { alert('Please select a date and time.'); _gbmGoStep(1); return; }
 
     const btn = document.getElementById('gbm-submit-btn');
@@ -518,12 +573,18 @@
 
     try {
       const body = {
-        slot_id:         gbmSelSlot.id,
-        service:         gbmSelSvc ? gbmSelSvc.title : 'Healing Session',
-        customer_name:   name,
-        customer_email:  email,
-        customer_phone:  phone,
-        message:         msg
+        slot_id:            gbmSelSlot.id,
+        service:            gbmSelSvc ? gbmSelSvc.title : 'Healing Session',
+        customer_name:      name,
+        customer_email:     email,
+        customer_phone:     phone,
+        timezone,
+        session_type,
+        session_reason,
+        message:            msg,
+        pre_session_notes,
+        referral_source,
+        prior_healing
       };
       const res  = await fetch('/api/bookings', {
         method: 'POST',

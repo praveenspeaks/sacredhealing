@@ -32,6 +32,7 @@ async function loadContent() {
             'hero_bg_img', 'about_bg_img', 'philosophy_bg_img',
             'services_bg_img', 'process_bg_img', 'testimonials_bg_img',
             'rs_1_img', 'rs_2_img', 'rs_3_img', 'rs_4_img', 'rs_5_img', 'rs_6_img',
+            'story_image',
         ];
         imgKeys.forEach(k => {
             const el = document.getElementById('preview-' + k);

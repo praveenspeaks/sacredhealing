@@ -115,7 +115,14 @@ module.exports = {
       'process_step3_title': 'Transform',
       'process_step3_desc':  'Experience profound shifts as energy moves, patterns dissolve, and your true self emerges.',
       'process_cta_desc':    'Many people come to us feeling lost or disconnected — overwhelmed by life\'s challenges, struggling with recurring patterns, or simply seeking a deeper understanding of their life\'s purpose. If you\'re seeking clarity, emotional release, or spiritual guidance, we\'re here to help. Reach out for a complimentary 15-minute clarity call.',
-      'process_cta_btn':     'Schedule a Free Clarity Call →'
+      'process_cta_btn':     'Schedule a Free Clarity Call →',
+
+      // Our Story section
+      'story_tag':        '✦ Our Story',
+      'story_heading':    'Born from a<br><em>Deep Calling</em>',
+      'story_paragraph1': 'Sacred Journey was born from a deep calling to serve those seeking spiritual awakening and healing. What began as a small practice has blossomed into a thriving community of souls committed to growth and transformation. We have walked alongside countless individuals on their paths to wholeness, witnessing profound shifts in consciousness and miraculous healings of body, mind, and spirit.',
+      'story_paragraph2': 'We believe that true healing comes from within, and our role is to facilitate your connection to your own inner wisdom and divine guidance.',
+      'story_image':      '/assets/story-room.jpg'
     };
     // Contact page content — use DO NOTHING so admin edits survive restarts
     const contactPageDefaults = {
