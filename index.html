@@ -1144,7 +1144,7 @@
             <label>Session Format <span style="color:var(--text-muted);font-weight:400;font-size:0.8rem;">(required)</span></label>
             <select id="booking-session-type" class="modal-input">
               <option value="Remote">🌐 Remote / Online</option>
-              <option value="In Person">📍 In Person (Croydon, London)</option>
+              <option value="In Person" id="booking-inperson-opt">📍 In Person</option>
             </select>
           </div>
           <div class="modal-form-group">
@@ -1247,6 +1247,7 @@
   <script src="https://js.stripe.com/v3/"></script>
   <script src="script.js"></script>
   <script src="cms_frontend.js"></script>
+  <script src="/cookie-banner.js"></script>
   <script src="/booking-widget.js"></script>
   <script src="/clarity-widget.js"></script>
 </body>

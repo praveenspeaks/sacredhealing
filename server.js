@@ -14,6 +14,10 @@ const app  = express();
 const PORT = process.env.PORT || 3000;
 
 // ── Middleware ──────────────────────────────────────────────
+// Trust the first proxy hop (nginx/EasyPanel reverse proxy) so that
+// express-rate-limit can read the real client IP from X-Forwarded-For.
+app.set('trust proxy', 1);
+
 const corsOrigin = process.env.ALLOWED_ORIGIN;
 app.use(cors(corsOrigin ? { origin: corsOrigin } : {}));
 app.use(express.json());
@@ -157,11 +161,10 @@ async function getSessionLocation() {
   try {
     const r = await pool.query("SELECT value FROM site_content WHERE key = 'session_location'");
     if (r.rows[0]?.value) return r.rows[0].value;
-    // Fall back to contact_location if session_location not set
     const r2 = await pool.query("SELECT value FROM site_content WHERE key = 'contact_location'");
-    return r2.rows[0]?.value ? `${r2.rows[0].value} (or Online if agreed)` : 'London (or Online if agreed)';
+    return r2.rows[0]?.value || 'London';
   } catch (e) {
-    return 'London (or Online if agreed)';
+    return 'London';
   }
 }
 
@@ -550,9 +553,9 @@ app.post('/api/bookings', bookingLimiter, async (req, res) => {
     }
 
     getSessionLocation().then(location => {
-      sendBookingConfirmation({ customerName: customer_name, customerEmail: customer_email, service, slot, servicePrice, cancelUrl, bookingRef, location })
+      sendBookingConfirmation({ customerName: customer_name, customerEmail: customer_email, service, slot, servicePrice, cancelUrl, bookingRef, location, session_type })
         .catch(err => console.error('Confirmation email error:', err));
-      sendAdminAlert({ customerName: customer_name, customerEmail: customer_email, customerPhone: customer_phone, service, slot, servicePrice, message, cancelUrl, bookingRef, location })
+      sendAdminAlert({ customerName: customer_name, customerEmail: customer_email, customerPhone: customer_phone, service, slot, servicePrice, message, cancelUrl, bookingRef, location, session_type })
         .catch(err => console.error('Admin alert email error:', err));
     });
 
@@ -616,6 +619,7 @@ app.post('/api/bookings/confirm', async (req, res) => {
         sendBookingConfirmation({
           customerName: booking.customer_name, customerEmail: booking.customer_email,
           service: booking.service, slot: booking, servicePrice, cancelUrl, bookingRef: booking.booking_ref, location,
+          session_type: booking.session_type,
         }).catch(err => console.error('Idempotent confirmation email error:', err));
       });
       return res.json({ success: true, booking_ref: booking.booking_ref, already_confirmed: true,
@@ -653,11 +657,13 @@ app.post('/api/bookings/confirm', async (req, res) => {
       sendBookingConfirmation({
         customerName: booking.customer_name, customerEmail: booking.customer_email,
         service: booking.service, slot: booking, servicePrice, cancelUrl, bookingRef: booking.booking_ref, location,
+        session_type: booking.session_type,
       }).catch(err => console.error('Confirmation email error:', err));
       sendAdminAlert({
         customerName: booking.customer_name, customerEmail: booking.customer_email,
         customerPhone: booking.customer_phone, service: booking.service,
         slot: booking, servicePrice, message: booking.message, cancelUrl, bookingRef: booking.booking_ref, location,
+        session_type: booking.session_type,
       }).catch(err => console.error('Admin alert email error:', err));
     });
 
@@ -721,11 +727,13 @@ app.get('/api/bookings/success', async (req, res) => {
         sendBookingConfirmation({
           customerName: booking.customer_name, customerEmail: booking.customer_email,
           service: booking.service, slot: booking, servicePrice, cancelUrl, location,
+          session_type: booking.session_type,
         }).catch(err => console.error('Confirmation email error:', err));
         sendAdminAlert({
           customerName: booking.customer_name, customerEmail: booking.customer_email,
           customerPhone: booking.customer_phone, service: booking.service,
           slot: booking, servicePrice, message: booking.message, cancelUrl, location,
+          session_type: booking.session_type,
         }).catch(err => console.error('Admin alert email error:', err));
       });
     }

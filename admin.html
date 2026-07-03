@@ -1178,8 +1178,24 @@
         <span style="font-size:0.82rem;color:var(--muted);">Everything you need to manage your Sacred Healing website</span>
       </div>
 
+      <!-- Search -->
+      <div style="position:relative;margin-bottom:1.25rem;">
+        <span style="position:absolute;left:1rem;top:50%;transform:translateY(-50%);font-size:1rem;color:var(--muted);pointer-events:none;">🔍</span>
+        <input
+          type="text"
+          id="guide-search"
+          placeholder="Search the guide… e.g. "cancel", "stripe", "image", "email""
+          oninput="guideSearch(this.value)"
+          style="width:100%;box-sizing:border-box;padding:0.85rem 1rem 0.85rem 2.75rem;background:rgba(255,255,255,0.05);border:1px solid var(--border);border-radius:10px;color:var(--cream);font-family:inherit;font-size:0.9rem;outline:none;transition:border-color .2s;"
+          onfocus="this.style.borderColor='var(--gold)'"
+          onblur="this.style.borderColor='var(--border)'"
+        />
+        <button onclick="guideSearch('');document.getElementById('guide-search').value='';" id="guide-search-clear" style="display:none;position:absolute;right:0.75rem;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--muted);font-size:1rem;cursor:pointer;padding:0.25rem;">✕</button>
+      </div>
+      <div id="guide-no-results" style="display:none;text-align:center;padding:2.5rem 1rem;color:var(--muted);font-size:0.9rem;">No guide sections matched your search. Try a different keyword.</div>
+
       <!-- Quick nav -->
-      <div class="card" style="margin-bottom:1.5rem;">
+      <div class="card" id="guide-quicknav" style="margin-bottom:1.5rem;">
         <div class="card-title" style="margin-bottom:1rem;">Quick Navigation</div>
         <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">
           <a href="#guide-slots"     class="guide-pill">📅 Slots</a>
@@ -1193,6 +1209,7 @@
           <a href="#guide-nav"       class="guide-pill">🧭 Navigation</a>
           <a href="#guide-theme"     class="guide-pill">🎨 Theme &amp; Fonts</a>
           <a href="#guide-settings"  class="guide-pill">⚙ Settings</a>
+          <a href="#guide-email"     class="guide-pill">📧 Email &amp; Calendar</a>
         </div>
       </div>
 
@@ -1455,6 +1472,34 @@
         </div>
       </div>
 
+      <!-- ⑫ EMAIL & CALENDAR INVITES -->
+      <div class="card guide-card" id="guide-email">
+        <div class="guide-section-head">
+          <span class="guide-icon">📧</span>
+          <div>
+            <div class="card-title" style="margin-bottom:0;">Email Notifications &amp; Calendar Invites</div>
+            <div class="guide-where">Automatic — sent by the server on every confirmed booking</div>
+          </div>
+        </div>
+        <p class="guide-intro">Every time a booking is confirmed, two emails go out automatically — one to the customer and one to you (admin). The customer email includes a <strong>.ics calendar file</strong> attachment that opens in Google Calendar, Apple Calendar, and Outlook.</p>
+
+        <div class="guide-steps">
+          <div class="guide-step"><span class="step-num">1</span><div><strong>Customer confirmation email</strong> — Sent to the customer the moment their booking is confirmed (instantly for free sessions; after Stripe payment succeeds for paid sessions). Contains: booking reference, service name, date, time, duration, price paid, and a cancel link.</div></div>
+          <div class="guide-step"><span class="step-num">2</span><div><strong>Calendar invite attachment (.ics)</strong> — Attached to every customer confirmation email as <code>sacred-healing-session.ics</code>. It is a standard calendar file — the customer simply opens it to add the session to their calendar app. Works with Google Calendar, Apple Calendar, Outlook, and any calendar that supports the iCal format.</div></div>
+          <div class="guide-step"><span class="step-num">3</span><div><strong>What the calendar invite contains</strong> — Session title (e.g. "Sacred Healing — Spiritual Healing"), start and end time in <strong>London time</strong> (Europe/London timezone, automatically adjusting for BST/GMT), the session location (from your Contact &amp; Footer Info), organiser email (your admin email), and a description with the booking reference.</div></div>
+          <div class="guide-step"><span class="step-num">4</span><div><strong>How customers add it to Google Calendar</strong> — In Gmail, the .ics attachment shows as an inline event card with an <em>"Add to Calendar"</em> button. Outside Gmail, the customer downloads the file and double-clicks it — Google Calendar opens automatically if it is set as the default calendar app in the browser or operating system.</div></div>
+          <div class="guide-step"><span class="step-num">5</span><div><strong>Package bookings — all sessions in one file</strong> — When a customer books a package of 5, 10, or more sessions, the single .ics attachment contains one calendar event per session. Opening it adds all sessions to the customer's calendar at once. Each event is labelled "Session 1 of 10", "Session 2 of 10" etc.</div></div>
+          <div class="guide-step"><span class="step-num">6</span><div><strong>Update the session location in invites</strong> — Go to <strong>Admin → Site Content → Contact &amp; Footer Info</strong>. The <em>Location / Address</em> field (key: <code>contact_location</code>) is used as the calendar event location. Update it whenever your practice address changes and all future invites will reflect the new address.</div></div>
+          <div class="guide-step"><span class="step-num">7</span><div><strong>Admin alert email</strong> — You receive a separate plain-text notification email each time a new booking comes in. It shows customer name, contact details, service, date/time, and the full session schedule for packages. No calendar invite is attached to your alert — use it to add the session to your own calendar manually.</div></div>
+          <div class="guide-step"><span class="step-num">8</span><div><strong>Cancellation emails</strong> — If you cancel a confirmed booking from the admin panel, a cancellation email is sent to the customer and a separate alert is sent to you. These do not include a calendar update — the customer will need to delete the event from their calendar manually.</div></div>
+        </div>
+
+        <div class="guide-tip">
+          <span class="tip-icon">💡</span>
+          <span>Emails are only sent when SMTP is configured in the <code>.env</code> file (<code>SMTP_HOST</code>, <code>SMTP_USER</code>, <code>SMTP_PASS</code>, <code>SMTP_FROM</code>, <code>ADMIN_EMAIL</code>). Check <strong>Admin → Settings</strong> to see if email is currently active — a green badge means emails are going out.</span>
+        </div>
+      </div>
+
       <!-- Public site features summary -->
       <div class="card guide-card" style="margin-top:0.5rem;">
         <div class="card-title" style="margin-bottom:1rem;">What Customers Can Do on the Public Site</div>
@@ -1496,6 +1541,68 @@
 <script>
   const API = '';
   let adminToken = '';
+
+  // ── GUIDE SEARCH ──
+  function guideSearch(query) {
+    const q = query.trim().toLowerCase();
+    const cards = document.querySelectorAll('#page-guide .guide-card');
+    const clearBtn = document.getElementById('guide-search-clear');
+    const noResults = document.getElementById('guide-no-results');
+    const quickNav  = document.getElementById('guide-quicknav');
+
+    clearBtn.style.display = q ? 'block' : 'none';
+
+    if (!q) {
+      cards.forEach(c => { c.style.display = ''; _guideRemoveHighlight(c); });
+      noResults.style.display = 'none';
+      quickNav.style.display  = '';
+      return;
+    }
+
+    quickNav.style.display = 'none';
+    let anyVisible = false;
+    cards.forEach(card => {
+      const text = card.textContent.toLowerCase();
+      if (text.includes(q)) {
+        card.style.display = '';
+        _guideHighlight(card, q);
+        anyVisible = true;
+      } else {
+        card.style.display = 'none';
+        _guideRemoveHighlight(card);
+      }
+    });
+    noResults.style.display = anyVisible ? 'none' : 'block';
+  }
+
+  function _guideHighlight(card, q) {
+    _guideRemoveHighlight(card);
+    const walker = document.createTreeWalker(card, NodeFilter.SHOW_TEXT, null, false);
+    const nodes = [];
+    let node;
+    while ((node = walker.nextNode())) nodes.push(node);
+    nodes.forEach(n => {
+      const idx = n.textContent.toLowerCase().indexOf(q);
+      if (idx === -1) return;
+      const span = document.createElement('span');
+      span.innerHTML =
+        escHtml(n.textContent.slice(0, idx)) +
+        `<mark style="background:rgba(218,180,103,0.35);color:inherit;border-radius:2px;padding:0 2px;">${escHtml(n.textContent.slice(idx, idx + q.length))}</mark>` +
+        escHtml(n.textContent.slice(idx + q.length));
+      span.className = '_guide-hl';
+      n.parentNode.replaceChild(span, n);
+    });
+  }
+
+  function _guideRemoveHighlight(card) {
+    card.querySelectorAll('._guide-hl').forEach(span => {
+      span.replaceWith(document.createTextNode(span.textContent));
+    });
+  }
+
+  function escHtml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
 
   // ── UTILS ──
   function toast(msg, type = 'info') {

@@ -59,9 +59,9 @@ function dtEnd(dateStr, timeStr, mins) {
 }
 
 // Generates a single ICS file with one VEVENT per slot.
-function generateICS({ service, slots, customerName, customerEmail, bookingRef, location }) {
+function generateICS({ service, slots, customerName, customerEmail, bookingRef, location, session_type }) {
   const dtstamp = new Date().toISOString().replace(/[-:]/g,'').split('.')[0] + 'Z';
-  const loc     = (location || 'London (or Online if agreed)').replace(/,/g, '\\,');
+  const loc     = (session_type === 'In Person' ? (location || 'London') : 'Online / Remote').replace(/,/g, '\\,');
   const isMulti = slots.length > 1;
 
   const events = slots.map((slot, i) => {
@@ -102,7 +102,7 @@ async function sendBookingConfirmation({
   slots,       // bulk booking — array of slot objects
   servicePrice, cancelUrl, bookingRef,
   isBulk, sessionCount, totalAmount,
-  location,
+  location, session_type,
 }) {
   if (!transporter) return;
 
@@ -117,7 +117,8 @@ async function sendBookingConfirmation({
   const fmtPrice   = p => `${sym}${parseFloat(p) % 1 === 0 ? parseInt(p) : parseFloat(p).toFixed(2)}`;
   const grandStr   = grand > 0  ? fmtPrice(grand) : 'Free';
   const perStr     = priceEach > 0 ? `${fmtPrice(priceEach)} per session` : 'Free';
-  const locLine    = location || 'London (or Online if agreed)';
+  const isInPerson = session_type === 'In Person';
+  const locLine    = location || 'London';
 
   let subjectLine, detailsHtml;
 
@@ -152,12 +153,16 @@ async function sendBookingConfirmation({
       </table>`;
   } else {
     subjectLine = `Your ${service} session is booked ✦ Sacred Healing`;
+    const sessionTypeLine = session_type
+      ? `<tr><td style="padding:0.6rem 0;color:#A1A1AA">Session Format</td><td style="color:#FDFCF8">${session_type === 'In Person' ? `📍 In Person — ${locLine}` : '🌐 Remote / Online'}</td></tr>`
+      : '';
     detailsHtml = `
       <table style="width:100%;border-collapse:collapse;margin-bottom:2rem;">
         <tr><td style="padding:0.6rem 0;color:#A1A1AA;width:40%">Service</td><td style="color:#FDFCF8;font-weight:600">${service}</td></tr>
         <tr><td style="padding:0.6rem 0;color:#A1A1AA">Date</td><td style="color:#FDFCF8">${formatDate(firstSlot.date)}</td></tr>
         <tr><td style="padding:0.6rem 0;color:#A1A1AA">Time</td><td style="color:#FDFCF8">${formatTime(firstSlot.time)}</td></tr>
         <tr><td style="padding:0.6rem 0;color:#A1A1AA">Duration</td><td style="color:#FDFCF8">${firstSlot.duration} minutes</td></tr>
+        ${sessionTypeLine}
         <tr><td style="padding:0.6rem 0;color:#A1A1AA">Price</td><td style="color:#DAB467;font-weight:600">${grandStr}</td></tr>
       </table>`;
   }
@@ -169,13 +174,13 @@ async function sendBookingConfirmation({
     subject: subjectLine,
     attachments: [{
       filename:    'sacred-healing-session.ics',
-      content:     generateICS({ service, slots: allSlots, customerName, customerEmail, bookingRef, location: locLine }),
+      content:     generateICS({ service, slots: allSlots, customerName, customerEmail, bookingRef, location: locLine, session_type }),
       contentType: 'text/calendar; charset=utf-8; method=REQUEST',
     }],
     html: `
       <div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;background:#0a0a0a;color:#FDFCF8;padding:2.5rem;border-radius:12px;">
         <h1 style="color:#DAB467;font-size:1.6rem;margin-bottom:0.5rem;">Sacred Healing</h1>
-        <p style="color:#A1A1AA;font-size:0.85rem;margin-bottom:2rem;">SoulBody Healing · ${locLine} &amp; Online</p>
+        <p style="color:#A1A1AA;font-size:0.85rem;margin-bottom:2rem;">SoulBody Healing · ${isInPerson ? locLine : 'Online / Remote'}</p>
         <h2 style="font-size:1.2rem;margin-bottom:1.5rem;">${isPackage ? `Your ${count}-session package is confirmed` : 'Your session is confirmed'}, ${customerName} ✦</h2>
         ${bookingRef ? `
         <div style="text-align:center;margin-bottom:1.75rem;padding:1rem;background:rgba(218,180,103,0.1);border:1px solid rgba(218,180,103,0.35);border-radius:10px;">

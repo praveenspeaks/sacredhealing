@@ -382,6 +382,12 @@
       const res = await fetch('/api/content');
       const data = await res.json();
       gbmServices = data.services || [];
+
+      // Update "In Person" option with the actual location from CMS
+      const loc = (data.content && data.content.contact_location) || 'London';
+      const inPersonOpt = document.querySelector('#gbm-session-type option[value="In Person"]');
+      if (inPersonOpt) inPersonOpt.textContent = `📍 In Person (${loc})`;
+
       const sel = document.getElementById('gbm-svc');
       sel.innerHTML = '<option value="">Select a service…</option>' +
         gbmServices.map(s =>

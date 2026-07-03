@@ -60,7 +60,9 @@
       "Bash(node -e \"const http = require\\('http'\\); http.get\\('http://localhost:3000/', r => console.log\\('Server running, status:', r.statusCode\\)\\).on\\('error', \\(\\) => console.log\\('Server not running'\\)\\)\")",
       "Bash(npm start *)",
       "Bash(node -e \"const {pool} = require\\('./server'\\); pool.query\\('SELECT 1'\\).then\\(r => { console.log\\('DB OK'\\); pool.end\\(\\); }\\).catch\\(e => { console.log\\('DB FAIL:', e.message\\); pool.end\\(\\); }\\)\")",
-      "Bash(node -e \"require\\('./tests/api.test.js'\\)\")"
+      "Bash(node -e \"require\\('./tests/api.test.js'\\)\")",
+      "Bash(node --check booking-widget.js)",
+      "Bash(node --check \"d:/My Professional Projects/sacredhealing/cookie-banner.js\")"
     ]
   }
 }

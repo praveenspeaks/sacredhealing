@@ -268,6 +268,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (content[key]) el.href = 'mailto:' + content[key];
         });
 
+        // Update "In Person" booking option with actual location from CMS
+        if (content.contact_location) {
+            const loc = content.contact_location;
+            document.querySelectorAll('#booking-inperson-opt, .inperson-opt').forEach(opt => {
+                opt.textContent = `📍 In Person (${loc})`;
+            });
+        }
+
         // Dispatch event so pages can react to loaded CMS data
         window.dispatchEvent(new CustomEvent('cmsContentLoaded', { detail: content }));
 
