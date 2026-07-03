@@ -56,6 +56,8 @@ module.exports = {
 
     // ── Upsert site_content with real content ────────────────
     const realContent = {
+      'logo_main_text':     'Sacred Healing',
+      'logo_slogan':        'सफलम् जन्मम् प्रवासम्',
       'hero_title':         'Welcome to<br /><em class="gold-text">SoulBody Healing</em>',
       'hero_subtitle':      "Your healing sanctuary. We're dedicated to guiding you on a journey of self-discovery, self-love, healing and well-being. Discover how our unique services can help you find yourself and unlock your true potential.",
       'hero_button_text':   'Begin Your Journey →',
