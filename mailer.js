@@ -1,4 +1,4 @@
-const nodemailer = require('nodemailer');
+﻿const nodemailer = require('nodemailer');
 
 const enabled =
   process.env.SMTP_HOST &&
@@ -21,7 +21,7 @@ if (!enabled) {
   console.warn('⚠️  SMTP not configured — email notifications are disabled. Set SMTP_HOST, SMTP_USER, SMTP_PASS in .env to enable.');
 }
 
-const FROM        = process.env.SMTP_FROM || '"Sacred Healing" <noreply@healwithreena.com>';
+const FROM        = process.env.SMTP_FROM || '"6R Ascension" <noreply@healwithreena.com>';
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || process.env.SMTP_USER;
 const REPLY_TO    = process.env.SMTP_REPLY_TO || ADMIN_EMAIL;
 
@@ -65,11 +65,11 @@ function generateICS({ service, slots, customerName, customerEmail, bookingRef, 
   const isMulti = slots.length > 1;
 
   const events = slots.map((slot, i) => {
-    const uid  = `sh-${bookingRef || Date.now()}-${i+1}@soulbodyhealing.com`;
+    const uid  = `sh-${bookingRef || Date.now()}-${i+1}@6rascension.com`;
     const summary = isMulti
-      ? `Sacred Healing — ${service} (Session ${i+1} of ${slots.length})`
-      : `Sacred Healing — ${service}`;
-    const desc = `Your ${service} session with Reena at Sacred Healing.${isMulti ? `\\nSession ${i+1} of ${slots.length}.` : ''}${bookingRef ? '\\nBooking Reference: ' + bookingRef : ''}\\n\\nFor queries\\, reply to this email.`;
+      ? `6R Ascension — ${service} (Session ${i+1} of ${slots.length})`
+      : `6R Ascension — ${service}`;
+    const desc = `Your ${service} session with Reena at 6R Ascension.${isMulti ? `\\nSession ${i+1} of ${slots.length}.` : ''}${bookingRef ? '\\nBooking Reference: ' + bookingRef : ''}\\n\\nFor queries\\, reply to this email.`;
     return [
       'BEGIN:VEVENT',
       `UID:${uid}`,
@@ -79,7 +79,7 @@ function generateICS({ service, slots, customerName, customerEmail, bookingRef, 
       `SUMMARY:${summary}`,
       `DESCRIPTION:${desc}`,
       `LOCATION:${loc}`,
-      `ORGANIZER;CN="Sacred Healing":mailto:${ADMIN_EMAIL || 'noreply@soulbodyhealing.com'}`,
+      `ORGANIZER;CN="6R Ascension":mailto:${ADMIN_EMAIL || 'noreply@6rascension.com'}`,
       `ATTENDEE;ROLE=REQ-PARTICIPANT;PARTSTAT=ACCEPTED;CN="${customerName}":mailto:${customerEmail}`,
       'STATUS:CONFIRMED',
       'END:VEVENT',
@@ -87,7 +87,7 @@ function generateICS({ service, slots, customerName, customerEmail, bookingRef, 
   });
 
   return [
-    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Sacred Healing//EN',
+    'BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//6R Ascension//EN',
     'CALSCALE:GREGORIAN', 'METHOD:REQUEST',
     ...events,
     'END:VCALENDAR',
@@ -123,7 +123,7 @@ async function sendBookingConfirmation({
   let subjectLine, detailsHtml;
 
   if (isPackage) {
-    subjectLine = `Your ${count}-session package is confirmed ✦ Sacred Healing`;
+    subjectLine = `Your ${count}-session package is confirmed ✦ 6R Ascension`;
     const sessionRows = allSlots.map((s, i) => `
       <tr>
         <td style="padding:0.45rem 0.5rem;color:#A1A1AA;border-bottom:1px solid rgba(255,255,255,0.05);">${i + 1}</td>
@@ -152,7 +152,7 @@ async function sendBookingConfirmation({
         <tbody>${sessionRows}</tbody>
       </table>`;
   } else {
-    subjectLine = `Your ${service} session is booked ✦ Sacred Healing`;
+    subjectLine = `Your ${service} session is booked ✦ 6R Ascension`;
     const sessionTypeLine = session_type
       ? `<tr><td style="padding:0.6rem 0;color:#A1A1AA">Session Format</td><td style="color:#FDFCF8">${session_type === 'In Person' ? `📍 In Person — ${locLine}` : '🌐 Remote / Online'}</td></tr>`
       : '';
@@ -179,8 +179,8 @@ async function sendBookingConfirmation({
     }],
     html: `
       <div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;background:#0a0a0a;color:#FDFCF8;padding:2.5rem;border-radius:12px;">
-        <h1 style="color:#DAB467;font-size:1.6rem;margin-bottom:0.5rem;">Sacred Healing</h1>
-        <p style="color:#A1A1AA;font-size:0.85rem;margin-bottom:2rem;">SoulBody Healing · ${isInPerson ? locLine : 'Online / Remote'}</p>
+        <h1 style="color:#DAB467;font-size:1.6rem;margin-bottom:0.5rem;">6R Ascension</h1>
+        <p style="color:#A1A1AA;font-size:0.85rem;margin-bottom:2rem;">6R Ascension · ${isInPerson ? locLine : 'Online / Remote'}</p>
         <h2 style="font-size:1.2rem;margin-bottom:1.5rem;">${isPackage ? `Your ${count}-session package is confirmed` : 'Your session is confirmed'}, ${customerName} ✦</h2>
         ${bookingRef ? `
         <div style="text-align:center;margin-bottom:1.75rem;padding:1rem;background:rgba(218,180,103,0.1);border:1px solid rgba(218,180,103,0.35);border-radius:10px;">
@@ -275,11 +275,11 @@ async function sendCancellationNotification({ customerName, customerEmail, servi
     from:    FROM,
     replyTo: REPLY_TO,
     to:      customerEmail,
-    subject: `Your Sacred Healing session has been cancelled — ${service}`,
+    subject: `Your 6R Ascension session has been cancelled — ${service}`,
     html: `
       <div style="font-family:Georgia,serif;max-width:560px;margin:0 auto;background:#0a0a0a;color:#FDFCF8;padding:2.5rem;border-radius:12px;">
-        <h1 style="color:#DAB467;font-size:1.6rem;margin-bottom:0.5rem;">Sacred Healing</h1>
-        <p style="color:#A1A1AA;font-size:0.85rem;margin-bottom:2rem;">SoulBody Healing</p>
+        <h1 style="color:#DAB467;font-size:1.6rem;margin-bottom:0.5rem;">6R Ascension</h1>
+        <p style="color:#A1A1AA;font-size:0.85rem;margin-bottom:2rem;">6R Ascension</p>
         <h2 style="font-size:1.2rem;margin-bottom:1.5rem;">Your session has been cancelled, ${customerName}</h2>
         <table style="width:100%;border-collapse:collapse;margin-bottom:2rem;">
           <tr><td style="padding:0.6rem 0;color:#A1A1AA;width:40%">Service</td><td style="color:#FDFCF8;font-weight:600">${service}</td></tr>
@@ -327,10 +327,10 @@ async function sendTestEmail(to) {
   await transporter.sendMail({
     from:    FROM,
     to,
-    subject: '✦ Sacred Healing — Email Test',
+    subject: '✦ 6R Ascension — Email Test',
     html: `
       <div style="font-family:Georgia,serif;max-width:520px;margin:0 auto;background:#0a0a0a;color:#FDFCF8;padding:2.5rem;border-radius:12px;">
-        <h1 style="color:#DAB467;font-size:1.5rem;margin-bottom:0.5rem;">Sacred Healing</h1>
+        <h1 style="color:#DAB467;font-size:1.5rem;margin-bottom:0.5rem;">6R Ascension</h1>
         <p style="color:#A1A1AA;font-size:0.85rem;margin-bottom:2rem;">Email Configuration Test</p>
         <p style="line-height:1.8;">This is a test email confirming that your email configuration is working correctly.</p>
         <table style="width:100%;border-collapse:collapse;margin:1.5rem 0;font-size:0.9rem;">
@@ -351,11 +351,11 @@ async function sendContactEnquiry({ name, email, message }) {
     from:     FROM,
     to:       ADMIN_EMAIL,
     replyTo:  email,
-    subject:  `✦ New Enquiry from ${name} — Sacred Healing`,
+    subject:  `✦ New Enquiry from ${name} — 6R Ascension`,
     html: `
       <div style="font-family:Georgia,serif;max-width:540px;margin:0 auto;background:#fff;padding:2rem;border-radius:10px;border:1px solid #e8e0d0;">
         <h2 style="color:#5C5B47;font-size:1.3rem;margin-bottom:0.25rem;">New Contact Enquiry</h2>
-        <p style="color:#8A8070;font-size:0.85rem;margin-bottom:1.5rem;">Sacred Healing Website</p>
+        <p style="color:#8A8070;font-size:0.85rem;margin-bottom:1.5rem;">6R Ascension Website</p>
         <table style="width:100%;border-collapse:collapse;font-size:0.95rem;">
           <tr><td style="padding:0.5rem 0;color:#8A8070;width:30%">Name</td><td><strong>${name}</strong></td></tr>
           <tr><td style="padding:0.5rem 0;color:#8A8070">Email</td><td><a href="mailto:${email}" style="color:#5C5B47">${email}</a></td></tr>

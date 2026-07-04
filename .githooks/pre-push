@@ -1,9 +1,9 @@
-#!/bin/sh
-# Sacred Healing pre-push hook — runs test suite before any git push
+﻿#!/bin/sh
+# 6R Ascension pre-push hook — runs test suite before any git push
 set -e
 
 echo ""
-echo "✦ Sacred Healing — Running test suite before push..."
+echo "✦ 6R Ascension — Running test suite before push..."
 echo ""
 
 npm test

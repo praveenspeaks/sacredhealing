@@ -12,6 +12,7 @@ showPage = function(pageId) {
     if (pageId === 'reviews') loadReviews();
     if (pageId === 'faqs') loadFaqs();
     if (pageId === 'navigation') loadNavConfig();
+    if (pageId === 'resources') loadResources();
 };
 
 async function loadContent() {
@@ -835,6 +836,7 @@ const NAV_SECTION_LABELS = {
     contact:          'Contact / Book Session',
     disclaimer:       'Legal Disclaimer',
     cancellation:     'Cancellation Policy',
+    resources:        'Free Resources',
     'reduced-rate':   'Reduced-Rate Access',
 };
 
@@ -857,7 +859,7 @@ async function loadNavConfig() {
 }
 
 function navSortedKeys() {
-    const all = ['about', 'philosophy', 'story', 'services', 'process', 'testimonials', 'clarity-call', 'faq', 'contact', 'disclaimer', 'cancellation', 'reduced-rate'];
+    const all = ['about', 'philosophy', 'story', 'services', 'process', 'testimonials', 'clarity-call', 'faq', 'contact', 'disclaimer', 'cancellation', 'resources', 'reduced-rate'];
     return all.sort((a, b) => {
         const oA = navConfigState[a] ? (navConfigState[a].order || 99) : 99;
         const oB = navConfigState[b] ? (navConfigState[b].order || 99) : 99;
@@ -989,5 +991,173 @@ async function saveNavConfig() {
         }
     } catch(e) {
         toast('Error saving navigation', 'error');
+    }
+}
+
+// ── FREE RESOURCES ────────────────────────────────────────────
+
+let resourcesList = [];
+let editResourceId = null;
+
+async function loadResources() {
+    try {
+        const res = await fetch('/api/admin/resources', {
+            headers: { 'x-admin-password': adminToken }
+        });
+        const data = await res.json();
+        resourcesList = data.resources || [];
+        renderResourcesList();
+    } catch(e) {
+        toast('Failed to load resources', 'error');
+    }
+}
+
+function fmtDate(iso) {
+    try { return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }); } catch(e) { return ''; }
+}
+
+function renderResourcesList() {
+    const el = document.getElementById('resources-list');
+    if (!el) return;
+    if (!resourcesList.length) {
+        el.innerHTML = '<p style="padding:1.5rem;color:var(--muted);">No posts yet. Create your first post using the form.</p>';
+        return;
+    }
+    el.innerHTML = resourcesList.map(r => {
+        const pubBadge = r.published
+            ? `<span style="background:#10B98122;color:#10B981;border-radius:4px;padding:0.15rem 0.5rem;font-size:0.72rem;font-weight:700;">Published</span>`
+            : `<span style="background:#71717A22;color:var(--muted);border-radius:4px;padding:0.15rem 0.5rem;font-size:0.72rem;font-weight:700;">Draft</span>`;
+        const ytTag = r.youtube_url ? `<span style="font-size:0.72rem;color:#EF4444;margin-left:0.4rem;">▶ YouTube</span>` : '';
+        const linkTag = r.link_url ? `<span style="font-size:0.72rem;color:var(--gold);margin-left:0.4rem;">🔗 Link</span>` : '';
+        const preview = (r.body || '').slice(0, 80) + (r.body && r.body.length > 80 ? '…' : '');
+        return `
+        <div style="border-bottom:1px solid var(--border);padding:1rem 1.25rem;">
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:0.75rem;flex-wrap:wrap;">
+            <div style="flex:1;min-width:0;">
+              <div style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;margin-bottom:0.3rem;">
+                ${pubBadge}
+                ${ytTag}${linkTag}
+                <span style="font-size:0.72rem;color:var(--muted);">${fmtDate(r.created_at)}</span>
+              </div>
+              ${r.title ? `<div style="font-weight:600;color:var(--cream);margin-bottom:0.2rem;">${r.title}</div>` : ''}
+              ${preview ? `<div style="font-size:0.82rem;color:var(--muted);white-space:pre-wrap;">${preview}</div>` : ''}
+            </div>
+            <div style="display:flex;gap:0.4rem;flex-shrink:0;">
+              <button class="btn-sm" onclick="toggleResourcePublish(${r.id},${r.published})" title="${r.published ? 'Unpublish' : 'Publish'}" style="padding:0.25rem 0.6rem;font-size:0.78rem;">${r.published ? 'Unpublish' : 'Publish'}</button>
+              <button class="btn-sm btn-primary" onclick="editResource(${r.id})" style="padding:0.25rem 0.6rem;font-size:0.78rem;">Edit</button>
+              <button class="btn-sm btn-danger" onclick="deleteResource(${r.id})" style="padding:0.25rem 0.6rem;font-size:0.78rem;">Delete</button>
+            </div>
+          </div>
+        </div>`;
+    }).join('');
+}
+
+function editResource(id) {
+    const r = resourcesList.find(x => x.id === id);
+    if (!r) return;
+    editResourceId = id;
+    document.getElementById('res-title').value = r.title || '';
+    document.getElementById('res-body').value = r.body || '';
+    document.getElementById('res-link-url').value = r.link_url || '';
+    document.getElementById('res-link-label').value = r.link_label || '';
+    document.getElementById('res-youtube').value = r.youtube_url || '';
+    document.getElementById('res-published').checked = !!r.published;
+    document.getElementById('resource-form-title').textContent = 'Edit Post';
+    document.getElementById('res-save-btn').textContent = '💾 Update Post';
+    document.getElementById('res-cancel-btn').style.display = 'inline-block';
+    document.getElementById('res-title').focus();
+    document.getElementById('resource-form-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function cancelResourceEdit() {
+    editResourceId = null;
+    document.getElementById('res-title').value = '';
+    document.getElementById('res-body').value = '';
+    document.getElementById('res-link-url').value = '';
+    document.getElementById('res-link-label').value = '';
+    document.getElementById('res-youtube').value = '';
+    document.getElementById('res-published').checked = false;
+    document.getElementById('resource-form-title').textContent = 'New Post';
+    document.getElementById('res-save-btn').textContent = '💾 Save Post';
+    document.getElementById('res-cancel-btn').style.display = 'none';
+}
+
+async function saveResource() {
+    const body = {
+        title:       document.getElementById('res-title').value.trim(),
+        body:        document.getElementById('res-body').value.trim(),
+        link_url:    document.getElementById('res-link-url').value.trim(),
+        link_label:  document.getElementById('res-link-label').value.trim(),
+        youtube_url: document.getElementById('res-youtube').value.trim(),
+        published:   document.getElementById('res-published').checked,
+    };
+    if (!body.title && !body.body && !body.youtube_url) {
+        return toast('Add a title, text, or YouTube URL', 'error');
+    }
+    const btn = document.getElementById('res-save-btn');
+    btn.disabled = true; btn.textContent = 'Saving…';
+    try {
+        const url = editResourceId ? `/api/admin/resources/${editResourceId}` : '/api/admin/resources';
+        const method = editResourceId ? 'PUT' : 'POST';
+        const res = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json', 'x-admin-password': adminToken },
+            body: JSON.stringify(body)
+        });
+        if (res.ok) {
+            toast(editResourceId ? 'Post updated' : 'Post created', 'success');
+            cancelResourceEdit();
+            loadResources();
+        } else {
+            toast('Failed to save post', 'error');
+        }
+    } catch(e) {
+        toast('Error saving post', 'error');
+    } finally {
+        btn.disabled = false;
+        btn.textContent = editResourceId ? '💾 Update Post' : '💾 Save Post';
+    }
+}
+
+async function deleteResource(id) {
+    if (!confirm('Delete this post? This cannot be undone.')) return;
+    try {
+        const res = await fetch(`/api/admin/resources/${id}`, {
+            method: 'DELETE',
+            headers: { 'x-admin-password': adminToken }
+        });
+        if (res.ok) {
+            toast('Post deleted', 'success');
+            if (editResourceId === id) cancelResourceEdit();
+            loadResources();
+        } else {
+            toast('Failed to delete post', 'error');
+        }
+    } catch(e) {
+        toast('Error deleting post', 'error');
+    }
+}
+
+async function toggleResourcePublish(id, currentlyPublished) {
+    const r = resourcesList.find(x => x.id === id);
+    if (!r) return;
+    try {
+        const res = await fetch(`/api/admin/resources/${id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json', 'x-admin-password': adminToken },
+            body: JSON.stringify({
+                title: r.title, body: r.body, link_url: r.link_url,
+                link_label: r.link_label, youtube_url: r.youtube_url,
+                published: !currentlyPublished
+            })
+        });
+        if (res.ok) {
+            toast(currentlyPublished ? 'Post unpublished' : 'Post published — visible on site!', 'success');
+            loadResources();
+        } else {
+            toast('Failed to update', 'error');
+        }
+    } catch(e) {
+        toast('Error updating post', 'error');
     }
 }

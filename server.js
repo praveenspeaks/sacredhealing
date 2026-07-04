@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const cors = require('cors');
 const path = require('path');
 require('dotenv').config();
@@ -21,6 +21,39 @@ app.set('trust proxy', 1);
 const corsOrigin = process.env.ALLOWED_ORIGIN;
 app.use(cors(corsOrigin ? { origin: corsOrigin } : {}));
 app.use(express.json());
+
+// ── Cookie-banner served from memory so it is always current ──
+const COOKIE_BANNER_JS = `(function(){
+  var K='sh_cookie_consent';
+  function ok(){try{return localStorage.getItem(K)==='accepted'}catch(e){return false}}
+  function dismiss(){var e=document.getElementById('sh-cookie-banner');if(!e)return;e.style.transition='opacity .4s,transform .4s';e.style.opacity='0';e.style.transform='translateY(100%)';setTimeout(function(){if(e.parentNode)e.parentNode.removeChild(e)},420)}
+  function inject(){
+    if(ok())return;
+    if(document.getElementById('sh-cookie-banner'))return;
+    if(!document.body)return;
+    var y=new Date().getFullYear();
+    var s=document.createElement('style');
+    s.textContent='#sh-cookie-banner{position:fixed;bottom:0;left:0;right:0;z-index:99999;background:#1a1814;border-top:1px solid rgba(218,180,103,.25);padding:1rem 1.5rem;display:flex;align-items:center;gap:1.25rem;flex-wrap:wrap;justify-content:space-between;box-shadow:0 -4px 24px rgba(0,0,0,.45);font-family:Raleway,sans-serif;font-size:.83rem;color:#c9c4b8;line-height:1.55}#sh-cookie-banner .shT{flex:1;min-width:220px}#sh-cookie-banner strong{color:#DAB467}#sh-cookie-banner a{color:#DAB467;text-underline-offset:3px}#sh-cookie-banner .shC{font-size:.73rem;color:#6b6760;margin-top:.2rem}#sh-cookie-banner .shA{display:flex;gap:.6rem;flex-shrink:0;align-items:center;flex-wrap:wrap}#sh-cookie-banner .shOk{padding:.55rem 1.4rem;background:#DAB467;color:#1a1814;border:none;border-radius:6px;font-weight:700;font-size:.82rem;cursor:pointer;font-family:inherit;white-space:nowrap}#sh-cookie-banner .shNo{padding:.55rem 1rem;background:transparent;color:#9ca3af;border:1px solid rgba(156,163,175,.3);border-radius:6px;font-size:.8rem;cursor:pointer;font-family:inherit;white-space:nowrap}@media(max-width:600px){#sh-cookie-banner .shA{width:100%}}';
+    document.head.appendChild(s);
+    var b=document.createElement('div');b.id='sh-cookie-banner';
+    var t=document.createElement('div');t.className='shT';
+    t.innerHTML='<div><strong>6R Ascension</strong> uses cookies to enhance your experience and analyse site traffic. By continuing you agree to our use of cookies.</div><div class="shC">© '+y+' 6R Ascension · Reena. All rights reserved.  ·  <a href="/disclaimer.html" target="_blank" rel="noopener">Privacy &amp; Disclaimer<\/a><\/div>';
+    var a=document.createElement('div');a.className='shA';
+    var no=document.createElement('button');no.className='shNo';no.textContent='Decline';
+    no.onclick=function(){try{localStorage.setItem(K,'declined')}catch(e){}dismiss()};
+    var yes=document.createElement('button');yes.className='shOk';yes.textContent='Accept Cookies ✦';
+    yes.onclick=function(){try{localStorage.setItem(K,'accepted')}catch(e){}dismiss()};
+    a.appendChild(no);a.appendChild(yes);b.appendChild(t);b.appendChild(a);document.body.appendChild(b);
+  }
+  if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',inject)}else{inject()}
+})();`;
+
+app.get('/cookie-banner.js', (req, res) => {
+  res.type('application/javascript');
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.send(COOKIE_BANNER_JS);
+});
+
 app.use(express.static(path.join(__dirname)));
 
 // ── Rate limiters ───────────────────────────────────────────
@@ -153,6 +186,21 @@ async function initDatabase() {
   await pool.query(`ALTER TABLE bookings ADD COLUMN IF NOT EXISTS session_type TEXT`);
   // Package pricing: optional discounted per-session price for bulk bookings
   await pool.query(`ALTER TABLE services ADD COLUMN IF NOT EXISTS package_price NUMERIC(10,2) DEFAULT NULL`);
+
+  // Free Resources posts
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS resources (
+      id          SERIAL PRIMARY KEY,
+      title       TEXT NOT NULL DEFAULT '',
+      body        TEXT DEFAULT '',
+      link_url    TEXT DEFAULT '',
+      link_label  TEXT DEFAULT '',
+      youtube_url TEXT DEFAULT '',
+      published   BOOLEAN DEFAULT FALSE,
+      sort_order  INTEGER DEFAULT 0,
+      created_at  TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
 }
 
 // Reads the session location from site_content (editable in Admin → Content).
@@ -231,6 +279,33 @@ async function getServiceBulkPrice(serviceName, duration) {
   return parseFloat(row.price) || 0;
 }
 
+// ── SEO: robots.txt and sitemap.xml ────────────────────────────────────────
+app.get('/robots.txt', (req, res) => {
+  const base = process.env.BASE_URL || `http://localhost:${PORT}`;
+  res.type('text/plain');
+  res.send(`User-agent: *\nAllow: /\nDisallow: /admin\nDisallow: /api/\n\nSitemap: ${base}/sitemap.xml\n`);
+});
+
+app.get('/sitemap.xml', async (req, res) => {
+  const base = (process.env.BASE_URL || `http://localhost:${PORT}`).replace(/\/$/, '');
+  const now  = new Date().toISOString().split('T')[0];
+  try {
+    const svcRes = await pool.query('SELECT slug, title FROM services WHERE slug IS NOT NULL ORDER BY sort_order, id');
+    const staticUrls = ['', '/about', '/philosophy', '/story', '/services', '/process', '/testimonials', '/faq', '/contact', '/disclaimer', '/resources'];
+    const urls = [
+      ...staticUrls.map(p => ({ loc: base + p, priority: p === '' ? '1.0' : '0.8', changefreq: 'weekly' })),
+      ...(svcRes.rows || []).map(s => ({ loc: `${base}/services/${s.slug}`, priority: '0.7', changefreq: 'monthly' })),
+    ];
+    const xml = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n` +
+      urls.map(u => `  <url><loc>${u.loc}</loc><lastmod>${now}</lastmod><changefreq>${u.changefreq}</changefreq><priority>${u.priority}</priority></url>`).join('\n') +
+      `\n</urlset>`;
+    res.type('application/xml');
+    res.send(xml);
+  } catch (e) {
+    res.status(500).send('<?xml version="1.0"?><error>Failed to generate sitemap</error>');
+  }
+});
+
 // Multi-page section routes (must be before /services/:slug)
 app.get('/about',        (req, res) => res.sendFile(path.join(__dirname, 'about.html')));
 app.get('/philosophy',   (req, res) => res.sendFile(path.join(__dirname, 'philosophy.html')));
@@ -242,6 +317,55 @@ app.get('/faq',          (req, res) => res.sendFile(path.join(__dirname, 'faq.ht
 app.get('/contact',      (req, res) => res.sendFile(path.join(__dirname, 'contact.html')));
 app.get('/disclaimer',   (req, res) => res.sendFile(path.join(__dirname, 'disclaimer.html')));
 app.get('/cancellation', (req, res) => res.sendFile(path.join(__dirname, 'cancellation.html')));
+app.get('/resources',    (req, res) => res.sendFile(path.join(__dirname, 'resources.html')));
+
+// ── Resources API ───────────────────────────────────────────────────────────
+app.get('/api/resources', async (req, res) => {
+  try {
+    const r = await pool.query('SELECT * FROM resources WHERE published = TRUE ORDER BY sort_order ASC, created_at DESC');
+    res.json({ resources: r.rows });
+  } catch (e) { res.status(500).json({ error: 'Failed to load resources' }); }
+});
+
+app.get('/api/admin/resources', requireAdmin, async (req, res) => {
+  try {
+    const r = await pool.query('SELECT * FROM resources ORDER BY sort_order ASC, created_at DESC');
+    res.json({ resources: r.rows });
+  } catch (e) { res.status(500).json({ error: 'Failed to load resources' }); }
+});
+
+app.post('/api/admin/resources', requireAdmin, async (req, res) => {
+  const { title = '', body = '', link_url = '', link_label = '', youtube_url = '', published = false } = req.body;
+  try {
+    const maxOrder = await pool.query('SELECT COALESCE(MAX(sort_order),0) AS m FROM resources');
+    const order = (maxOrder.rows[0]?.m || 0) + 10;
+    const r = await pool.query(
+      'INSERT INTO resources (title, body, link_url, link_label, youtube_url, published, sort_order) VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *',
+      [title, body, link_url, link_label, youtube_url, published, order]
+    );
+    res.json({ resource: r.rows[0] });
+  } catch (e) { res.status(500).json({ error: 'Failed to create resource' }); }
+});
+
+app.put('/api/admin/resources/:id', requireAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { title, body, link_url, link_label, youtube_url, published } = req.body;
+  try {
+    const r = await pool.query(
+      `UPDATE resources SET title=$1, body=$2, link_url=$3, link_label=$4, youtube_url=$5, published=$6 WHERE id=$7 RETURNING *`,
+      [title, body, link_url, link_label, youtube_url, published, id]
+    );
+    if (!r.rows.length) return res.status(404).json({ error: 'Not found' });
+    res.json({ resource: r.rows[0] });
+  } catch (e) { res.status(500).json({ error: 'Failed to update resource' }); }
+});
+
+app.delete('/api/admin/resources/:id', requireAdmin, async (req, res) => {
+  try {
+    await pool.query('DELETE FROM resources WHERE id=$1', [req.params.id]);
+    res.json({ ok: true });
+  } catch (e) { res.status(500).json({ error: 'Failed to delete resource' }); }
+});
 
 // Route: /services/spiritual-healing  →  serves service.html
 app.get('/services/:slug', (req, res) => {
@@ -266,11 +390,11 @@ app.get('/cancel', async (req, res) => {
 
   const booking = result.rows[0];
   if (!booking) {
-    return res.send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Sacred Healing</title>
+    return res.send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>6R Ascension</title>
       <style>body{font-family:Georgia,serif;background:#0a0a0a;color:#FDFCF8;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;}
       .box{text-align:center;padding:3rem;max-width:480px;}h1{color:#DAB467;}a{color:#DAB467;}</style></head>
-      <body><div class="box"><h1>✦ Sacred Healing</h1><p>This cancellation link is invalid or has already been used.</p>
-      <p><a href="/">Return to Sacred Healing →</a></p></div></body></html>`);
+      <body><div class="box"><h1>✦ 6R Ascension</h1><p>This cancellation link is invalid or has already been used.</p>
+      <p><a href="/">Return to 6R Ascension →</a></p></div></body></html>`);
   }
 
   const client = await pool.connect();
@@ -286,18 +410,18 @@ app.get('/cancel', async (req, res) => {
     client.release();
   }
 
-  res.send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Booking Cancelled — Sacred Healing</title>
+  res.send(`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Booking Cancelled — 6R Ascension</title>
     <style>body{font-family:Georgia,serif;background:#0a0a0a;color:#FDFCF8;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;}
     .box{text-align:center;padding:3rem;max-width:520px;}h1{color:#DAB467;margin-bottom:0.5rem;}
     p{color:#A1A1AA;line-height:1.7;}a{color:#DAB467;}</style></head>
     <body><div class="box">
-      <h1>✦ Sacred Healing</h1>
+      <h1>✦ 6R Ascension</h1>
       <h2 style="margin-bottom:1.5rem;">Booking Cancelled</h2>
       <p>Your <strong>${booking.service}</strong> session on
          <strong>${new Date(booking.date + 'T00:00:00').toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}</strong>
          at <strong>${booking.time}</strong> has been cancelled.</p>
       <p style="margin-top:1.5rem;">We hope to see you again soon.</p>
-      <p style="margin-top:2rem;"><a href="/">Return to Sacred Healing →</a></p>
+      <p style="margin-top:2rem;"><a href="/">Return to 6R Ascension →</a></p>
     </div></body></html>`);
 });
 
@@ -1531,7 +1655,7 @@ async function start() {
   cleanupAbandonedBookings();
   setInterval(cleanupAbandonedBookings, 10 * 60 * 1000);
   app.listen(PORT, () => {
-    console.log(`\n✦ Sacred Healing Server running at http://localhost:${PORT}`);
+    console.log(`\n✦ 6R Ascension Server running at http://localhost:${PORT}`);
     console.log(`✦ Admin Panel: http://localhost:${PORT}/admin`);
     console.log(`✦ Admin Password: [set — check .env or ADMIN_PASSWORD env var]\n`);
   });

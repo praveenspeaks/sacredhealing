@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -56,21 +56,21 @@ module.exports = {
 
     // ── Upsert site_content with real content ────────────────
     const realContent = {
-      'logo_main_text':     'Sacred Healing',
+      'logo_main_text':     '6R Ascension',
       'logo_slogan':        'सफलम् जन्मम् प्रवासम्',
-      'hero_title':         'Welcome to<br /><em class="gold-text">SoulBody Healing</em>',
+      'hero_title':         'Welcome to<br /><em class="gold-text">6R Ascension</em>',
       'hero_subtitle':      "Your healing sanctuary. We're dedicated to guiding you on a journey of self-discovery, self-love, healing and well-being. Discover how our unique services can help you find yourself and unlock your true potential.",
       'hero_button_text':   'Begin Your Journey →',
       'explore_button_text':'Explore Services',
       'about_title':        'Reena — Your<br /><em>Healing Guide</em>',
       'about_paragraph1':   "Reena's journey into healing began in childhood, guided by her mother's wisdom. After experiencing personal loss, she embarked on a spiritual journey, exploring various healing modalities that transformed her understanding of consciousness. It was during her Past Life Regression sessions with her clients that she discovered her clairvoyant gift. The passing of her mother during COVID led her to deepen her understanding of energy, leading her on another journey of healing grief.",
       'about_paragraph2':   "Reena is a Tier 1 Certified Holden QiGong Instructor, teaching Qi Gong and meditation. She is also a certified Regression Therapist, Hypnotherapist, Reiki & Integrated Energy Therapist, and Intuitive/Tarot Card Reader. We work as per divine guidance — for you, with you, with divine wisdom and light.",
-      'contact_email':      'hello@soulbody.healing.com',
+      'contact_email':      'hello@6rascension.com',
       'contact_phone':      '+44 7700 900000',
       'contact_location':   'Croydon, London',
       'footer_tagline':     'Ancient Wisdom · Infinite Healing<br />Croydon, London &amp; Online Sessions Available',
       'footer_online_text': '🌐 Online Sessions Available',
-      'footer_copyright':   '© 2026 SoulBody Healing · Reena. All rights reserved. Crafted with ✦ love &amp; light.',
+      'footer_copyright':   '© 2026 6R Ascension · Reena. All rights reserved. Crafted with ✦ love &amp; light.',
       'footer_credit':      'Site designed &amp; developed by <a href="https://shivayinfotech.co.uk/" target="_blank" rel="noopener" style="color:inherit;text-decoration:underline;text-underline-offset:3px;">Shivay Infotech Ltd.</a>',
       'logo_img':            'assets/logo-sbh.png',
       'hero_bg_img':         '',
@@ -87,7 +87,7 @@ module.exports = {
       'rs_1_img': '', 'rs_2_img': '', 'rs_3_img': '',
       'rs_4_img': '', 'rs_5_img': '', 'rs_6_img': '',
 
-      // 6 R's of Sacred Healing
+      // 6 R's of 6R Ascension
       'rs_1_title':   'Recognise',
       'rs_1_tagline': '"Identify what is stopping you from reaching your full potential"',
       'rs_1_desc':    'Identify your masks, patterns, triggers and reactions.',
@@ -120,9 +120,31 @@ module.exports = {
       // Our Story section
       'story_tag':        '✦ Our Story',
       'story_heading':    'Born from a<br><em>Deep Calling</em>',
-      'story_paragraph1': 'Sacred Journey was born from a deep calling to serve those seeking spiritual awakening and healing. What began as a small practice has blossomed into a thriving community of souls committed to growth and transformation. We have walked alongside countless individuals on their paths to wholeness, witnessing profound shifts in consciousness and miraculous healings of body, mind, and spirit.',
+      'story_paragraph1': '6R Ascension was born from a deep calling to serve those seeking spiritual awakening and healing. What began as a small practice has blossomed into a thriving community of souls committed to growth and transformation. We have walked alongside countless individuals on their paths to wholeness, witnessing profound shifts in consciousness and miraculous healings of body, mind, and spirit.',
       'story_paragraph2': 'We believe that true healing comes from within, and our role is to facilitate your connection to your own inner wisdom and divine guidance.',
-      'story_image':      '/assets/story-room.jpg'
+      'story_image':      '/assets/story-room.jpg',
+
+      // Cancellation Policy page
+      'cancellation_heading':  'Rescheduling &amp; <em>Cancellations</em>',
+      'cancellation_para1':    'We understand that life is unpredictable. If you need to cancel or reschedule your session, we ask for at least <strong>24 hours\' notice</strong> so that the time can be offered to someone else who needs it.',
+      'cancellation_para2':    'Sessions cancelled with <strong>48 or more hours\' notice</strong> will receive a full refund or session credit. Cancellations made with less than 24 hours\' notice, or missed sessions without prior contact, may not be eligible for a refund or rescheduling.',
+      'cancellation_para3':    'To reschedule, please reach out as early as possible. We will always do our best to find an alternative time that works for you.',
+      'cancellation_para4':    'We appreciate your understanding — thoughtful cancellations help us serve all clients with the care and dedication they deserve.',
+      'cancellation_cta_text': 'Get in Touch →',
+
+      // Legal Disclaimer page
+      'disclaimer_intro':         'These sessions are intended for personal insight, healing, and spiritual exploration and are not a substitute for medical, psychiatric, legal, or financial advice.',
+      'disclaimer_para1':         'We are required by UK Law to state that all readings and insights given are for entertainment purposes only, and no guarantee can be given as to the accuracy of a reading. Due to the metaphysical and interpretive nature of these sessions, insights are subject to interpretation and should not be taken as absolute. Intuitive reading is never 100% accurate.',
+      'disclaimer_para2':         'A spiritual healing session or reading does not replace professional Medical, Legal, or Business opinion and advice. It will not force you to follow a particular course of action, or attempt to exert any form of control over your free will and common sense. The contents of any insights from such sessions are not legally binding.',
+      'disclaimer_para3':         'Any decisions made, or actions taken by you as a result of your session with Reena are your sole responsibility. We assume no legal liability for any damages, losses, or other consequences of any client decisions, subsequent to, or based on, her sessions or insights.',
+      'disclaimer_para4':         'Reena can choose to stop the reading at any time, and so can the client.',
+      'disclaimer_notice_title':  'Our Services are NOT a Substitute for Professional Advice',
+      'disclaimer_notice_para':   'Our services are not a replacement for professional advice or treatment. Reena is not a qualified medical practitioner, counsellor, or financial or legal advisor. She will not make any medical claims or diagnosis within her practice.',
+      'disclaimer_list_1':        'Any health or medical guidance must be confirmed with a licensed medical professional before taking action.',
+      'disclaimer_list_2':        'If you are experiencing mental or physical distress, please seek immediate guidance from a qualified professional.',
+      'disclaimer_list_3':        'We do not offer sessions to anyone under 18 years of age, under the influence of alcohol or drugs, or undergoing mental health treatments.',
+      'disclaimer_list_4':        'These sessions are not suitable for people who suffer from clinical depression or are undergoing psychiatric therapy.',
+      'disclaimer_consent':       'By booking a session with Reena, you confirm you are 18 years of age or over and that you have read and agree with the full legal disclaimer stated above.',
     };
     // Contact page content — use DO NOTHING so admin edits survive restarts
     const contactPageDefaults = {
@@ -177,7 +199,8 @@ module.exports = {
       contact:        { location: 'page', label: 'Contact',             header: true,  footer: true,  order: 60 },
       disclaimer:     { location: 'page', label: 'Legal Notice',        header: false, footer: true,  order: 70 },
       cancellation:   { location: 'page', label: 'Cancellation Policy', header: false, footer: true,  order: 71 },
-      'reduced-rate': { location: 'page', label: 'Reduced-Rate Access', header: false, footer: false, order: 72 },
+      resources:      { location: 'page', label: 'Free Resources',      header: true,  footer: true,  order: 72 },
+      'reduced-rate': { location: 'page', label: 'Reduced-Rate Access', header: false, footer: false, order: 73 },
     };
     // Insert defaults for fresh installs only — never overwrite admin-saved settings
     await pool.query(
@@ -228,7 +251,7 @@ module.exports = {
           sessionType: 'One-on-one or Remote healing',
           bestFor: 'Emotional release, energy restoration, stress relief',
           longDescription: [
-            'At SoulBody Healing, we offer transformative spiritual healing services designed to harmonise your mind, body, and spirit. We guide you on a journey of self-discovery and rejuvenation, helping release emotional blocks and promote inner peace.',
+            'At 6R Ascension, we offer transformative spiritual healing services designed to harmonise your mind, body, and spirit. We guide you on a journey of self-discovery and rejuvenation, helping release emotional blocks and promote inner peace.',
             'Embrace a holistic approach to wellness that nurtures your soul and revitalises your body, empowering you to live your best life. Our sessions release blockages and restore balance — best for emotional release, energy restoration and stress relief.'
           ],
           expect: [
@@ -272,7 +295,7 @@ module.exports = {
           sessionType: 'In-person guided regression',
           bestFor: 'Pattern recognition, karmic healing, soul exploration',
           longDescription: [
-            'SoulBody Healing offers transformative past life regression therapy, guiding you on a journey through time to uncover and heal wounds from previous incarnations.',
+            '6R Ascension offers transformative past life regression therapy, guiding you on a journey through time to uncover and heal wounds from previous incarnations.',
             'This powerful process helps you understand recurring patterns, release karmic bonds and integrate valuable soul wisdom into your present life. Experience profound healing and renewal for a more harmonious existence.'
           ],
           expect: [
@@ -316,7 +339,7 @@ module.exports = {
           sessionType: 'In-person or Remote healing',
           bestFor: 'Breaking family patterns, generational healing, lineage clearing',
           longDescription: [
-            'At SoulBody Healing, we empower you to break free from inherited family patterns and heal generational trauma. Through profound ancestral work, we help identify and release limiting beliefs, behaviours and energetic imprints passed down through your lineage.',
+            'At 6R Ascension, we empower you to break free from inherited family patterns and heal generational trauma. Through profound ancestral work, we help identify and release limiting beliefs, behaviours and energetic imprints passed down through your lineage.',
             'Reclaim your authentic path and forge new patterns for future generations, fostering a legacy of well-being and resilience.'
           ],
           expect: [
@@ -338,7 +361,7 @@ module.exports = {
           sessionType: 'In-person or Remote',
           bestFor: 'Relaxation, stress relief, inner peace',
           longDescription: [
-            'At SoulBody Healing, we invite you to embark on a transformative journey of meditation and visualisation, designed to promote self-healing and deep relaxation.',
+            'At 6R Ascension, we invite you to embark on a transformative journey of meditation and visualisation, designed to promote self-healing and deep relaxation.',
             'Our expert-guided sessions foster a calm environment that encourages restoration of both mind and body. Experience the rejuvenating power of our holistic practices and awaken your inner peace.'
           ],
           expect: [
@@ -413,8 +436,8 @@ module.exports = {
     const reviewCountResult = await pool.query('SELECT COUNT(*) as c FROM reviews');
     if (parseInt(reviewCountResult.rows[0].c) === 0) {
       const seedReviews = [
-        ['Anonymous', 'I was hesitant at first, but the 10-minute courtesy call eased my worries. I immediately felt comfortable and trusted the process. Thank you, SoulBody Healing.', 'approved'],
-        ['Anonymous', 'After just one session, I felt lighter and more at peace. I truly believe I have been healed. I highly recommend SoulBody Healing to anyone seeking clarity and healing.', 'approved'],
+        ['Anonymous', 'I was hesitant at first, but the 10-minute courtesy call eased my worries. I immediately felt comfortable and trusted the process. Thank you, 6R Ascension.', 'approved'],
+        ['Anonymous', 'After just one session, I felt lighter and more at peace. I truly believe I have been healed. I highly recommend 6R Ascension to anyone seeking clarity and healing.', 'approved'],
         ['Anonymous', 'I felt truly empowered after my session. The tips I received are helping me navigate my journey with confidence. I now feel in tune with self.', 'approved']
       ];
       for (const [author, comment, status] of seedReviews) {

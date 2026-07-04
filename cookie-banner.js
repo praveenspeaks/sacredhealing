@@ -1,4 +1,4 @@
-/**
+﻿/**
  * cookie-banner.js — Cookie & copyright consent banner
  * Standalone script; loaded independently on every public page.
  */
@@ -80,8 +80,8 @@
 
     var textDiv = document.createElement('div');
     textDiv.className = 'sh-cb-text';
-    textDiv.innerHTML = '<div><strong>Sacred Healing</strong> uses cookies to enhance your browsing experience and analyse site traffic. By continuing to use this site you agree to our use of cookies.</div>' +
-      '<div class="sh-cb-copy">© ' + year + ' SoulBody Healing · Reena. All rights reserved.  ·  <a href="/disclaimer.html" target="_blank" rel="noopener">Privacy &amp; Disclaimer</a></div>';
+    textDiv.innerHTML = '<div><strong>6R Ascension</strong> uses cookies to enhance your browsing experience and analyse site traffic. By continuing to use this site you agree to our use of cookies.</div>' +
+      '<div class="sh-cb-copy">© ' + year + ' 6R Ascension · Reena. All rights reserved.  ·  <a href="/disclaimer.html" target="_blank" rel="noopener">Privacy &amp; Disclaimer</a></div>';
 
     var actionsDiv = document.createElement('div');
     actionsDiv.className = 'sh-cb-actions';

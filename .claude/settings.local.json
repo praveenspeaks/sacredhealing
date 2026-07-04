@@ -62,7 +62,8 @@
       "Bash(node -e \"const {pool} = require\\('./server'\\); pool.query\\('SELECT 1'\\).then\\(r => { console.log\\('DB OK'\\); pool.end\\(\\); }\\).catch\\(e => { console.log\\('DB FAIL:', e.message\\); pool.end\\(\\); }\\)\")",
       "Bash(node -e \"require\\('./tests/api.test.js'\\)\")",
       "Bash(node --check booking-widget.js)",
-      "Bash(node --check \"d:/My Professional Projects/sacredhealing/cookie-banner.js\")"
+      "Bash(node --check \"d:/My Professional Projects/sacredhealing/cookie-banner.js\")",
+      "Bash(xargs -I{} basename {})"
     ]
   }
 }

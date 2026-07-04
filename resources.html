@@ -1,0 +1,188 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Free Resources — 6R Ascension</title>
+  <meta name="description" content="Free healing resources, guides, and wisdom from Reena at 6R Ascension. Watch videos, read articles, and access tools to support your journey." />
+  <link rel="icon" type="image/png" href="/assets/logo-sbh.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,600&family=Raleway:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/style.css" />
+  <style>
+    .res-hero { min-height: auto; padding: 130px 0 3rem; background: var(--indigo, #1a1a2e); text-align: center; }
+    .res-hero .section-tag { justify-content: center; margin-bottom: 0.75rem; }
+    .res-hero h1 { font-family: var(--font-heading, 'Cormorant Garamond', serif); font-size: clamp(2.4rem, 5vw, 4rem); font-weight: 300; color: var(--cream, #f7f5f0); line-height: 1.15; margin: 0 0 1rem; }
+    .res-hero h1 em { font-style: italic; color: var(--gold, #DAB467); }
+    .res-hero p { color: rgba(255,255,255,0.6); font-size: 1rem; line-height: 1.8; max-width: 520px; margin: 0 auto; }
+
+    .res-grid { padding: 4rem 0 6rem; background: var(--cream-light, #faf8f4); }
+    .res-posts { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 2rem; }
+
+    .res-card {
+      background: #fff; border-radius: 16px; box-shadow: 0 4px 24px rgba(0,0,0,0.07);
+      overflow: hidden; display: flex; flex-direction: column; transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .res-card:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(0,0,0,0.11); }
+
+    /* YouTube embed */
+    .res-yt { position: relative; padding-top: 56.25%; background: #000; cursor: pointer; flex-shrink: 0; }
+    .res-yt img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .res-yt .play-btn {
+      position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    }
+    .res-yt .play-btn svg { width: 64px; height: 64px; filter: drop-shadow(0 2px 8px rgba(0,0,0,0.5)); transition: transform 0.2s; }
+    .res-yt:hover .play-btn svg { transform: scale(1.1); }
+    .res-yt iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: none; }
+
+    .res-body { padding: 1.5rem; flex: 1; display: flex; flex-direction: column; gap: 0.75rem; }
+    .res-title { font-family: var(--font-heading, 'Cormorant Garamond', serif); font-size: 1.35rem; font-weight: 500; color: var(--charcoal, #1a1a2e); line-height: 1.25; margin: 0; }
+    .res-text { font-size: 0.9rem; color: var(--text-body, #5a5a4e); line-height: 1.75; white-space: pre-wrap; flex: 1; }
+    .res-link { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.55rem 1.25rem; background: var(--gold, #DAB467); color: var(--charcoal, #1a1a2e); border-radius: 6px; font-size: 0.82rem; font-weight: 700; text-decoration: none; transition: background 0.18s; margin-top: auto; align-self: flex-start; }
+    .res-link:hover { background: #c9a353; }
+    .res-date { font-size: 0.72rem; color: #aaa; }
+
+    .res-empty { text-align: center; padding: 5rem 2rem; grid-column: 1/-1; }
+    .res-empty h3 { font-family: var(--font-heading, 'Cormorant Garamond', serif); font-size: 1.6rem; color: var(--charcoal, #1a1a2e); font-weight: 300; margin-bottom: 0.5rem; }
+    .res-empty p { color: var(--text-body, #5a5a4e); font-size: 0.92rem; }
+  </style>
+</head>
+<body>
+
+  <div id="nav-backdrop" style="display:none;position:fixed;inset:0;z-index:998;background:rgba(0,0,0,0.5);backdrop-filter:blur(2px);"></div>
+
+  <nav class="navbar" id="navbar">
+    <div class="nav-container">
+      <a href="/" class="nav-logo">
+        <div class="logo-circle">
+          <img src="/assets/logo-sbh.png" alt="6R Ascension Logo" class="logo-img" id="logo_img" />
+        </div>
+        <div class="logo-text">
+          <div class="logo-main" id="logo_main_text">6R Ascension</div>
+          <div class="logo-slogan" id="logo_slogan">सफलम् जन्मम् प्रवासम्</div>
+        </div>
+      </a>
+      <div class="nav-right">
+        <ul class="nav-links-left" id="nav-links-left"></ul>
+        <ul class="nav-links-right" id="nav-links-right"></ul>
+        <button class="btn btn-gold nav-cta" onclick="openBookingModal()">Book Session</button>
+        <button class="nav-toggle" id="nav-toggle" aria-label="Toggle navigation">
+          <span></span><span></span><span></span>
+        </button>
+      </div>
+    </div>
+    <div class="nav-mobile-panel" id="nav-mobile-panel">
+      <div class="nav-mobile-inner">
+        <ul class="nav-mobile-links" id="nav-links-mobile"></ul>
+        <button class="btn btn-gold nav-mobile-cta" onclick="openBookingModal();closeMobileNav()">Book Session</button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="res-hero">
+    <div class="container">
+      <div class="section-tag">✦ Wisdom &amp; Healing</div>
+      <h1>Free <em>Resources</em></h1>
+      <p>Guides, videos, and tools to support your healing journey — shared with love from Reena.</p>
+    </div>
+  </div>
+
+  <section class="res-grid">
+    <div class="container">
+      <div class="res-posts" id="res-posts">
+        <div class="res-empty">
+          <p style="color:#aaa;">Loading…</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a href="/" class="footer-logo"><span class="logo-icon">✦</span> <span id="logo_main_text2">6R Ascension</span></a>
+          <p class="footer-tagline" id="footer_tagline">Ancient Wisdom · Infinite Healing</p>
+        </div>
+        <div class="footer-nav">
+          <h4>Explore</h4>
+          <ul id="footer-nav-explore"></ul>
+        </div>
+        <div class="footer-contact">
+          <h4>Connect</h4>
+          <ul>
+            <li>📧 <span id="contact_email">hello@6rascension.com</span></li>
+            <li>📍 <span id="contact_location">London</span></li>
+            <li>⏰ <span id="contact_phone"></span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p id="footer_copyright">© 2026 6R Ascension · Reena. All rights reserved.</p>
+        <p id="footer_credit" style="font-size:0.75rem;margin-top:0.3rem;opacity:0.6;"></p>
+      </div>
+    </div>
+  </footer>
+
+  <script src="/script.js"></script>
+  <script src="/cms_frontend.js"></script>
+  <script src="/cookie-banner.js"></script>
+  <script src="/booking-widget.js"></script>
+  <script>
+  (function () {
+    function ytId(url) {
+      if (!url) return null;
+      var m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/))([A-Za-z0-9_-]{11})/);
+      return m ? m[1] : null;
+    }
+
+    function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    function fmtDate(iso) {
+      try { return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }); } catch(e) { return ''; }
+    }
+
+    function renderCard(r) {
+      var vid = ytId(r.youtube_url);
+      var ytHtml = '';
+      if (vid) {
+        ytHtml = '<div class="res-yt" id="yt-' + r.id + '" onclick="playYt(' + r.id + ',\'' + vid + '\')">' +
+          '<img src="https://img.youtube.com/vi/' + vid + '/hqdefault.jpg" alt="' + esc(r.title) + '" loading="lazy" />' +
+          '<div class="play-btn"><svg viewBox="0 0 68 48" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="68" height="48" rx="10" fill="#ff0000" fill-opacity="0.85"/><polygon points="28,16 50,24 28,32" fill="white"/></svg></div>' +
+          '</div>';
+      }
+      var linkHtml = (r.link_url) ?
+        '<a href="' + esc(r.link_url) + '" target="_blank" rel="noopener" class="res-link">' + esc(r.link_label || 'Read More') + ' →</a>' : '';
+      var bodyHtml = r.body ? '<p class="res-text">' + esc(r.body) + '</p>' : '';
+      var titleHtml = r.title ? '<h3 class="res-title">' + esc(r.title) + '</h3>' : '';
+      var dateHtml = r.created_at ? '<span class="res-date">' + fmtDate(r.created_at) + '</span>' : '';
+      return '<div class="res-card">' + ytHtml +
+        '<div class="res-body">' + dateHtml + titleHtml + bodyHtml + linkHtml + '</div></div>';
+    }
+
+    window.playYt = function (id, vid) {
+      var wrap = document.getElementById('yt-' + id);
+      if (!wrap) return;
+      wrap.innerHTML = '<iframe src="https://www.youtube.com/embed/' + vid + '?autoplay=1&rel=0" allow="autoplay; encrypted-media" allowfullscreen></iframe>';
+    };
+
+    function load() {
+      fetch('/api/resources').then(function(r){ return r.json(); }).then(function(data) {
+        var posts = data.resources || [];
+        var el = document.getElementById('res-posts');
+        if (!posts.length) {
+          el.innerHTML = '<div class="res-empty"><h3>Coming Soon</h3><p>Reena is preparing resources to share with you. Check back soon.</p></div>';
+          return;
+        }
+        el.innerHTML = posts.map(renderCard).join('');
+      }).catch(function() {
+        document.getElementById('res-posts').innerHTML = '<div class="res-empty"><p>Unable to load resources. Please try again later.</p></div>';
+      });
+    }
+
+    if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', load); } else { load(); }
+  })();
+  </script>
+</body>
+</html>

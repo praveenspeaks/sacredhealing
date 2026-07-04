@@ -23,7 +23,7 @@ SMTP_PORT=587
 SMTP_SECURE=false
 SMTP_USER=you@gmail.com
 SMTP_PASS=your-app-password
-SMTP_FROM="Sacred Healing" <you@gmail.com>
+SMTP_FROM="6R Ascension" <you@gmail.com>
 ADMIN_EMAIL=reena@example.com          # receives new booking alerts
 ```
 
